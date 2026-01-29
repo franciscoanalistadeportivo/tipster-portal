@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Trophy, TrendingUp, TrendingDown, AlertTriangle, Target, Star } from 'lucide-react';
+import { Trophy, TrendingUp, TrendingDown, AlertTriangle, Brain, Star, ChevronRight, Sparkles } from 'lucide-react';
 import { recomendacionesAPI } from '@/lib/api';
 
 interface TopTipster {
@@ -54,15 +54,15 @@ export default function RecomendacionesPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Error al cargar recomendaciones</p>
+      <div className="text-center py-16">
+        <p className="text-slate-500">Error al cargar recomendaciones</p>
       </div>
     );
   }
@@ -70,146 +70,190 @@ export default function RecomendacionesPage() {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Target className="h-7 w-7 text-primary-600" />
-          Recomendaciones IA
-        </h1>
-        <p className="text-gray-600">Análisis inteligente basado en rendimiento</p>
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-amber-500/10">
+          <Brain className="h-6 w-6 text-amber-400" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Análisis IA</h1>
+          <p className="text-slate-500 text-sm">Recomendaciones basadas en rendimiento</p>
+        </div>
       </div>
 
-      {/* Top Tipsters del Mes */}
-      <div className="card">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-yellow-500" />
-          Top Tipsters del Mes
-        </h2>
-        
-        {data.top_tipsters.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No hay datos suficientes</p>
-        ) : (
-          <div className="space-y-4">
-            {data.top_tipsters.map((tipster, index) => (
-              <div 
-                key={tipster.id} 
-                className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg ${
-                  index === 0 ? 'bg-yellow-50 border border-yellow-200' :
-                  index === 1 ? 'bg-gray-50 border border-gray-200' :
-                  index === 2 ? 'bg-orange-50 border border-orange-200' : 'bg-white border'
-                }`}
-              >
-                <div className="flex items-center gap-4 mb-3 md:mb-0">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
-                    index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                    index === 1 ? 'bg-gray-300 text-gray-700' :
-                    index === 2 ? 'bg-orange-300 text-orange-800' : 'bg-primary-100 text-primary-700'
-                  }`}>
-                    {index + 1}
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900">{tipster.alias}</p>
-                    <p className="text-sm text-gray-500">{tipster.deporte}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500">Apuestas</p>
-                    <p className="font-bold text-gray-900">{tipster.apuestas_mes}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500">Ganadas</p>
-                    <p className="font-bold text-green-600">{tipster.ganadas}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500">Ganancia</p>
-                    <p className="font-bold text-green-600 flex items-center gap-1">
-                      <TrendingUp className="h-4 w-4" />
-                      ${tipster.ganancia_mes.toLocaleString()}
-                    </p>
-                  </div>
-                  <Link 
-                    href={`/dashboard/tipsters/${tipster.id}`}
-                    className="btn-primary text-sm"
-                  >
-                    Ver
-                  </Link>
-                </div>
-              </div>
-            ))}
+      {/* Top Tipster Destacado */}
+      {data.top_tipsters.length > 0 && (
+        <div className="card-featured animate-fadeInUp">
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy className="h-5 w-5 text-amber-400" />
+            <span className="text-amber-400 font-semibold text-sm">TOP PERFORMER DEL MES</span>
           </div>
-        )}
-      </div>
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 flex items-center justify-center border border-amber-500/30">
+                <span className="text-2xl font-bold text-amber-400">
+                  {data.top_tipsters[0].alias.charAt(0)}
+                </span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">{data.top_tipsters[0].alias}</h3>
+                <p className="text-sm text-slate-500">{data.top_tipsters[0].deporte}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <p className="text-xs text-slate-500 uppercase">Apuestas</p>
+                <p className="text-xl font-bold text-white font-mono">{data.top_tipsters[0].apuestas_mes}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500 uppercase">Ganadas</p>
+                <p className="text-xl font-bold text-emerald-400 font-mono">{data.top_tipsters[0].ganadas}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500 uppercase">Ganancia</p>
+                <p className="text-xl font-bold text-emerald-400 font-mono flex items-center gap-1">
+                  <TrendingUp className="h-4 w-4" />
+                  ${data.top_tipsters[0].ganancia_mes.toLocaleString()}
+                </p>
+              </div>
+              <Link 
+                href={`/dashboard/tipsters/${data.top_tipsters[0].id}`}
+                className="btn-outline text-sm hidden sm:flex items-center gap-1"
+              >
+                Ver Perfil
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Apuestas Más Seguras Hoy */}
-      <div className="card">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Star className="h-5 w-5 text-green-500" />
-          Apuestas Más Seguras Hoy
-        </h2>
-        
-        {data.apuestas_seguras.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No hay apuestas seguras disponibles hoy</p>
-        ) : (
-          <div className="space-y-4">
-            {data.apuestas_seguras.map((apuesta, index) => (
-              <div key={index} className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="badge-success">Alta Confianza</span>
-                    <span className="text-sm font-medium text-gray-600">
-                      por {apuesta.tipster}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Ranking Top Tipsters */}
+        <div className="card-ops animate-fadeInUp stagger-1">
+          <div className="flex items-center gap-2 mb-4">
+            <Star className="h-5 w-5 text-amber-400" />
+            <h2 className="font-semibold text-white">Ranking del Mes</h2>
+          </div>
+          
+          {data.top_tipsters.length === 0 ? (
+            <p className="text-slate-500 text-center py-8">No hay datos suficientes</p>
+          ) : (
+            <div className="space-y-2">
+              {data.top_tipsters.slice(1).map((tipster, index) => (
+                <Link
+                  key={tipster.id}
+                  href={`/dashboard/tipsters/${tipster.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors table-row-hover"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+                      {index + 2}
+                    </span>
+                    <div>
+                      <p className="font-medium text-white text-sm">{tipster.alias}</p>
+                      <p className="text-xs text-slate-500">{tipster.deporte}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-emerald-400 font-mono font-bold text-sm">
+                      +${tipster.ganancia_mes.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-slate-500">{tipster.ganadas}W / {tipster.apuestas_mes}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Apuestas Seguras */}
+        <div className="card-ops animate-fadeInUp stagger-2">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="h-5 w-5 text-emerald-400" />
+            <h2 className="font-semibold text-white">Picks de Alta Confianza</h2>
+          </div>
+          
+          {data.apuestas_seguras.length === 0 ? (
+            <p className="text-slate-500 text-center py-8">No hay picks disponibles hoy</p>
+          ) : (
+            <div className="space-y-3">
+              {data.apuestas_seguras.map((apuesta, index) => (
+                <div 
+                  key={index} 
+                  className="p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="badge-success text-[10px]">ALTA CONFIANZA</span>
+                    <span className="text-lg font-bold text-white font-mono">
+                      @{apuesta.cuota}
                     </span>
                   </div>
-                  <span className="text-xl font-bold text-primary-600">
-                    Cuota {apuesta.cuota}
-                  </span>
-                </div>
-                <p className="text-lg font-medium text-gray-900 mb-2">{apuesta.apuesta}</p>
-                {apuesta.analisis && (
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Análisis:</span> {apuesta.analisis}
+                  <p className="text-white font-medium text-sm mb-1">{apuesta.apuesta}</p>
+                  <p className="text-xs text-slate-500">
+                    por <span className="text-emerald-400">{apuesta.tipster}</span>
                   </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tipsters a Evitar */}
       {data.evitar.length > 0 && (
-        <div className="card border-l-4 border-red-500">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-            Tipsters en Mala Racha (Precaución)
-          </h2>
+        <div className="card-ops border-l-4 border-l-red-500 animate-fadeInUp stagger-3">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <h2 className="font-semibold text-white">Zona de Riesgo</h2>
+            <span className="badge-danger ml-auto">Evitar</span>
+          </div>
           
-          <div className="space-y-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {data.evitar.map((alerta, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                <span className="font-medium text-gray-900">{alerta.alias}</span>
-                <span className="badge-danger flex items-center gap-1">
-                  <TrendingDown className="h-4 w-4" />
-                  Racha {alerta.racha}
+              <div 
+                key={index} 
+                className="flex items-center justify-between p-3 rounded-lg bg-red-500/5 border border-red-500/10"
+              >
+                <span className="text-sm text-slate-300">{alerta.alias}</span>
+                <span className="font-mono text-sm text-red-400 flex items-center gap-1">
+                  <TrendingDown className="h-3.5 w-3.5" />
+                  {alerta.racha}
                 </span>
               </div>
             ))}
           </div>
           
-          <p className="mt-4 text-sm text-gray-600">
-            💡 Recomendamos reducir el stake o evitar temporalmente estos tipsters hasta que recuperen su racha.
+          <p className="text-xs text-slate-500 mt-4">
+            💡 Reducir exposición hasta que recuperen racha positiva
           </p>
         </div>
       )}
 
-      {/* Info Card */}
-      <div className="card bg-primary-50 border border-primary-200">
-        <h3 className="font-bold text-primary-900 mb-2">¿Cómo funciona el análisis IA?</h3>
-        <ul className="text-sm text-primary-800 space-y-1">
-          <li>• Evaluamos el rendimiento de los últimos 30 días</li>
-          <li>• Calculamos probabilidades reales vs cuotas (EV+)</li>
-          <li>• Identificamos patrones de rachas y consistencia</li>
-          <li>• Las apuestas seguras son las aprobadas por IA de tipsters top</li>
+      {/* Info Panel - Cómo funciona */}
+      <div className="info-panel animate-fadeInUp stagger-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Brain className="h-5 w-5 text-blue-400" />
+          <h3 className="font-semibold text-white">¿Cómo funciona el análisis IA?</h3>
+        </div>
+        <ul className="space-y-2 text-sm text-slate-400">
+          <li className="flex items-start gap-2">
+            <span className="text-blue-400 mt-0.5">•</span>
+            Evaluación de rendimiento en los últimos 30 días
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-400 mt-0.5">•</span>
+            Cálculo de probabilidades reales vs cuotas (Expected Value)
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-400 mt-0.5">•</span>
+            Identificación de patrones de rachas y consistencia
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-400 mt-0.5">•</span>
+            Los picks "Alta Confianza" son aprobados por IA de tipsters top
+          </li>
         </ul>
       </div>
     </div>
