@@ -1,34 +1,39 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================
-   ROOT VARIABLES - PALETA PREMIUM
+   ELITE BETTING VAULT - PALETA PREMIUM
    ============================================ */
 :root {
-  /* Navy - Colores primarios */
-  --navy-950: #0a1929;
-  --navy-900: #102a43;
-  --navy-800: #243b53;
-  --navy-700: #334e68;
-  --navy-600: #486581;
-  --navy-500: #627d98;
-  --navy-400: #829ab1;
-  --navy-300: #9fb3c8;
-  --navy-200: #bcccdc;
-  --navy-100: #d9e2ec;
+  /* Fondos */
+  --bg-base: #0F172A;
+  --bg-card: #1E293B;
+  --bg-elevated: #334155;
   
-  /* Emerald - CTAs */
-  --emerald-500: #10b981;
-  --emerald-600: #059669;
-  --emerald-700: #047857;
+  /* Primario - Teal (Éxito/CTA) */
+  --teal-500: #00D1B2;
+  --teal-600: #00B89C;
+  --teal-glow: rgba(0, 209, 178, 0.3);
   
-  /* Gold - Acentos */
-  --gold-400: #fbbf24;
-  --gold-500: #f59e0b;
-  --gold-600: #d97706;
+  /* Acento - Oro (Premium) */
+  --gold-400: #FFDD57;
+  --gold-500: #F5C518;
+  --gold-glow: rgba(255, 221, 87, 0.3);
+  
+  /* Danger */
+  --red-500: #EF4444;
+  --red-glow: rgba(239, 68, 68, 0.2);
+  
+  /* Textos */
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  
+  /* Bordes */
+  --border-subtle: #334155;
 }
 
 /* ============================================
@@ -39,98 +44,248 @@ html {
 }
 
 body {
-  font-family: 'Poppins', system-ui, sans-serif;
-  background-color: var(--navy-950);
-  color: var(--navy-100);
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+/* Números y datos financieros */
+.font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
 }
 
 /* ============================================
-   COMPONENT STYLES
+   COMPONENT STYLES - ELITE VAULT
    ============================================ */
 @layer components {
-  /* Botón primario - Verde Esmeralda */
+  /* Botón primario Teal */
   .btn-primary {
-    @apply bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-6 rounded-lg 
-           transition-all duration-300 transform hover:scale-105 hover:shadow-glow-emerald
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+    @apply font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02];
+    background: linear-gradient(135deg, #00D1B2 0%, #00B89C 100%);
+    color: white;
+    box-shadow: 0 4px 15px var(--teal-glow);
   }
 
-  /* Botón secundario */
-  .btn-secondary {
-    @apply bg-transparent border-2 border-navy-300 text-navy-100 font-semibold py-3 px-6 rounded-lg 
-           transition-all duration-300 hover:bg-navy-800 hover:border-navy-200;
+  .btn-primary:hover {
+    box-shadow: 0 6px 25px var(--teal-glow);
   }
 
-  /* Botón gold/urgencia */
+  /* Botón pulsante (CTA principal) */
+  .btn-pulse {
+    @apply font-bold py-4 px-8 rounded-xl transition-all duration-300;
+    background: linear-gradient(135deg, #00D1B2 0%, #00B89C 100%);
+    color: white;
+    animation: pulse-teal 2s ease-in-out infinite;
+  }
+
+  /* Botón oro premium */
   .btn-gold {
-    @apply bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 
-           text-navy-950 font-bold py-3 px-6 rounded-lg transition-all duration-300 
-           transform hover:scale-105 hover:shadow-glow-gold;
+    @apply font-bold py-3 px-6 rounded-xl transition-all duration-300;
+    background: linear-gradient(135deg, #FFDD57 0%, #F5C518 100%);
+    color: #0F172A;
+    box-shadow: 0 4px 15px var(--gold-glow);
+  }
+
+  .btn-gold:hover {
+    box-shadow: 0 6px 25px var(--gold-glow);
+    transform: scale(1.02);
+  }
+
+  /* Botón outline */
+  .btn-outline {
+    @apply bg-transparent border border-slate-600 text-slate-300 font-medium py-2.5 px-5 rounded-xl 
+           transition-all duration-300 hover:border-teal-500 hover:text-teal-400;
   }
 
   /* Input field */
   .input-field {
-    @apply w-full px-4 py-3 bg-navy-800 border border-navy-600 rounded-lg 
-           text-white placeholder-navy-400 
-           focus:ring-2 focus:ring-emerald-500 focus:border-transparent 
-           outline-none transition-all duration-300;
+    @apply w-full px-4 py-3 rounded-xl text-white placeholder-slate-500 
+           focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
   }
 
-  /* Card premium */
-  .card {
-    @apply bg-white/5 backdrop-blur-sm rounded-2xl p-6 
-           border border-navy-700/50 shadow-card
-           transition-all duration-300 hover:shadow-card-hover hover:border-navy-600/50;
+  /* Card Elite */
+  .card-elite {
+    @apply rounded-2xl p-5 transition-all duration-300;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
   }
 
-  /* Card blanca (para contenido importante) */
-  .card-light {
-    @apply bg-white rounded-2xl p-6 shadow-card
-           transition-all duration-300 hover:shadow-card-hover;
+  .card-elite:hover {
+    border-color: #475569;
+    transform: translateY(-2px);
   }
 
-  /* Badges */
-  .badge-success {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
-           bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+  /* Card Hero (destacada) */
+  .card-hero {
+    @apply rounded-2xl p-6 relative overflow-hidden;
+    background: linear-gradient(135deg, var(--bg-card) 0%, #253347 100%);
+    border: 1px solid rgba(0, 209, 178, 0.3);
+    box-shadow: 0 0 40px rgba(0, 209, 178, 0.1);
   }
 
-  .badge-danger {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
-           bg-red-500/20 text-red-400 border border-red-500/30;
+  /* Card Premium (oro) */
+  .card-premium {
+    @apply rounded-2xl p-6 relative overflow-hidden;
+    background: linear-gradient(135deg, var(--bg-card) 0%, #2D2A1F 100%);
+    border: 1px solid rgba(255, 221, 87, 0.3);
+    box-shadow: 0 0 40px rgba(255, 221, 87, 0.1);
   }
 
-  .badge-warning {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
-           bg-gold-500/20 text-gold-400 border border-gold-500/30;
-  }
-
-  .badge-info {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
-           bg-blue-500/20 text-blue-400 border border-blue-500/30;
-  }
-
-  /* Stat card */
+  /* Stat Card */
   .stat-card {
-    @apply bg-gradient-to-br from-navy-800/80 to-navy-900/80 rounded-xl p-5
-           border border-navy-700/50 backdrop-blur-sm;
+    @apply rounded-xl p-5 relative overflow-hidden transition-all duration-300;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .stat-card:hover {
+    border-color: #475569;
+  }
+
+  /* Badge Teal (Ganada/Éxito) */
+  .badge-success {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold;
+    background: linear-gradient(135deg, rgba(0, 209, 178, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
+    color: #00D1B2;
+    border: 1px solid rgba(0, 209, 178, 0.3);
+  }
+
+  /* Badge Oro (Premium) */
+  .badge-gold {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold;
+    background: linear-gradient(135deg, rgba(255, 221, 87, 0.2) 0%, rgba(245, 197, 24, 0.2) 100%);
+    color: #FFDD57;
+    border: 1px solid rgba(255, 221, 87, 0.3);
+  }
+
+  /* Badge Danger */
+  .badge-danger {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold;
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  /* Badge Info */
+  .badge-info {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+
+  /* Badge Live */
+  .badge-live {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold;
+    background: rgba(239, 68, 68, 0.2);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+
+  .badge-live::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #EF4444;
+    border-radius: 50%;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+
+  /* Badge IA Approved */
+  .badge-ia {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold;
+    background: linear-gradient(135deg, rgba(0, 209, 178, 0.2) 0%, rgba(0, 209, 178, 0.1) 100%);
+    color: #00D1B2;
+    border: 1px solid rgba(0, 209, 178, 0.4);
+    box-shadow: 0 0 15px rgba(0, 209, 178, 0.2);
+  }
+
+  /* Badge deporte */
+  .badge-sport {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Trial Banner */
+  .trial-banner {
+    @apply rounded-xl p-4 relative overflow-hidden;
+    background: linear-gradient(135deg, #1E293B 0%, #2D2A1F 100%);
+    border: 1px solid rgba(255, 221, 87, 0.4);
+  }
+
+  /* Fila ganada */
+  .row-won {
+    background: rgba(0, 209, 178, 0.05);
+    border-left: 3px solid #00D1B2;
+  }
+
+  /* Fila perdida */
+  .row-lost {
+    background: rgba(239, 68, 68, 0.05);
+    border-left: 3px solid #EF4444;
+  }
+
+  /* Fila pendiente */
+  .row-pending {
+    background: transparent;
+    border-left: 3px solid var(--border-subtle);
+  }
+
+  /* Win Rate Circle */
+  .win-rate-circle {
+    @apply relative flex items-center justify-center;
+    width: 60px;
+    height: 60px;
+  }
+
+  .win-rate-circle svg {
+    transform: rotate(-90deg);
+  }
+
+  .win-rate-circle .percentage {
+    @apply absolute text-lg font-bold text-white font-mono;
   }
 }
 
 /* ============================================
    ANIMATIONS
    ============================================ */
+@keyframes pulse-teal {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(0, 209, 178, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(0, 209, 178, 0.5);
+  }
+}
+
+@keyframes pulse-gold {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(255, 221, 87, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(255, 221, 87, 0.5);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -143,18 +298,9 @@ h1, h2, h3, h4, h5, h6 {
   to { opacity: 1; }
 }
 
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(16, 185, 129, 0.5);
-  }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes shimmer {
@@ -162,88 +308,142 @@ h1, h2, h3, h4, h5, h6 {
   100% { background-position: 200% 0; }
 }
 
+@keyframes glow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
 .animate-fadeInUp {
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.5s ease-out forwards;
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+.animate-pulse-teal {
+  animation: pulse-teal 2s ease-in-out infinite;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+.animate-pulse-gold {
+  animation: pulse-gold 2s ease-in-out infinite;
 }
 
-/* Stagger animations */
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Stagger */
+.stagger-1 { animation-delay: 0.05s; opacity: 0; }
+.stagger-2 { animation-delay: 0.1s; opacity: 0; }
+.stagger-3 { animation-delay: 0.15s; opacity: 0; }
+.stagger-4 { animation-delay: 0.2s; opacity: 0; }
+.stagger-5 { animation-delay: 0.25s; opacity: 0; }
 
 /* ============================================
-   GRADIENT BACKGROUNDS
+   SIDEBAR ACTIVE INDICATOR
    ============================================ */
-.bg-hero-gradient {
-  background: linear-gradient(135deg, #0a1929 0%, #102a43 40%, #243b53 100%);
-}
-
-.bg-card-gradient {
-  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
-}
-
-.bg-cta-gradient {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-/* Noise texture overlay */
-.noise-overlay {
+.nav-active {
   position: relative;
+  background: rgba(0, 209, 178, 0.1);
+  color: #00D1B2 !important;
 }
-.noise-overlay::before {
+
+.nav-active::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  opacity: 0.03;
-  pointer-events: none;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 70%;
+  background: #00D1B2;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px var(--teal-glow);
 }
 
 /* ============================================
-   SCROLLBAR CUSTOM
+   MINI CHART (Sparkline)
+   ============================================ */
+.sparkline-up {
+  stroke: #00D1B2;
+  fill: none;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px var(--teal-glow));
+}
+
+.sparkline-down {
+  stroke: #EF4444;
+  fill: none;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px var(--red-glow));
+}
+
+/* ============================================
+   COUNTDOWN TIMER
+   ============================================ */
+.countdown-box {
+  @apply flex items-center justify-center rounded-lg font-mono text-2xl font-bold;
+  background: rgba(255, 221, 87, 0.1);
+  border: 1px solid rgba(255, 221, 87, 0.3);
+  color: #FFDD57;
+  min-width: 50px;
+  padding: 8px 12px;
+}
+
+/* ============================================
+   SCROLLBAR
    ============================================ */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--navy-900);
+  background: var(--bg-base);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--navy-600);
-  border-radius: 4px;
+  background: var(--border-subtle);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--navy-500);
+  background: #475569;
 }
 
 /* ============================================
    SELECTION
    ============================================ */
 ::selection {
-  background: var(--emerald-500);
+  background: #00D1B2;
   color: white;
 }
 
 /* ============================================
-   FOCUS VISIBLE
+   TABLE HOVER
    ============================================ */
-*:focus-visible {
-  outline: 2px solid var(--emerald-500);
-  outline-offset: 2px;
+.table-row-hover {
+  @apply transition-all duration-200 cursor-pointer;
+}
+
+.table-row-hover:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ============================================
+   GRADIENT TEXTS
+   ============================================ */
+.text-gradient-teal {
+  background: linear-gradient(135deg, #00D1B2 0%, #10B981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #FFDD57 0%, #F5C518 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
