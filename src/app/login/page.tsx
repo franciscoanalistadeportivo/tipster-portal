@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Trophy, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { Trophy, Mail, Lock, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { authAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 
@@ -34,41 +34,48 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-hero-gradient noise-overlay flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <Trophy className="h-10 w-10 text-yellow-400" />
-            <span className="text-3xl font-bold text-white">Tipster Portal</span>
+          <Link href="/" className="inline-flex items-center gap-3">
+            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2.5 rounded-xl">
+              <Trophy className="h-7 w-7 text-white" />
+            </div>
+            <span className="text-2xl font-display font-bold text-white">
+              Tipster<span className="text-emerald-400">Portal</span>
+            </span>
           </Link>
         </div>
 
         {/* Card de Login */}
-        <div className="card animate-fadeIn">
-          <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">
-            Iniciar Sesión
+        <div className="card-light animate-fadeInUp">
+          <h1 className="text-2xl font-display font-bold text-navy-900 text-center mb-2">
+            Bienvenido de vuelta
           </h1>
+          <p className="text-navy-500 text-center mb-8">
+            Ingresa a tu cuenta para continuar
+          </p>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              <span>{error}</span>
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-navy-700 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-field pl-10"
+                  className="w-full px-4 py-3 pl-12 bg-navy-50 border border-navy-200 rounded-xl text-navy-900 placeholder-navy-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                   placeholder="tu@email.com"
                   required
                   disabled={isLoading}
@@ -77,16 +84,16 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-navy-700 mb-2">
                 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-400" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pl-10"
+                  className="w-full px-4 py-3 pl-12 bg-navy-50 border border-navy-200 rounded-xl text-navy-900 placeholder-navy-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                   required
                   disabled={isLoading}
@@ -96,7 +103,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="btn-primary w-full py-3 flex items-center justify-center gap-2"
+              className="btn-primary w-full py-4 flex items-center justify-center gap-2"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -110,10 +117,10 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
+          <div className="mt-8 pt-6 border-t border-navy-100 text-center">
+            <p className="text-navy-600">
               ¿No tienes cuenta?{' '}
-              <Link href="/registro" className="text-primary-600 hover:text-primary-700 font-medium">
+              <Link href="/registro" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
                 Regístrate gratis
               </Link>
             </p>
@@ -121,9 +128,10 @@ export default function LoginPage() {
         </div>
 
         {/* Volver */}
-        <div className="text-center mt-6">
-          <Link href="/" className="text-primary-200 hover:text-white transition-colors">
-            ← Volver al inicio
+        <div className="text-center mt-8">
+          <Link href="/" className="inline-flex items-center gap-2 text-navy-400 hover:text-white transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            <span>Volver al inicio</span>
           </Link>
         </div>
       </div>
