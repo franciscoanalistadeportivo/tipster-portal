@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  Trophy, LayoutDashboard, Users, Calendar, Lightbulb, 
-  LogOut, Menu, X, User, Crown, ChevronRight
+  Trophy, LayoutDashboard, Users, Calendar, Zap, 
+  LogOut, Menu, X, User, Crown, Shield
 } from 'lucide-react';
 import { authAPI, loadTokens, clearTokens, isAuthenticated } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
@@ -13,8 +13,8 @@ import { useAuthStore } from '@/lib/store';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Tipsters', href: '/dashboard/tipsters', icon: Users },
-  { name: 'Apuestas Hoy', href: '/dashboard/apuestas', icon: Calendar },
-  { name: 'Recomendaciones', href: '/dashboard/recomendaciones', icon: Lightbulb },
+  { name: 'Apuestas', href: '/dashboard/apuestas', icon: Calendar },
+  { name: 'IA Picks', href: '/dashboard/recomendaciones', icon: Zap },
 ];
 
 export default function DashboardLayout({
@@ -24,8 +24,9 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, setUser, isLoading, setLoading } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -42,6 +43,8 @@ export default function DashboardLayout({
       } catch (error) {
         clearTokens();
         router.push('/login');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -54,12 +57,12 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
-  if (isLoading || !user) {
+  if (loading || !user) {
     return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-navy-300">Cargando...</p>
+          <div className="w-12 h-12 border-3 border-[#00D1B2]/30 border-t-[#00D1B2] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-[#94A3B8]">Cargando...</p>
         </div>
       </div>
     );
@@ -68,36 +71,49 @@ export default function DashboardLayout({
   const getPlanBadge = () => {
     switch (user.plan) {
       case 'FREE_TRIAL':
-        return <span className="badge-info text-xs">Prueba Gratis</span>;
+        return (
+          <span className="badge-gold text-[10px] flex items-center gap-1">
+            <Shield className="h-3 w-3" />
+            TRIAL
+          </span>
+        );
       case 'PREMIUM':
-        return <span className="badge-success text-xs flex items-center gap-1"><Crown className="h-3 w-3" /> Premium</span>;
+        return (
+          <span className="badge-success text-[10px] flex items-center gap-1">
+            <Crown className="h-3 w-3" />
+            PREMIUM
+          </span>
+        );
       case 'EXPIRED':
-        return <span className="badge-danger text-xs">Expirado</span>;
+        return (
+          <span className="badge-danger text-[10px]">EXPIRADO</span>
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-navy-950">
-      {/* Sidebar Mobile */}
+    <div className="min-h-screen bg-[#0F172A]">
+      {/* Mobile Sidebar Overlay */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)}></div>
-        <div className="fixed inset-y-0 left-0 flex w-72 flex-col bg-navy-900 border-r border-navy-800">
-          <div className="flex h-16 items-center justify-between px-6 border-b border-navy-800">
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-1.5 rounded-lg">
+        <div className="fixed inset-0 bg-black/70" onClick={() => setSidebarOpen(false)}></div>
+        <div className="fixed inset-y-0 left-0 w-72 bg-[#0F172A] border-r border-[#334155]">
+          <div className="flex h-16 items-center justify-between px-5 border-b border-[#334155]">
+            <div className="flex items-center gap-2.5">
+              <div className="bg-[#00D1B2] p-1.5 rounded-lg">
                 <Trophy className="h-5 w-5 text-white" />
               </div>
-              <span className="text-lg font-display font-bold text-white">
-                Tipster<span className="text-emerald-400">Portal</span>
-              </span>
+              <div>
+                <span className="text-base font-bold text-white">TipsterPortal</span>
+                <span className="block text-[10px] text-[#FFDD57] font-mono">ELITE VAULT</span>
+              </div>
             </div>
-            <button onClick={() => setSidebarOpen(false)} className="text-navy-400 hover:text-white">
-              <X className="h-6 w-6" />
+            <button onClick={() => setSidebarOpen(false)} className="text-[#94A3B8] hover:text-white">
+              <X className="h-5 w-5" />
             </button>
           </div>
-          <nav className="flex-1 px-4 py-6 space-y-1">
+          <nav className="flex-1 px-3 py-5 space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -105,15 +121,12 @@ export default function DashboardLayout({
                   key={item.name}
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    isActive 
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                      : 'text-navy-300 hover:bg-navy-800 hover:text-white'
+                    isActive ? 'nav-active' : 'text-[#94A3B8] hover:bg-[#1E293B] hover:text-white'
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.name}</span>
-                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
                 </Link>
               );
             })}
@@ -121,18 +134,22 @@ export default function DashboardLayout({
         </div>
       </div>
 
-      {/* Sidebar Desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex flex-col flex-1 bg-navy-900 border-r border-navy-800">
-          <div className="flex h-16 items-center px-6 border-b border-navy-800">
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-1.5 rounded-lg">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex flex-col flex-1 bg-[#0F172A] border-r border-[#334155]">
+          {/* Logo */}
+          <div className="flex h-16 items-center px-5 border-b border-[#334155]">
+            <div className="bg-[#00D1B2] p-1.5 rounded-lg">
               <Trophy className="h-5 w-5 text-white" />
             </div>
-            <span className="ml-2 text-lg font-display font-bold text-white">
-              Tipster<span className="text-emerald-400">Portal</span>
-            </span>
+            <div className="ml-2.5">
+              <span className="text-base font-bold text-white">TipsterPortal</span>
+              <span className="block text-[10px] text-[#FFDD57] font-mono tracking-wider">ELITE VAULT</span>
+            </div>
           </div>
-          <nav className="flex-1 px-4 py-6 space-y-1">
+
+          {/* Navigation */}
+          <nav className="flex-1 px-3 py-5 space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -140,63 +157,75 @@ export default function DashboardLayout({
                   key={item.name}
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    isActive 
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                      : 'text-navy-300 hover:bg-navy-800 hover:text-white'
+                    isActive ? 'nav-active' : 'text-[#94A3B8] hover:bg-[#1E293B] hover:text-white'
                   }`}
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.name}</span>
-                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
                 </Link>
               );
             })}
           </nav>
           
-          {/* User section */}
-          <div className="p-4 border-t border-navy-800">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-navy-800/50 mb-3">
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2 rounded-lg">
+          {/* User Section */}
+          <div className="p-4 border-t border-[#334155]">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#1E293B]">
+              <div className="bg-gradient-to-br from-[#00D1B2] to-[#00B89C] p-2 rounded-lg">
                 <User className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user.nombre || user.email}</p>
-                {getPlanBadge()}
+                <p className="text-sm font-medium text-white truncate">
+                  {user.nombre || user.email.split('@')[0]}
+                </p>
+                <div className="mt-0.5">{getPlanBadge()}</div>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-navy-400 hover:text-white transition-colors w-full px-3 py-2 rounded-lg hover:bg-navy-800"
+              className="flex items-center gap-2 text-[#94A3B8] hover:text-white transition-colors w-full px-4 py-3 mt-2 rounded-xl hover:bg-[#1E293B]"
             >
-              <LogOut className="h-5 w-5" />
-              <span>Cerrar Sesión</span>
+              <LogOut className="h-4 w-4" />
+              <span className="text-sm">Cerrar Sesión</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="lg:pl-72">
-        {/* Top bar mobile */}
-        <div className="sticky top-0 z-40 lg:hidden bg-navy-900/80 backdrop-blur-md border-b border-navy-800">
-          <div className="flex h-16 items-center justify-between px-4">
-            <button onClick={() => setSidebarOpen(true)} className="text-navy-400 hover:text-white">
-              <Menu className="h-6 w-6" />
+      <div className="lg:pl-64">
+        {/* Mobile Top Bar */}
+        <div className="sticky top-0 z-40 lg:hidden bg-[#0F172A]/95 backdrop-blur-md border-b border-[#334155]">
+          <div className="flex h-14 items-center justify-between px-4">
+            <button onClick={() => setSidebarOpen(true)} className="text-[#94A3B8] hover:text-white">
+              <Menu className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-1.5 rounded-lg">
-                <Trophy className="h-5 w-5 text-white" />
+              <div className="bg-[#00D1B2] p-1 rounded">
+                <Trophy className="h-4 w-4 text-white" />
               </div>
-              <span className="font-display font-bold text-white">TipsterPortal</span>
+              <span className="font-bold text-white text-sm">TipsterPortal</span>
             </div>
-            <div className="w-6"></div>
+            <div className="w-5"></div>
           </div>
         </div>
 
         {/* Page Content */}
-        <main className="p-4 lg:p-8 min-h-screen">
+        <main className="p-4 lg:p-6 min-h-screen">
           {children}
         </main>
+
+        {/* Mobile Bottom CTA (Trial only) */}
+        {user.plan === 'FREE_TRIAL' && (
+          <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-[#0F172A]/95 backdrop-blur-md border-t border-[#334155] p-3">
+            <Link 
+              href="/dashboard/suscripcion" 
+              className="btn-pulse w-full flex items-center justify-center gap-2"
+            >
+              <Crown className="h-5 w-5" />
+              Suscribirse por $15.000/mes
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
