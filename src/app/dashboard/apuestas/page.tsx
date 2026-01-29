@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar, TrendingUp, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, Clock, Brain, Zap } from 'lucide-react';
 import { apuestasAPI } from '@/lib/api';
 
 interface Apuesta {
@@ -45,32 +45,50 @@ export default function ApuestasPage() {
     return true;
   });
 
-  const getResultadoIcon = (resultado: string) => {
+  const getRowClass = (resultado: string) => {
     switch (resultado) {
       case 'GANADA':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return 'row-won';
       case 'PERDIDA':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return 'row-lost';
       default:
-        return <Clock className="h-5 w-5 text-yellow-500" />;
+        return 'row-pending';
     }
   };
 
-  const getDeporteBadge = (deporte: string) => {
-    const colors: { [key: string]: string } = {
-      Futbol: 'bg-green-100 text-green-800',
-      Tenis: 'bg-yellow-100 text-yellow-800',
-      NBA: 'bg-orange-100 text-orange-800',
-      Voleibol: 'bg-blue-100 text-blue-800',
-      Mixto: 'bg-purple-100 text-purple-800',
+  const getResultadoIcon = (resultado: string) => {
+    switch (resultado) {
+      case 'GANADA':
+        return <CheckCircle className="h-4 w-4 text-emerald-400" />;
+      case 'PERDIDA':
+        return <XCircle className="h-4 w-4 text-red-400" />;
+      default:
+        return <Clock className="h-4 w-4 text-amber-400" />;
+    }
+  };
+
+  const getDeporteBadgeClass = (deporte: string) => {
+    const map: { [key: string]: string } = {
+      Futbol: 'badge-sport futbol',
+      Tenis: 'badge-sport tenis',
+      NBA: 'badge-sport nba',
+      Voleibol: 'badge-sport voleibol',
+      Mixto: 'badge-sport mixto',
     };
-    return colors[deporte] || 'bg-gray-100 text-gray-800';
+    return map[deporte] || 'badge-sport';
+  };
+
+  const stats = {
+    total: apuestas.length,
+    aprobadas: apuestas.filter(a => a.filtro_claude === 'APROBADA').length,
+    pendientes: apuestas.filter(a => a.resultado === 'PENDIENTE').length,
+    ganadas: apuestas.filter(a => a.resultado === 'GANADA').length,
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -80,121 +98,108 @@ export default function ApuestasPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Apuestas del Día</h1>
-          <p className="text-gray-600 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-white">Monitor de Apuestas</h1>
+          <p className="text-slate-500 text-sm mt-1 flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             {fecha ? new Date(fecha).toLocaleDateString('es-CL', { 
               weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+              day: 'numeric',
+              month: 'long'
             }) : 'Hoy'}
           </p>
         </div>
 
         {/* Filtros */}
         <div className="flex gap-2">
-          <button
-            onClick={() => setFilter('todas')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filter === 'todas' 
-                ? 'bg-primary-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Todas ({apuestas.length})
-          </button>
-          <button
-            onClick={() => setFilter('aprobadas')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filter === 'aprobadas' 
-                ? 'bg-green-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Aprobadas IA
-          </button>
-          <button
-            onClick={() => setFilter('pendientes')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filter === 'pendientes' 
-                ? 'bg-yellow-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Pendientes
-          </button>
+          {[
+            { key: 'todas', label: `Todas (${stats.total})` },
+            { key: 'aprobadas', label: `IA ✓ (${stats.aprobadas})` },
+            { key: 'pendientes', label: `Live (${stats.pendientes})` },
+          ].map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key as any)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filter === f.key
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card text-center">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-2xl font-bold text-gray-900">{apuestas.length}</p>
+      {/* Stats Row */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="stat-card py-3">
+          <p className="text-2xl font-bold text-white font-mono text-center">{stats.total}</p>
+          <p className="text-[10px] text-slate-500 uppercase text-center mt-1">Total</p>
         </div>
-        <div className="card text-center">
-          <p className="text-sm text-gray-500">Aprobadas IA</p>
-          <p className="text-2xl font-bold text-green-600">
-            {apuestas.filter((a) => a.filtro_claude === 'APROBADA').length}
-          </p>
+        <div className="stat-card py-3">
+          <p className="text-2xl font-bold text-emerald-400 font-mono text-center">{stats.aprobadas}</p>
+          <p className="text-[10px] text-slate-500 uppercase text-center mt-1">IA Aprobadas</p>
         </div>
-        <div className="card text-center">
-          <p className="text-sm text-gray-500">Pendientes</p>
-          <p className="text-2xl font-bold text-yellow-600">
-            {apuestas.filter((a) => a.resultado === 'PENDIENTE').length}
-          </p>
+        <div className="stat-card py-3">
+          <p className="text-2xl font-bold text-amber-400 font-mono text-center">{stats.pendientes}</p>
+          <p className="text-[10px] text-slate-500 uppercase text-center mt-1">Pendientes</p>
         </div>
-        <div className="card text-center">
-          <p className="text-sm text-gray-500">Ganadas Hoy</p>
-          <p className="text-2xl font-bold text-green-600">
-            {apuestas.filter((a) => a.resultado === 'GANADA').length}
-          </p>
+        <div className="stat-card py-3">
+          <p className="text-2xl font-bold text-emerald-400 font-mono text-center">{stats.ganadas}</p>
+          <p className="text-[10px] text-slate-500 uppercase text-center mt-1">Ganadas</p>
         </div>
       </div>
 
       {/* Lista de Apuestas */}
       {filteredApuestas.length === 0 ? (
-        <div className="card text-center py-12">
-          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No hay apuestas {filter !== 'todas' ? 'con este filtro' : 'para hoy'}</p>
+        <div className="card-ops text-center py-16">
+          <Calendar className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+          <p className="text-slate-500">No hay apuestas {filter !== 'todas' ? 'con este filtro' : 'para hoy'}</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredApuestas.map((apuesta) => (
-            <div key={apuesta.id} className="card hover:shadow-lg transition-shadow">
+        <div className="space-y-3">
+          {filteredApuestas.map((apuesta, index) => (
+            <div 
+              key={apuesta.id} 
+              className={`card-ops ${getRowClass(apuesta.resultado)} table-row-hover animate-fadeInUp`}
+              style={{ animationDelay: `${index * 0.03}s` }}
+            >
               <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                 {/* Info principal */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDeporteBadge(apuesta.deporte)}`}>
+                    <span className={getDeporteBadgeClass(apuesta.deporte)}>
                       {apuesta.deporte}
                     </span>
-                    <span className="text-sm text-gray-500">•</span>
-                    <span className="text-sm font-medium text-primary-600">{apuesta.tipster_alias}</span>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-sm text-emerald-400 font-medium">{apuesta.tipster_alias}</span>
                   </div>
-                  <p className="text-lg font-medium text-gray-900">{apuesta.apuesta}</p>
+                  <p className="text-white font-medium">{apuesta.apuesta}</p>
                 </div>
 
-                {/* Cuota */}
-                <div className="flex items-center gap-6">
+                {/* Datos numéricos */}
+                <div className="flex items-center gap-6 lg:gap-8">
+                  {/* Cuota */}
                   <div className="text-center">
-                    <p className="text-xs text-gray-500">Cuota</p>
-                    <p className="text-xl font-bold text-primary-600">{apuesta.cuota}</p>
+                    <p className="text-xs text-slate-500 uppercase">Cuota</p>
+                    <p className="text-xl font-bold text-white font-mono">{apuesta.cuota}</p>
                   </div>
 
                   {/* Stake */}
                   <div className="text-center">
-                    <p className="text-xs text-gray-500">Stake Grok</p>
-                    <p className="text-lg font-bold text-gray-900">${apuesta.stake_grok.toLocaleString()}</p>
+                    <p className="text-xs text-slate-500 uppercase">Stake</p>
+                    <p className="text-lg font-bold text-slate-300 font-mono">
+                      ${apuesta.stake_grok.toLocaleString()}
+                    </p>
                   </div>
 
-                  {/* Estado */}
-                  <div className="flex items-center gap-2">
+                  {/* Resultado */}
+                  <div className="flex items-center gap-2 min-w-[100px]">
                     {getResultadoIcon(apuesta.resultado)}
-                    <span className={`text-sm font-medium ${
-                      apuesta.resultado === 'GANADA' ? 'text-green-600' :
-                      apuesta.resultado === 'PERDIDA' ? 'text-red-600' : 'text-yellow-600'
+                    <span className={`text-sm font-medium font-mono ${
+                      apuesta.resultado === 'GANADA' ? 'text-emerald-400' :
+                      apuesta.resultado === 'PERDIDA' ? 'text-red-400' : 'text-amber-400'
                     }`}>
                       {apuesta.resultado}
                     </span>
@@ -202,18 +207,27 @@ export default function ApuestasPage() {
 
                   {/* Filtro IA */}
                   <div>
-                    <span className={apuesta.filtro_claude === 'APROBADA' ? 'badge-success' : 'badge-danger'}>
-                      {apuesta.filtro_claude === 'APROBADA' ? '✓ IA' : '✗ IA'}
-                    </span>
+                    {apuesta.filtro_claude === 'APROBADA' ? (
+                      <span className="badge-ia">
+                        <Brain className="h-3.5 w-3.5 animate-glow" />
+                        IA ✓
+                      </span>
+                    ) : (
+                      <span className="badge-ia-rejected">
+                        <Brain className="h-3.5 w-3.5" />
+                        IA ✗
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Análisis IA */}
               {apuesta.analisis && (
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium text-gray-700">Análisis IA:</span> {apuesta.analisis}
+                <div className="mt-4 pt-4 border-t border-slate-700/50">
+                  <p className="text-sm text-slate-400">
+                    <span className="text-emerald-400 font-medium">Análisis IA:</span>{' '}
+                    {apuesta.analisis}
                   </p>
                 </div>
               )}
@@ -221,6 +235,15 @@ export default function ApuestasPage() {
           ))}
         </div>
       )}
+
+      {/* Footer Status */}
+      <div className="flex items-center justify-between text-xs text-slate-600 pt-4 border-t border-slate-800/50">
+        <span className="font-mono">Mostrando {filteredApuestas.length} de {apuestas.length}</span>
+        <span className="font-mono flex items-center gap-1.5">
+          <Zap className="h-3 w-3 text-emerald-500" />
+          Actualización automática
+        </span>
+      </div>
     </div>
   );
 }
