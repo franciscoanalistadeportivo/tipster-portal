@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { TrendingUp, TrendingDown, Users, Calendar, Target, AlertTriangle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Calendar, Target, AlertTriangle, ArrowRight, Zap } from 'lucide-react';
 import { tipstersAPI, apuestasAPI, recomendacionesAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 
@@ -32,7 +32,6 @@ export default function DashboardPage() {
           recomendacionesAPI.get(),
         ]);
 
-        // Encontrar el top tipster
         const tipsters = tipstersRes.tipsters || [];
         const topTipster = tipsters.length > 0 
           ? tipsters.reduce((prev: any, curr: any) => 
@@ -56,7 +55,6 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  // Calcular días restantes de suscripción
   const getDiasRestantes = () => {
     if (!user?.suscripcion_hasta) return 0;
     const hasta = new Date(user.suscripcion_hasta);
@@ -68,111 +66,113 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl lg:text-3xl font-display font-bold text-white">
           Hola, {user?.nombre || 'Usuario'} 👋
         </h1>
-        <p className="text-gray-600">
+        <p className="text-navy-400 mt-1">
           Bienvenido al Director de Riesgos
         </p>
       </div>
 
       {/* Alerta de suscripción */}
       {user?.plan === 'FREE_TRIAL' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 p-2 rounded-full">
-              <Calendar className="h-5 w-5 text-blue-600" />
+        <div className="bg-gradient-to-r from-gold-500/10 to-gold-600/10 border border-gold-500/30 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-gold-500/20 p-3 rounded-xl">
+              <Calendar className="h-6 w-6 text-gold-400" />
             </div>
             <div>
-              <p className="font-medium text-blue-900">Período de Prueba</p>
-              <p className="text-sm text-blue-700">Te quedan {getDiasRestantes()} días de prueba gratis</p>
+              <p className="font-semibold text-gold-400">Período de Prueba</p>
+              <p className="text-sm text-gold-300/70">Te quedan {getDiasRestantes()} días de prueba gratis</p>
             </div>
           </div>
-          <Link href="/dashboard/suscripcion" className="btn-primary text-sm">
-            Suscribirse
+          <Link href="/dashboard/suscripcion" className="btn-gold text-sm whitespace-nowrap">
+            Suscribirse Ahora
           </Link>
         </div>
       )}
 
       {user?.plan === 'EXPIRED' && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
+        <div className="bg-gradient-to-r from-red-500/10 to-red-600/10 border border-red-500/30 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-red-500/20 p-3 rounded-xl">
+              <AlertTriangle className="h-6 w-6 text-red-400" />
+            </div>
             <div>
-              <p className="font-medium text-red-900">Suscripción Expirada</p>
-              <p className="text-sm text-red-700">Renueva tu suscripción para continuar</p>
+              <p className="font-semibold text-red-400">Suscripción Expirada</p>
+              <p className="text-sm text-red-300/70">Renueva tu suscripción para continuar</p>
             </div>
           </div>
-          <Link href="/dashboard/suscripcion" className="btn-primary text-sm bg-red-600 hover:bg-red-700">
+          <Link href="/dashboard/suscripcion" className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors whitespace-nowrap">
             Renovar Ahora
           </Link>
         </div>
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Tipsters Activos</p>
-              <p className="text-3xl font-bold text-gray-900">{data.totalTipsters}</p>
+              <p className="text-sm text-navy-400">Tipsters Activos</p>
+              <p className="text-3xl font-display font-bold text-white mt-1">{data.totalTipsters}</p>
             </div>
-            <div className="bg-primary-100 p-3 rounded-full">
-              <Users className="h-6 w-6 text-primary-600" />
+            <div className="bg-emerald-500/10 p-3 rounded-xl">
+              <Users className="h-6 w-6 text-emerald-400" />
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Apuestas Hoy</p>
-              <p className="text-3xl font-bold text-gray-900">{data.apuestasHoy}</p>
+              <p className="text-sm text-navy-400">Apuestas Hoy</p>
+              <p className="text-3xl font-display font-bold text-white mt-1">{data.apuestasHoy}</p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <Calendar className="h-6 w-6 text-green-600" />
+            <div className="bg-gold-500/10 p-3 rounded-xl">
+              <Calendar className="h-6 w-6 text-gold-400" />
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Top Tipster</p>
-              <p className="text-lg font-bold text-gray-900">{data.topTipster?.alias || '-'}</p>
+              <p className="text-sm text-navy-400">Top Tipster</p>
+              <p className="text-lg font-display font-bold text-white mt-1">{data.topTipster?.alias || '-'}</p>
               {data.topTipster && (
-                <p className="text-sm text-green-600 flex items-center gap-1">
+                <p className="text-sm text-emerald-400 flex items-center gap-1 mt-1">
                   <TrendingUp className="h-4 w-4" />
                   ${data.topTipster.ganancia.toLocaleString()}
                 </p>
               )}
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <Target className="h-6 w-6 text-yellow-600" />
+            <div className="bg-emerald-500/10 p-3 rounded-xl">
+              <Target className="h-6 w-6 text-emerald-400" />
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Alertas</p>
-              <p className="text-3xl font-bold text-gray-900">{data.alertas.length}</p>
+              <p className="text-sm text-navy-400">Alertas</p>
+              <p className="text-3xl font-display font-bold text-white mt-1">{data.alertas.length}</p>
               {data.alertas.length > 0 && (
-                <p className="text-sm text-red-600">Tipsters en mala racha</p>
+                <p className="text-sm text-red-400 mt-1">Tipsters en mala racha</p>
               )}
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <AlertTriangle className="h-6 w-6 text-red-600" />
+            <div className="bg-red-500/10 p-3 rounded-xl">
+              <AlertTriangle className="h-6 w-6 text-red-400" />
             </div>
           </div>
         </div>
@@ -180,42 +180,48 @@ export default function DashboardPage() {
 
       {/* Quick Links */}
       <div className="grid md:grid-cols-2 gap-6">
-        <Link href="/dashboard/apuestas" className="card hover:shadow-lg transition-shadow group">
-          <div className="flex items-center gap-4">
-            <div className="bg-green-100 p-4 rounded-lg group-hover:bg-green-200 transition-colors">
-              <Calendar className="h-8 w-8 text-green-600" />
+        <Link href="/dashboard/apuestas" className="card group hover:border-emerald-500/30">
+          <div className="flex items-center gap-5">
+            <div className="bg-emerald-500/10 p-4 rounded-xl group-hover:bg-emerald-500/20 transition-colors">
+              <Calendar className="h-8 w-8 text-emerald-400" />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Ver Apuestas de Hoy</h3>
-              <p className="text-gray-600">Revisa todas las apuestas activas</p>
+            <div className="flex-1">
+              <h3 className="text-lg font-display font-bold text-white group-hover:text-emerald-400 transition-colors">
+                Ver Apuestas de Hoy
+              </h3>
+              <p className="text-navy-400 text-sm mt-1">Revisa todas las apuestas activas</p>
             </div>
+            <ArrowRight className="h-5 w-5 text-navy-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
           </div>
         </Link>
 
-        <Link href="/dashboard/recomendaciones" className="card hover:shadow-lg transition-shadow group">
-          <div className="flex items-center gap-4">
-            <div className="bg-yellow-100 p-4 rounded-lg group-hover:bg-yellow-200 transition-colors">
-              <Target className="h-8 w-8 text-yellow-600" />
+        <Link href="/dashboard/recomendaciones" className="card group hover:border-gold-500/30">
+          <div className="flex items-center gap-5">
+            <div className="bg-gold-500/10 p-4 rounded-xl group-hover:bg-gold-500/20 transition-colors">
+              <Zap className="h-8 w-8 text-gold-400" />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Recomendaciones IA</h3>
-              <p className="text-gray-600">Top tipsters y apuestas seguras</p>
+            <div className="flex-1">
+              <h3 className="text-lg font-display font-bold text-white group-hover:text-gold-400 transition-colors">
+                Recomendaciones IA
+              </h3>
+              <p className="text-navy-400 text-sm mt-1">Top tipsters y apuestas seguras</p>
             </div>
+            <ArrowRight className="h-5 w-5 text-navy-500 group-hover:text-gold-400 group-hover:translate-x-1 transition-all" />
           </div>
         </Link>
       </div>
 
       {/* Alertas de mala racha */}
       {data.alertas.length > 0 && (
-        <div className="card border-l-4 border-red-500">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
+        <div className="card border-l-4 border-l-red-500">
+          <h3 className="text-lg font-display font-bold text-white mb-4 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
             Tipsters en Mala Racha (Evitar)
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {data.alertas.map((alerta, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
-                <span className="font-medium">{alerta.alias}</span>
+              <div key={index} className="flex items-center justify-between py-3 border-b border-navy-700/50 last:border-0">
+                <span className="font-medium text-white">{alerta.alias}</span>
                 <span className="badge-danger flex items-center gap-1">
                   <TrendingDown className="h-4 w-4" />
                   Racha {alerta.racha}
