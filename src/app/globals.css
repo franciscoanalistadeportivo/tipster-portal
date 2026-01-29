@@ -1,71 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos base */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+/* ============================================
+   ROOT VARIABLES - PALETA PREMIUM
+   ============================================ */
+:root {
+  /* Navy - Colores primarios */
+  --navy-950: #0a1929;
+  --navy-900: #102a43;
+  --navy-800: #243b53;
+  --navy-700: #334e68;
+  --navy-600: #486581;
+  --navy-500: #627d98;
+  --navy-400: #829ab1;
+  --navy-300: #9fb3c8;
+  --navy-200: #bcccdc;
+  --navy-100: #d9e2ec;
+  
+  /* Emerald - CTAs */
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+  
+  /* Gold - Acentos */
+  --gold-400: #fbbf24;
+  --gold-500: #f59e0b;
+  --gold-600: #d97706;
 }
 
-/* Componentes personalizados */
+/* ============================================
+   BASE STYLES
+   ============================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Poppins', system-ui, sans-serif;
+  background-color: var(--navy-950);
+  color: var(--navy-100);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================
+   COMPONENT STYLES
+   ============================================ */
 @layer components {
+  /* Botón primario - Verde Esmeralda */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-6 rounded-lg 
+           transition-all duration-300 transform hover:scale-105 hover:shadow-glow-emerald
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
   }
 
+  /* Botón secundario */
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-transparent border-2 border-navy-300 text-navy-100 font-semibold py-3 px-6 rounded-lg 
+           transition-all duration-300 hover:bg-navy-800 hover:border-navy-200;
   }
 
+  /* Botón gold/urgencia */
+  .btn-gold {
+    @apply bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 
+           text-navy-950 font-bold py-3 px-6 rounded-lg transition-all duration-300 
+           transform hover:scale-105 hover:shadow-glow-gold;
+  }
+
+  /* Input field */
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200;
+    @apply w-full px-4 py-3 bg-navy-800 border border-navy-600 rounded-lg 
+           text-white placeholder-navy-400 
+           focus:ring-2 focus:ring-emerald-500 focus:border-transparent 
+           outline-none transition-all duration-300;
   }
 
+  /* Card premium */
   .card {
-    @apply bg-white rounded-xl shadow-md p-6;
+    @apply bg-white/5 backdrop-blur-sm rounded-2xl p-6 
+           border border-navy-700/50 shadow-card
+           transition-all duration-300 hover:shadow-card-hover hover:border-navy-600/50;
   }
 
+  /* Card blanca (para contenido importante) */
+  .card-light {
+    @apply bg-white rounded-2xl p-6 shadow-card
+           transition-all duration-300 hover:shadow-card-hover;
+  }
+
+  /* Badges */
   .badge-success {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
+           bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
   }
 
   .badge-danger {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
+           bg-red-500/20 text-red-400 border border-red-500/30;
   }
 
   .badge-warning {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
+           bg-gold-500/20 text-gold-400 border border-gold-500/30;
   }
 
   .badge-info {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
+           bg-blue-500/20 text-blue-400 border border-blue-500/30;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply bg-gradient-to-br from-navy-800/80 to-navy-900/80 rounded-xl p-5
+           border border-navy-700/50 backdrop-blur-sm;
   }
 }
 
-/* Animaciones */
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.5);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
-/* Scrollbar personalizada */
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Stagger animations */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+/* ============================================
+   GRADIENT BACKGROUNDS
+   ============================================ */
+.bg-hero-gradient {
+  background: linear-gradient(135deg, #0a1929 0%, #102a43 40%, #243b53 100%);
+}
+
+.bg-card-gradient {
+  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+}
+
+.bg-cta-gradient {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Noise texture overlay */
+.noise-overlay {
+  position: relative;
+}
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+/* ============================================
+   SCROLLBAR CUSTOM
+   ============================================ */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--navy-900);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--navy-600);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: var(--navy-500);
+}
+
+/* ============================================
+   SELECTION
+   ============================================ */
+::selection {
+  background: var(--emerald-500);
+  color: white;
+}
+
+/* ============================================
+   FOCUS VISIBLE
+   ============================================ */
+*:focus-visible {
+  outline: 2px solid var(--emerald-500);
+  outline-offset: 2px;
 }
