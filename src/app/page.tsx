@@ -1,298 +1,251 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { 
-  TrendingUp, Shield, Zap, BarChart3, Users, Trophy, 
-  CheckCircle, ArrowRight, Star, Target, ChevronRight
+  TrendingUp, TrendingDown, Users, Calendar, Target, AlertTriangle, 
+  ArrowRight, Zap, Activity, ChevronRight, Brain
 } from 'lucide-react';
+import { tipstersAPI, apuestasAPI, recomendacionesAPI } from '@/lib/api';
+import { useAuthStore } from '@/lib/store';
 
-export default function Home() {
+interface DashboardData {
+  totalTipsters: number;
+  apuestasHoy: number;
+  topTipster: { alias: string; ganancia: number } | null;
+  alertas: { alias: string; racha: number }[];
+}
+
+export default function DashboardPage() {
+  const user = useAuthStore((state) => state.user);
+  const [data, setData] = useState<DashboardData>({
+    totalTipsters: 0,
+    apuestasHoy: 0,
+    topTipster: null,
+    alertas: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [tipstersRes, apuestasRes, recomendacionesRes] = await Promise.all([
+          tipstersAPI.getAll(),
+          apuestasAPI.getHoy(),
+          recomendacionesAPI.get(),
+        ]);
+
+        const tipsters = tipstersRes.tipsters || [];
+        const topTipster = tipsters.length > 0 
+          ? tipsters.reduce((prev: any, curr: any) => 
+              curr.ganancia_total > prev.ganancia_total ? curr : prev
+            )
+          : null;
+
+        setData({
+          totalTipsters: tipsters.length,
+          apuestasHoy: apuestasRes.total || 0,
+          topTipster: topTipster ? { alias: topTipster.alias, ganancia: topTipster.ganancia_total } : null,
+          alertas: recomendacionesRes.evitar || [],
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const getDiasRestantes = () => {
+    if (!user?.suscripcion_hasta) return 0;
+    const hasta = new Date(user.suscripcion_hasta);
+    const hoy = new Date();
+    const diff = Math.ceil((hasta.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diff);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Activity className="h-8 w-8 text-emerald-500 animate-pulse" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-hero-gradient noise-overlay">
+    <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-navy-950/80 backdrop-blur-md border-b border-navy-800/50">
-        <div className="container mx-auto px-4 lg:px-8">
-          <nav className="flex justify-between items-center h-16 lg:h-20">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2 rounded-xl">
-                <Trophy className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-xl lg:text-2xl font-display font-bold text-white">
-                Tipster<span className="text-emerald-400">Portal</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-3 lg:gap-4">
-              <Link 
-                href="/login" 
-                className="hidden sm:block text-navy-200 hover:text-white font-medium transition-colors"
-              >
-                Iniciar Sesión
-              </Link>
-              <Link 
-                href="/registro" 
-                className="btn-primary text-sm lg:text-base"
-              >
-                Comenzar Gratis
-              </Link>
-            </div>
-          </nav>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">
+            Centro de Operaciones
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Bienvenido, <span className="text-slate-300">{user?.nombre || 'Operador'}</span>
+          </p>
         </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="pt-32 lg:pt-40 pb-20 lg:pb-32">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/30 rounded-full px-4 py-2 mb-8 animate-fadeInUp">
-              <Star className="h-4 w-4 text-gold-400" />
-              <span className="text-gold-400 text-sm font-medium">5 Días de Prueba Gratis</span>
-            </div>
-
-            {/* Title */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-display font-bold text-white mb-6 animate-fadeInUp stagger-1 leading-tight">
-              Análisis de Tipsters con{' '}
-              <span className="bg-gradient-to-r from-emerald-400 to-emerald-500 bg-clip-text text-transparent">
-                Inteligencia Artificial
-              </span>
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-lg lg:text-xl text-navy-300 mb-10 max-w-2xl mx-auto animate-fadeInUp stagger-2">
-              Accede a estadísticas detalladas de +24 tipsters profesionales. 
-              Nuestro Director de Riesgos analiza cada apuesta para maximizar tus ganancias.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp stagger-3">
-              <Link href="/registro" className="btn-gold text-lg px-8 py-4 flex items-center justify-center gap-2">
-                Comenzar 5 Días Gratis
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link href="#como-funciona" className="btn-secondary text-lg px-8 py-4">
-                ¿Cómo Funciona?
-              </Link>
-            </div>
-
-            {/* Trust indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-12 animate-fadeInUp stagger-4">
-              <div className="flex items-center gap-2 text-navy-400">
-                <Shield className="h-5 w-5 text-emerald-500" />
-                <span className="text-sm">100% Seguro</span>
-              </div>
-              <div className="flex items-center gap-2 text-navy-400">
-                <CheckCircle className="h-5 w-5 text-emerald-500" />
-                <span className="text-sm">Sin tarjeta requerida</span>
-              </div>
-              <div className="flex items-center gap-2 text-navy-400">
-                <Zap className="h-5 w-5 text-emerald-500" />
-                <span className="text-sm">Acceso inmediato</span>
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
+          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+          Sistema Activo
         </div>
-      </section>
+      </div>
 
-      {/* Stats Section */}
-      <section className="py-16 lg:py-20 bg-navy-900/50 border-y border-navy-800/50">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {[
-              { value: '24+', label: 'Tipsters Verificados', icon: Users },
-              { value: '1000+', label: 'Apuestas Analizadas', icon: BarChart3 },
-              { value: '78%', label: 'Tasa de Acierto', icon: Target },
-              { value: 'IA', label: 'Director de Riesgos', icon: Shield },
-            ].map((stat, index) => (
-              <div 
-                key={index} 
-                className="stat-card text-center animate-fadeInUp"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <stat.icon className="h-8 w-8 text-emerald-500 mx-auto mb-3" />
-                <div className="text-3xl lg:text-4xl font-display font-bold text-white mb-1">
-                  {stat.value}
-                </div>
-                <div className="text-navy-400 text-sm">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="como-funciona" className="py-20 lg:py-32">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-display font-bold text-white mb-4">
-              ¿Cómo Funciona?
-            </h2>
-            <p className="text-navy-300 max-w-2xl mx-auto">
-              Nuestro sistema analiza automáticamente cada apuesta con inteligencia artificial avanzada
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: BarChart3,
-                title: 'Estadísticas Detalladas',
-                description: 'ROI, rachas, porcentaje de aciertos y más métricas de cada tipster en tiempo real.',
-                color: 'emerald'
-              },
-              {
-                icon: Shield,
-                title: 'Análisis EV+',
-                description: 'Cada apuesta analizada con probabilidad real, Expected Value y nivel de riesgo.',
-                color: 'gold'
-              },
-              {
-                icon: Zap,
-                title: 'Recomendaciones IA',
-                description: 'Top tipsters del mes y las apuestas más seguras del día, seleccionadas por IA.',
-                color: 'emerald'
-              }
-            ].map((feature, index) => (
-              <div 
-                key={index} 
-                className="card-light group animate-fadeInUp"
-                style={{ animationDelay: `${index * 0.15}s` }}
-              >
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 ${
-                  feature.color === 'emerald' 
-                    ? 'bg-emerald-500/10 text-emerald-600' 
-                    : 'bg-gold-500/10 text-gold-600'
-                }`}>
-                  <feature.icon className="h-7 w-7" />
-                </div>
-                <h3 className="text-xl font-display font-bold text-navy-900 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-navy-600 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="py-20 lg:py-32 bg-navy-900/30">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-display font-bold text-white mb-4">
-              Plan Simple y Accesible
-            </h2>
-            <p className="text-navy-300">
-              Sin sorpresas, todo incluido. Cancela cuando quieras.
-            </p>
-          </div>
-
-          <div className="max-w-lg mx-auto">
-            <div className="card-light relative overflow-hidden">
-              {/* Badge 5 días gratis */}
-              <div className="absolute top-0 right-0">
-                <div className="bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 text-sm font-bold px-4 py-2 rounded-bl-xl">
-                  5 DÍAS GRATIS
-                </div>
-              </div>
-
-              <div className="pt-8 text-center">
-                <h3 className="text-2xl font-display font-bold text-navy-900">Premium</h3>
-                <div className="my-6">
-                  <span className="text-5xl lg:text-6xl font-display font-bold text-navy-900">$15.000</span>
-                  <span className="text-navy-500 ml-2">CLP/mes</span>
-                </div>
-                
-                <ul className="text-left space-y-4 mb-8">
-                  {[
-                    'Acceso a +24 tipsters verificados',
-                    'Estadísticas completas en tiempo real',
-                    'Apuestas del día filtradas por IA',
-                    'Análisis EV+ de cada apuesta',
-                    'Recomendaciones diarias personalizadas',
-                    'Alertas de tipsters en racha',
-                  ].map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-navy-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link 
-                  href="/registro" 
-                  className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2 animate-pulse-glow"
-                >
-                  Comenzar Prueba Gratis
-                  <ChevronRight className="h-5 w-5" />
-                </Link>
-                
-                <p className="text-sm text-navy-500 mt-4">
-                  Sin tarjeta de crédito • Cancela cuando quieras
-                </p>
-              </div>
+      {/* Alerta de suscripción */}
+      {user?.plan === 'FREE_TRIAL' && (
+        <div className="card-ops border-l-4 border-l-amber-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fadeInUp stagger-1">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 rounded-lg bg-amber-500/10">
+              <Calendar className="h-5 w-5 text-amber-400" />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 lg:py-28">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-3xl p-8 lg:p-16 text-center relative overflow-hidden">
-            {/* Decorative elements */}
-            <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full translate-x-1/2 translate-y-1/2"></div>
-            
-            <div className="relative z-10">
-              <h2 className="text-3xl lg:text-4xl font-display font-bold text-white mb-4">
-                ¿Listo para mejorar tus apuestas?
-              </h2>
-              <p className="text-emerald-100 mb-8 max-w-xl mx-auto text-lg">
-                Únete a cientos de apostadores que ya usan nuestro Director de Riesgos con IA
+            <div>
+              <p className="font-semibold text-amber-400 text-sm">Período de Prueba Activo</p>
+              <p className="text-xs text-slate-500 font-mono mt-0.5">
+                {getDiasRestantes()} días restantes
               </p>
-              <Link 
-                href="/registro" 
-                className="inline-flex items-center gap-2 bg-white text-emerald-700 font-bold py-4 px-8 rounded-lg text-lg transition-all hover:bg-emerald-50 hover:scale-105"
-              >
-                Comenzar Ahora
-                <ArrowRight className="h-5 w-5" />
-              </Link>
             </div>
           </div>
+          <Link href="/dashboard/suscripcion" className="btn-gold text-sm py-2 px-4">
+            Actualizar Plan
+          </Link>
         </div>
-      </section>
+      )}
 
-      {/* Footer */}
-      <footer className="bg-navy-950 border-t border-navy-800/50 py-12">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2 rounded-xl">
-                <Trophy className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-lg font-display font-bold text-white">
-                Tipster<span className="text-emerald-400">Portal</span>
-              </span>
+      {/* Stats Cards Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Tipsters Activos */}
+        <div className="stat-card animate-fadeInUp stagger-1">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-wider">Tipsters</p>
+              <p className="text-3xl font-bold text-white mt-1 font-mono">{data.totalTipsters}</p>
+              <p className="text-xs text-slate-500 mt-1">activos</p>
             </div>
-            <p className="text-navy-500 text-sm">
-              © 2026 TipsterPortal. Todos los derechos reservados.
-            </p>
-            <div className="flex items-center gap-6">
-              <Link href="#" className="text-navy-400 hover:text-white text-sm transition-colors">
-                Términos
-              </Link>
-              <Link href="#" className="text-navy-400 hover:text-white text-sm transition-colors">
-                Privacidad
-              </Link>
-              <Link href="#" className="text-navy-400 hover:text-white text-sm transition-colors">
-                Contacto
-              </Link>
+            <div className="p-2 rounded-lg bg-emerald-500/10">
+              <Users className="h-5 w-5 text-emerald-400" strokeWidth={1.5} />
             </div>
           </div>
         </div>
-      </footer>
+
+        {/* Apuestas Hoy */}
+        <div className="stat-card animate-fadeInUp stagger-2">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-wider">Hoy</p>
+              <p className="text-3xl font-bold text-white mt-1 font-mono">{data.apuestasHoy}</p>
+              <p className="text-xs text-slate-500 mt-1">apuestas</p>
+            </div>
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <Calendar className="h-5 w-5 text-blue-400" strokeWidth={1.5} />
+            </div>
+          </div>
+        </div>
+
+        {/* Top Tipster */}
+        <div className="stat-card animate-fadeInUp stagger-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-wider">Top Performer</p>
+              <p className="text-lg font-bold text-white mt-1 truncate max-w-[120px]">
+                {data.topTipster?.alias || '—'}
+              </p>
+              {data.topTipster && (
+                <p className="text-sm text-emerald-400 font-mono flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3" />
+                  +${Math.abs(data.topTipster.ganancia).toLocaleString()}
+                </p>
+              )}
+            </div>
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Target className="h-5 w-5 text-amber-400" strokeWidth={1.5} />
+            </div>
+          </div>
+        </div>
+
+        {/* Alertas */}
+        <div className="stat-card animate-fadeInUp stagger-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-wider">Alertas</p>
+              <p className="text-3xl font-bold text-white mt-1 font-mono">{data.alertas.length}</p>
+              <p className="text-xs text-red-400 mt-1">
+                {data.alertas.length > 0 ? 'requieren atención' : 'sin alertas'}
+              </p>
+            </div>
+            <div className={`p-2 rounded-lg ${data.alertas.length > 0 ? 'bg-red-500/10' : 'bg-slate-700/50'}`}>
+              <AlertTriangle className={`h-5 w-5 ${data.alertas.length > 0 ? 'text-red-400' : 'text-slate-500'}`} strokeWidth={1.5} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <Link href="/dashboard/apuestas" className="card-ops group hover:border-emerald-500/30 animate-fadeInUp stagger-3">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-lg bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
+              <Calendar className="h-6 w-6 text-emerald-400" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                Apuestas del Día
+              </h3>
+              <p className="text-sm text-slate-500 mt-0.5">Monitor de operaciones activas</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-slate-600 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+          </div>
+        </Link>
+
+        <Link href="/dashboard/recomendaciones" className="card-ops group hover:border-amber-500/30 animate-fadeInUp stagger-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
+              <Brain className="h-6 w-6 text-amber-400" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">
+                Análisis IA
+              </h3>
+              <p className="text-sm text-slate-500 mt-0.5">Recomendaciones inteligentes</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+          </div>
+        </Link>
+      </div>
+
+      {/* Alertas de mala racha */}
+      {data.alertas.length > 0 && (
+        <div className="card-ops border-l-4 border-l-red-500 animate-fadeInUp stagger-5">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <h3 className="font-semibold text-white">Tipsters en Mala Racha</h3>
+            <span className="badge-danger ml-auto">Evitar</span>
+          </div>
+          <div className="space-y-2">
+            {data.alertas.map((alerta, index) => (
+              <div 
+                key={index} 
+                className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-red-500/5 border border-red-500/10 table-row-hover"
+              >
+                <span className="text-sm text-slate-300">{alerta.alias}</span>
+                <span className="font-mono text-sm text-red-400 flex items-center gap-1">
+                  <TrendingDown className="h-3.5 w-3.5" />
+                  {alerta.racha}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Footer Status */}
+      <div className="flex items-center justify-between text-xs text-slate-600 pt-4 border-t border-slate-800/50">
+        <span className="font-mono">Última actualización: hace 5 min</span>
+        <span className="font-mono flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+          API conectada
+        </span>
+      </div>
     </div>
   );
 }
