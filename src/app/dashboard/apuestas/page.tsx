@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar, CheckCircle, XCircle, Clock, Brain, Zap } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, Clock, Zap, TrendingUp, Filter } from 'lucide-react';
 import { apuestasAPI } from '@/lib/api';
 
 interface Apuesta {
@@ -13,6 +13,7 @@ interface Apuesta {
   stake_tipster: number;
   stake_grok: number;
   resultado: string;
+  ganancia_neta: number;
   filtro_claude: string;
   analisis: string;
 }
@@ -21,7 +22,7 @@ export default function ApuestasPage() {
   const [apuestas, setApuestas] = useState<Apuesta[]>([]);
   const [fecha, setFecha] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<'todas' | 'aprobadas' | 'pendientes'>('todas');
+  const [filter, setFilter] = useState<'todas' | 'ia' | 'pendientes' | 'ganadas'>('todas');
 
   useEffect(() => {
     const fetchApuestas = async () => {
@@ -40,66 +41,47 @@ export default function ApuestasPage() {
   }, []);
 
   const filteredApuestas = apuestas.filter((a) => {
-    if (filter === 'aprobadas') return a.filtro_claude === 'APROBADA';
+    if (filter === 'ia') return a.filtro_claude === 'APROBADA';
     if (filter === 'pendientes') return a.resultado === 'PENDIENTE';
+    if (filter === 'ganadas') return a.resultado === 'GANADA';
     return true;
   });
 
-  const getRowClass = (resultado: string) => {
-    switch (resultado) {
-      case 'GANADA':
-        return 'row-won';
-      case 'PERDIDA':
-        return 'row-lost';
-      default:
-        return 'row-pending';
-    }
-  };
-
-  const getResultadoIcon = (resultado: string) => {
-    switch (resultado) {
-      case 'GANADA':
-        return <CheckCircle className="h-4 w-4 text-emerald-400" />;
-      case 'PERDIDA':
-        return <XCircle className="h-4 w-4 text-red-400" />;
-      default:
-        return <Clock className="h-4 w-4 text-amber-400" />;
-    }
-  };
-
-  const getDeporteBadgeClass = (deporte: string) => {
-    const map: { [key: string]: string } = {
-      Futbol: 'badge-sport futbol',
-      Tenis: 'badge-sport tenis',
-      NBA: 'badge-sport nba',
-      Voleibol: 'badge-sport voleibol',
-      Mixto: 'badge-sport mixto',
-    };
-    return map[deporte] || 'badge-sport';
-  };
-
   const stats = {
     total: apuestas.length,
-    aprobadas: apuestas.filter(a => a.filtro_claude === 'APROBADA').length,
-    pendientes: apuestas.filter(a => a.resultado === 'PENDIENTE').length,
     ganadas: apuestas.filter(a => a.resultado === 'GANADA').length,
+    perdidas: apuestas.filter(a => a.resultado === 'PERDIDA').length,
+    pendientes: apuestas.filter(a => a.resultado === 'PENDIENTE').length,
+    iaApproved: apuestas.filter(a => a.filtro_claude === 'APROBADA').length,
+    gananciaTotal: apuestas.reduce((acc, a) => acc + (a.ganancia_neta || 0), 0)
+  };
+
+  const getDeporteIcon = (deporte: string) => {
+    const icons: { [key: string]: string } = {
+      'Futbol': '⚽',
+      'Tenis': '🎾',
+      'NBA': '🏀',
+      'Voleibol': '🏐',
+      'Mixto': '🎯'
+    };
+    return icons[deporte] || '🎯';
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-3 border-[#00D1B2]/30 border-t-[#00D1B2] rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn pb-20 lg:pb-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Monitor de Apuestas</h1>
-          <p className="text-slate-500 text-sm mt-1 flex items-center gap-2">
+          <p className="text-[#94A3B8] mt-1 flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             {fecha ? new Date(fecha).toLocaleDateString('es-CL', { 
               weekday: 'long', 
@@ -108,125 +90,144 @@ export default function ApuestasPage() {
             }) : 'Hoy'}
           </p>
         </div>
+      </div>
 
-        {/* Filtros */}
-        <div className="flex gap-2">
-          {[
-            { key: 'todas', label: `Todas (${stats.total})` },
-            { key: 'aprobadas', label: `IA ✓ (${stats.aprobadas})` },
-            { key: 'pendientes', label: `Live (${stats.pendientes})` },
-          ].map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                filter === f.key
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+      {/* Totales */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="stat-card">
+          <p className="text-2xl font-bold text-white font-mono">{stats.total}</p>
+          <p className="text-xs text-[#94A3B8]">Total</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-2xl font-bold text-[#00D1B2] font-mono">{stats.ganadas}</p>
+          <p className="text-xs text-[#94A3B8]">Ganadas</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-2xl font-bold text-[#EF4444] font-mono">{stats.perdidas}</p>
+          <p className="text-xs text-[#94A3B8]">Perdidas</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-2xl font-bold text-[#FFDD57] font-mono">{stats.pendientes}</p>
+          <p className="text-xs text-[#94A3B8]">Pendientes</p>
+        </div>
+        <div className="stat-card col-span-2 lg:col-span-1">
+          <p className={`text-2xl font-bold font-mono ${stats.gananciaTotal >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+            {stats.gananciaTotal >= 0 ? '+' : ''}{stats.gananciaTotal.toLocaleString()}
+          </p>
+          <p className="text-xs text-[#94A3B8]">Ganancia Neta</p>
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-3">
-        <div className="stat-card py-3">
-          <p className="text-2xl font-bold text-white font-mono text-center">{stats.total}</p>
-          <p className="text-[10px] text-slate-500 uppercase text-center mt-1">Total</p>
-        </div>
-        <div className="stat-card py-3">
-          <p className="text-2xl font-bold text-emerald-400 font-mono text-center">{stats.aprobadas}</p>
-          <p className="text-[10px] text-slate-500 uppercase text-center mt-1">IA Aprobadas</p>
-        </div>
-        <div className="stat-card py-3">
-          <p className="text-2xl font-bold text-amber-400 font-mono text-center">{stats.pendientes}</p>
-          <p className="text-[10px] text-slate-500 uppercase text-center mt-1">Pendientes</p>
-        </div>
-        <div className="stat-card py-3">
-          <p className="text-2xl font-bold text-emerald-400 font-mono text-center">{stats.ganadas}</p>
-          <p className="text-[10px] text-slate-500 uppercase text-center mt-1">Ganadas</p>
-        </div>
+      {/* Filtros Tab */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {[
+          { key: 'todas', label: `Todas (${stats.total})` },
+          { key: 'ia', label: `IA ✓ (${stats.iaApproved})` },
+          { key: 'pendientes', label: `Pendientes (${stats.pendientes})` },
+          { key: 'ganadas', label: `Ganadas (${stats.ganadas})` },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setFilter(tab.key as any)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              filter === tab.key
+                ? 'bg-[#00D1B2] text-white'
+                : 'bg-[#1E293B] text-[#94A3B8] hover:bg-[#334155]'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Lista de Apuestas */}
       {filteredApuestas.length === 0 ? (
-        <div className="card-ops text-center py-16">
-          <Calendar className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-500">No hay apuestas {filter !== 'todas' ? 'con este filtro' : 'para hoy'}</p>
+        <div className="card-elite text-center py-16">
+          <Calendar className="h-12 w-12 text-[#334155] mx-auto mb-4" />
+          <p className="text-[#94A3B8]">No hay apuestas {filter !== 'todas' ? 'con este filtro' : 'para hoy'}</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filteredApuestas.map((apuesta, index) => (
             <div 
               key={apuesta.id} 
-              className={`card-ops ${getRowClass(apuesta.resultado)} table-row-hover animate-fadeInUp`}
+              className={`card-elite table-row-hover animate-fadeInUp ${
+                apuesta.resultado === 'GANADA' ? 'row-won' :
+                apuesta.resultado === 'PERDIDA' ? 'row-lost' : 'row-pending'
+              }`}
               style={{ animationDelay: `${index * 0.03}s` }}
             >
               <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                {/* Info principal */}
+                {/* Info Principal */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={getDeporteBadgeClass(apuesta.deporte)}>
-                      {apuesta.deporte}
-                    </span>
-                    <span className="text-slate-600">•</span>
-                    <span className="text-sm text-emerald-400 font-medium">{apuesta.tipster_alias}</span>
+                    <span className="text-xl">{getDeporteIcon(apuesta.deporte)}</span>
+                    <span className="text-sm text-[#00D1B2] font-medium">{apuesta.tipster_alias}</span>
+                    {apuesta.filtro_claude === 'APROBADA' && (
+                      <span className="badge-ia">
+                        <Zap className="h-3 w-3" />
+                        IA
+                      </span>
+                    )}
                   </div>
                   <p className="text-white font-medium">{apuesta.apuesta}</p>
                 </div>
 
-                {/* Datos numéricos */}
-                <div className="flex items-center gap-6 lg:gap-8">
+                {/* Datos */}
+                <div className="flex items-center gap-4 lg:gap-6">
                   {/* Cuota */}
                   <div className="text-center">
-                    <p className="text-xs text-slate-500 uppercase">Cuota</p>
-                    <p className="text-xl font-bold text-white font-mono">{apuesta.cuota}</p>
+                    <p className="text-xs text-[#94A3B8]">Cuota</p>
+                    <p className="text-xl font-bold text-white font-mono">@{apuesta.cuota}</p>
                   </div>
 
                   {/* Stake */}
                   <div className="text-center">
-                    <p className="text-xs text-slate-500 uppercase">Stake</p>
-                    <p className="text-lg font-bold text-slate-300 font-mono">
-                      ${apuesta.stake_grok.toLocaleString()}
+                    <p className="text-xs text-[#94A3B8]">Stake</p>
+                    <p className="text-lg font-bold text-[#94A3B8] font-mono">
+                      ${apuesta.stake_grok?.toLocaleString()}
                     </p>
                   </div>
 
                   {/* Resultado */}
-                  <div className="flex items-center gap-2 min-w-[100px]">
-                    {getResultadoIcon(apuesta.resultado)}
-                    <span className={`text-sm font-medium font-mono ${
-                      apuesta.resultado === 'GANADA' ? 'text-emerald-400' :
-                      apuesta.resultado === 'PERDIDA' ? 'text-red-400' : 'text-amber-400'
-                    }`}>
-                      {apuesta.resultado}
-                    </span>
-                  </div>
-
-                  {/* Filtro IA */}
-                  <div>
-                    {apuesta.filtro_claude === 'APROBADA' ? (
-                      <span className="badge-ia">
-                        <Brain className="h-3.5 w-3.5 animate-glow" />
-                        IA ✓
-                      </span>
+                  <div className="min-w-[100px]">
+                    {apuesta.resultado === 'GANADA' ? (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#00D1B2]/10">
+                        <CheckCircle className="h-4 w-4 text-[#00D1B2]" />
+                        <span className="text-sm font-bold text-[#00D1B2] font-mono">GANADA</span>
+                      </div>
+                    ) : apuesta.resultado === 'PERDIDA' ? (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#EF4444]/10">
+                        <XCircle className="h-4 w-4 text-[#EF4444]" />
+                        <span className="text-sm font-bold text-[#EF4444] font-mono">PERDIDA</span>
+                      </div>
                     ) : (
-                      <span className="badge-ia-rejected">
-                        <Brain className="h-3.5 w-3.5" />
-                        IA ✗
-                      </span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#FFDD57]/10">
+                        <Clock className="h-4 w-4 text-[#FFDD57]" />
+                        <span className="text-sm font-bold text-[#FFDD57] font-mono">PENDIENTE</span>
+                      </div>
                     )}
                   </div>
+
+                  {/* Ganancia */}
+                  {apuesta.resultado !== 'PENDIENTE' && (
+                    <div className="text-right">
+                      <p className="text-xs text-[#94A3B8]">P/L</p>
+                      <p className={`text-lg font-bold font-mono ${
+                        (apuesta.ganancia_neta || 0) >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'
+                      }`}>
+                        {(apuesta.ganancia_neta || 0) >= 0 ? '+' : ''}{(apuesta.ganancia_neta || 0).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Análisis IA */}
+              {/* Análisis */}
               {apuesta.analisis && (
-                <div className="mt-4 pt-4 border-t border-slate-700/50">
-                  <p className="text-sm text-slate-400">
-                    <span className="text-emerald-400 font-medium">Análisis IA:</span>{' '}
+                <div className="mt-4 pt-4 border-t border-[#334155]">
+                  <p className="text-sm text-[#94A3B8]">
+                    <span className="text-[#00D1B2] font-medium">Análisis IA:</span>{' '}
                     {apuesta.analisis}
                   </p>
                 </div>
@@ -236,13 +237,18 @@ export default function ApuestasPage() {
         </div>
       )}
 
-      {/* Footer Status */}
-      <div className="flex items-center justify-between text-xs text-slate-600 pt-4 border-t border-slate-800/50">
-        <span className="font-mono">Mostrando {filteredApuestas.length} de {apuestas.length}</span>
-        <span className="font-mono flex items-center gap-1.5">
-          <Zap className="h-3 w-3 text-emerald-500" />
-          Actualización automática
-        </span>
+      {/* Barra flotante de ganancia (mobile) */}
+      <div className="fixed bottom-16 left-4 right-4 lg:hidden">
+        <div className={`rounded-xl p-3 flex items-center justify-between ${
+          stats.gananciaTotal >= 0 ? 'bg-[#00D1B2]/20 border border-[#00D1B2]/30' : 'bg-[#EF4444]/20 border border-[#EF4444]/30'
+        }`}>
+          <span className="text-white font-medium">Ganancia Neta Hoy</span>
+          <span className={`text-xl font-bold font-mono ${
+            stats.gananciaTotal >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'
+          }`}>
+            {stats.gananciaTotal >= 0 ? '+' : ''}${stats.gananciaTotal.toLocaleString()}
+          </span>
+        </div>
       </div>
     </div>
   );
