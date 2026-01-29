@@ -31,14 +31,16 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth debe usarse dentro de AuthProvider');
+  if (!context) {
+    throw new Error('useAuth debe usarse dentro de AuthProvider');
+  }
   return context;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
 
 // ============================================
-// UTILIDAD PARA LLAMADAS API SEGURAS
+// FETCH HELPER
 // ============================================
 export async function adminFetch(
   endpoint: string, 
@@ -59,18 +61,13 @@ export async function adminFetch(
     headers['X-CSRF-Token'] = csrfToken;
   }
   
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers
-  });
-  
-  return response;
+  return fetch(`${API_URL}${endpoint}`, { ...options, headers });
 }
 
 // ============================================
 // AUTH PROVIDER
 // ============================================
-export function AdminAuthProvider({ children }: { children: ReactNode }) {
+function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
@@ -167,7 +164,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 }
 
 // ============================================
-// SIDEBAR NAVIGATION
+// NAVIGATION
 // ============================================
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -179,9 +176,9 @@ const navigation = [
 ];
 
 // ============================================
-// ADMIN LAYOUT COMPONENT
+// ADMIN LAYOUT CONTENT
 // ============================================
-export default function AdminLayout({ children }: { children: ReactNode }) {
+function AdminLayoutContent({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
@@ -213,7 +210,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-slate-800 border-r border-slate-700 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-700">
           <Link href="/admin" className="flex items-center gap-2">
@@ -261,9 +257,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="lg:pl-64">
-        {/* Top bar */}
         <header className="h-16 bg-slate-800/50 border-b border-slate-700 flex items-center justify-between px-4 lg:px-6">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
             <Menu className="w-6 h-6" />
@@ -274,11 +268,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </Link>
         </header>
 
-        {/* Page content */}
         <main className="p-4 lg:p-6">
           {children}
         </main>
       </div>
     </div>
+  );
+}
+
+// ============================================
+// MAIN LAYOUT EXPORT
+// ============================================
+export default function AdminLayout({ children }: { children: ReactNode }) {
+  return (
+    <AuthProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AuthProvider>
   );
 }
