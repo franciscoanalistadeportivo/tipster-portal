@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, Users, Calendar, Target, AlertTriangle, 
   ChevronRight, Zap, Trophy, Clock, Star, ArrowUpRight
 } from 'lucide-react';
-import { tipstersAPI, apuestasAPI, recomendacionesAPI } from '@/lib/api';
+import { dashboardAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 
 interface DashboardData {
@@ -97,25 +97,15 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [tipstersRes, apuestasRes, recomendacionesRes] = await Promise.all([
-          tipstersAPI.getAll(),
-          apuestasAPI.getHoy(),
-          recomendacionesAPI.get(),
-        ]);
-
-        const tipsters = tipstersRes.tipsters || [];
-        const topTipster = tipsters.length > 0 
-          ? tipsters.reduce((prev: any, curr: any) => 
-              curr.ganancia_total > prev.ganancia_total ? curr : prev
-            )
-          : null;
-
+        // Usa el endpoint público que combina todos los datos
+        const dashboardData = await dashboardAPI.getData();
+        
         setData({
-          totalTipsters: tipsters.length,
-          apuestasHoy: apuestasRes.total || 0,
-          topTipster: topTipster ? { alias: topTipster.alias, ganancia: topTipster.ganancia_total } : null,
-          alertas: recomendacionesRes.evitar || [],
-          apuestasRecientes: (apuestasRes.apuestas || []).slice(0, 3)
+          totalTipsters: dashboardData.tipsters?.total || 0,
+          apuestasHoy: dashboardData.apuestas?.total || 0,
+          topTipster: dashboardData.topTipster || null,
+          alertas: dashboardData.alertas || [],
+          apuestasRecientes: (dashboardData.apuestas?.apuestas || []).slice(0, 3)
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
