@@ -3,7 +3,6 @@
  * SEGURIDAD:
  * - Tokens almacenados en memoria (no localStorage para evitar XSS)
  * - Refresh automático de tokens
- * - Sanitización de respuestas
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
@@ -11,7 +10,6 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
 
 // Almacenamiento en memoria (más seguro que localStorage)
-// MITIGA: XSS no puede robar tokens de memoria
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 
@@ -21,7 +19,7 @@ const api: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 segundos timeout
+  timeout: 10000,
 });
 
 // Interceptor para agregar token a requests
@@ -41,7 +39,6 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
 
-    // Si el token expiró y tenemos refresh token
     if (error.response?.status === 401 && refreshToken && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -56,7 +53,6 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh falló, limpiar tokens
         clearTokens();
         window.location.href = '/login';
         return Promise.reject(refreshError);
@@ -71,7 +67,6 @@ api.interceptors.response.use(
 export const setTokens = (access: string, refresh: string) => {
   accessToken = access;
   refreshToken = refresh;
-  // Guardar refresh en sessionStorage (se borra al cerrar pestaña)
   if (typeof window !== 'undefined') {
     sessionStorage.setItem('refresh_token', refresh);
   }
@@ -146,6 +141,21 @@ export const tipstersAPI = {
 
   getById: async (id: number) => {
     const response = await api.get(`/api/tipsters/${id}`);
+    return response.data;
+  },
+};
+
+// ============================================================================
+// BANCA API (NUEVO)
+// ============================================================================
+export const bancaAPI = {
+  get: async () => {
+    const response = await api.get('/api/usuario/banca');
+    return response.data;
+  },
+
+  update: async (banca: number) => {
+    const response = await api.put('/api/usuario/banca', { banca });
     return response.data;
   },
 };
