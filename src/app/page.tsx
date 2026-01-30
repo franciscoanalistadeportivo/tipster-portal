@@ -51,9 +51,9 @@ const GainsTicker = () => {
   }, []);
   
   return (
-    <div className="inline-flex items-center gap-2 bg-[#00D1B2]/10 border border-[#00D1B2]/30 rounded-full px-4 py-2">
-      <span className="w-2 h-2 bg-[#00D1B2] rounded-full animate-pulse" />
-      <span className="text-[#00D1B2] text-sm">
+    <div className="inline-flex items-center gap-2 bg-[#00FF88]/10 border border-[#00FF88]/30 rounded-full px-4 py-2">
+      <span className="w-2 h-2 bg-[#00FF88] rounded-full animate-pulse" />
+      <span className="text-[#00FF88] text-sm">
         {gains[currentIndex].user} ganó <span className="font-bold">{gains[currentIndex].amount}</span> con {gains[currentIndex].tipster}
       </span>
     </div>
@@ -62,13 +62,13 @@ const GainsTicker = () => {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0F172A]">
+    <div className="min-h-screen bg-[#050505]">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-[#334155]">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#050505]/90 backdrop-blur-md border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-[#00D1B2] p-1.5 rounded-lg">
-              <Trophy className="h-5 w-5 text-white" />
+            <div className="bg-[#00FF88] p-1.5 rounded-lg">
+              <Trophy className="h-5 w-5 text-[#050505]" />
             </div>
             <span className="font-bold text-lg text-white">TipsterPortal</span>
           </div>
@@ -77,7 +77,7 @@ export default function LandingPage() {
             <Link href="/login" className="text-[#94A3B8] hover:text-white transition text-sm">
               Iniciar Sesión
             </Link>
-            <Link href="/registro" className="btn-primary text-sm py-2 px-4">
+            <Link href="/registro" className="bg-[#00FF88] hover:bg-[#00E07A] text-[#050505] font-semibold text-sm py-2 px-4 rounded-lg transition">
               Comenzar Gratis
             </Link>
           </div>
@@ -85,8 +85,14 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="pt-32 pb-20 px-6 relative">
+        {/* Grid sutil de fondo */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(#00FF88 1px, transparent 1px), linear-gradient(90deg, #00FF88 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
+        }} />
+        
+        <div className="max-w-4xl mx-auto text-center relative">
           {/* Ticker */}
           <div className="mb-8">
             <GainsTicker />
@@ -95,7 +101,7 @@ export default function LandingPage() {
           {/* Headline */}
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Sigue a los mejores
-            <span className="text-gradient-teal block">tipsters verificados</span>
+            <span className="text-[#00FF88] block">tipsters verificados</span>
           </h1>
           
           <p className="text-xl text-[#94A3B8] mb-8 max-w-2xl mx-auto">
@@ -106,7 +112,7 @@ export default function LandingPage() {
           {/* Stats */}
           <div className="flex flex-wrap justify-center gap-8 mb-10">
             <div className="text-center">
-              <p className="text-3xl font-bold text-[#00D1B2] font-mono">
+              <p className="text-3xl font-bold text-[#00FF88] font-mono">
                 <AnimatedCounter value={847} suffix="K" />
               </p>
               <p className="text-[#94A3B8] text-sm">Ganados este mes</p>
@@ -123,7 +129,7 @@ export default function LandingPage() {
           
           {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/registro" className="btn-pulse flex items-center gap-2">
+            <Link href="/registro" className="bg-[#00FF88] hover:bg-[#00E07A] text-[#050505] font-bold py-4 px-8 rounded-lg transition flex items-center gap-2 shadow-[0_0_30px_rgba(0,255,136,0.3)]">
               Comenzar 5 Días Gratis
               <ArrowRight className="h-5 w-5" />
             </Link>
@@ -133,16 +139,16 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="py-20 px-6 bg-[#1E293B]/30">
+      <section className="py-20 px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-white text-center mb-12">
             ¿Por qué elegirnos?
           </h2>
           
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="card-elite text-center">
-              <div className="w-14 h-14 bg-[#00D1B2]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-7 w-7 text-[#00D1B2]" />
+            <div className="bg-[#0A0A0A] border border-white/5 rounded-xl p-6 text-center hover:border-[#00FF88]/30 transition">
+              <div className="w-14 h-14 bg-[#00FF88]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-7 w-7 text-[#00FF88]" />
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Tipsters Verificados</h3>
               <p className="text-[#94A3B8] text-sm">
@@ -150,9 +156,9 @@ export default function LandingPage() {
               </p>
             </div>
             
-            <div className="card-elite text-center">
-              <div className="w-14 h-14 bg-[#FFDD57]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Zap className="h-7 w-7 text-[#FFDD57]" />
+            <div className="bg-[#0A0A0A] border border-white/5 rounded-xl p-6 text-center hover:border-[#00FF88]/30 transition">
+              <div className="w-14 h-14 bg-[#FFD700]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Zap className="h-7 w-7 text-[#FFD700]" />
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Análisis con IA</h3>
               <p className="text-[#94A3B8] text-sm">
@@ -160,7 +166,7 @@ export default function LandingPage() {
               </p>
             </div>
             
-            <div className="card-elite text-center">
+            <div className="bg-[#0A0A0A] border border-white/5 rounded-xl p-6 text-center hover:border-[#00FF88]/30 transition">
               <div className="w-14 h-14 bg-[#3B82F6]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Target className="h-7 w-7 text-[#3B82F6]" />
               </div>
@@ -174,7 +180,7 @@ export default function LandingPage() {
       </section>
 
       {/* Top Tipsters */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 bg-[#0A0A0A]">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-white text-center mb-4">
             Top Tipsters del Mes
@@ -185,13 +191,13 @@ export default function LandingPage() {
           
           <div className="grid md:grid-cols-3 gap-6">
             {/* Top 1 */}
-            <div className="card-premium relative">
-              <div className="absolute -top-3 left-4 bg-[#FFDD57] text-[#0F172A] text-xs font-bold px-3 py-1 rounded-full">
+            <div className="bg-[#050505] border-2 border-[#FFD700]/50 rounded-xl p-6 relative">
+              <div className="absolute -top-3 left-4 bg-[#FFD700] text-[#050505] text-xs font-bold px-3 py-1 rounded-full">
                 🥇 #1 DEL MES
               </div>
               <div className="pt-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-[#FFDD57]/20 rounded-full flex items-center justify-center text-xl">
+                  <div className="w-12 h-12 bg-[#FFD700]/20 rounded-full flex items-center justify-center text-xl">
                     ⚽
                   </div>
                   <div>
@@ -201,7 +207,7 @@ export default function LandingPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div>
-                    <p className="text-[#00D1B2] font-mono font-bold">+32%</p>
+                    <p className="text-[#00FF88] font-mono font-bold">+32%</p>
                     <p className="text-[#64748B] text-xs">ROI</p>
                   </div>
                   <div>
@@ -209,7 +215,7 @@ export default function LandingPage() {
                     <p className="text-[#64748B] text-xs">Win Rate</p>
                   </div>
                   <div>
-                    <p className="text-[#00D1B2] font-mono font-bold">+8</p>
+                    <p className="text-[#00FF88] font-mono font-bold">+8</p>
                     <p className="text-[#64748B] text-xs">Racha</p>
                   </div>
                 </div>
@@ -217,7 +223,7 @@ export default function LandingPage() {
             </div>
             
             {/* Top 2 */}
-            <div className="card-elite">
+            <div className="bg-[#050505] border border-white/10 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-xl">
                   🎾
@@ -229,7 +235,7 @@ export default function LandingPage() {
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
-                  <p className="text-[#00D1B2] font-mono font-bold">+25%</p>
+                  <p className="text-[#00FF88] font-mono font-bold">+25%</p>
                   <p className="text-[#64748B] text-xs">ROI</p>
                 </div>
                 <div>
@@ -237,14 +243,14 @@ export default function LandingPage() {
                   <p className="text-[#64748B] text-xs">Win Rate</p>
                 </div>
                 <div>
-                  <p className="text-[#00D1B2] font-mono font-bold">+5</p>
+                  <p className="text-[#00FF88] font-mono font-bold">+5</p>
                   <p className="text-[#64748B] text-xs">Racha</p>
                 </div>
               </div>
             </div>
             
             {/* Top 3 */}
-            <div className="card-elite">
+            <div className="bg-[#050505] border border-white/10 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-xl">
                   🏀
@@ -256,7 +262,7 @@ export default function LandingPage() {
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
-                  <p className="text-[#00D1B2] font-mono font-bold">+28%</p>
+                  <p className="text-[#00FF88] font-mono font-bold">+28%</p>
                   <p className="text-[#64748B] text-xs">ROI</p>
                 </div>
                 <div>
@@ -264,7 +270,7 @@ export default function LandingPage() {
                   <p className="text-[#64748B] text-xs">Win Rate</p>
                 </div>
                 <div>
-                  <p className="text-[#00D1B2] font-mono font-bold">+3</p>
+                  <p className="text-[#00FF88] font-mono font-bold">+3</p>
                   <p className="text-[#64748B] text-xs">Racha</p>
                 </div>
               </div>
@@ -272,7 +278,7 @@ export default function LandingPage() {
           </div>
           
           <div className="text-center mt-8">
-            <Link href="/registro" className="text-[#00D1B2] hover:underline">
+            <Link href="/registro" className="text-[#00FF88] hover:underline">
               Ver los 24 tipsters →
             </Link>
           </div>
@@ -280,7 +286,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="py-20 px-6 bg-[#1E293B]/30">
+      <section className="py-20 px-6">
         <div className="max-w-lg mx-auto">
           <h2 className="text-3xl font-bold text-white text-center mb-4">
             Un solo plan, acceso total
@@ -289,8 +295,8 @@ export default function LandingPage() {
             Sin trucos. Sin niveles. Todo incluido.
           </p>
           
-          <div className="card-hero relative">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#00D1B2] text-white text-sm font-bold px-4 py-1 rounded-full">
+          <div className="bg-[#0A0A0A] border-2 border-[#00FF88] rounded-xl p-8 relative">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#00FF88] text-[#050505] text-sm font-bold px-4 py-1 rounded-full">
               ACCESO COMPLETO
             </div>
             
@@ -313,13 +319,13 @@ export default function LandingPage() {
                 "Soporte prioritario"
               ].map((feature, i) => (
                 <li key={i} className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-[#00D1B2] flex-shrink-0" />
+                  <CheckCircle className="h-5 w-5 text-[#00FF88] flex-shrink-0" />
                   <span className="text-[#94A3B8]">{feature}</span>
                 </li>
               ))}
             </ul>
             
-            <Link href="/registro" className="btn-pulse w-full flex items-center justify-center gap-2">
+            <Link href="/registro" className="w-full bg-[#00FF88] hover:bg-[#00E07A] text-[#050505] font-bold py-4 rounded-lg transition flex items-center justify-center gap-2">
               Comenzar 5 Días Gratis
               <ArrowRight className="h-5 w-5" />
             </Link>
@@ -332,7 +338,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 bg-[#0A0A0A]">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-white text-center mb-12">
             Lo que dicen nuestros miembros
@@ -344,19 +350,19 @@ export default function LandingPage() {
               { name: "María P.", gain: "+$89,200", text: "El análisis de IA me ayuda a filtrar las apuestas. Ya no apuesto por impulso, solo picks con EV+." },
               { name: "Roberto S.", gain: "+$156,800", text: "Probé gratis y el primer día gané. Ahora soy premium y no me arrepiento. 100% recomendado." },
             ].map((testimonial, i) => (
-              <div key={i} className="card-elite">
+              <div key={i} className="bg-[#050505] border border-white/5 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-[#00D1B2]/10 rounded-full flex items-center justify-center text-[#00D1B2] font-bold">
+                  <div className="w-10 h-10 bg-[#00FF88]/10 rounded-full flex items-center justify-center text-[#00FF88] font-bold">
                     {testimonial.name[0]}
                   </div>
                   <div>
                     <p className="font-medium text-white">{testimonial.name}</p>
-                    <p className="text-[#00D1B2] text-sm font-mono">{testimonial.gain}</p>
+                    <p className="text-[#00FF88] text-sm font-mono">{testimonial.gain}</p>
                   </div>
                 </div>
                 <p className="text-[#94A3B8] text-sm">"{testimonial.text}"</p>
                 <div className="flex gap-1 mt-4">
-                  {[1,2,3,4,5].map(s => <Star key={s} className="h-4 w-4 text-[#FFDD57] fill-[#FFDD57]" />)}
+                  {[1,2,3,4,5].map(s => <Star key={s} className="h-4 w-4 text-[#FFD700] fill-[#FFD700]" />)}
                 </div>
               </div>
             ))}
@@ -365,10 +371,10 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-6 bg-[#1E293B]/30">
+      <section className="py-20 px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-[#00D1B2] p-3 rounded-xl w-fit mx-auto mb-6">
-            <Trophy className="h-8 w-8 text-white" />
+          <div className="bg-[#00FF88] p-3 rounded-xl w-fit mx-auto mb-6">
+            <Trophy className="h-8 w-8 text-[#050505]" />
           </div>
           <h2 className="text-3xl font-bold text-white mb-4">
             ¿Listo para ganar?
@@ -376,7 +382,7 @@ export default function LandingPage() {
           <p className="text-[#94A3B8] mb-8">
             Únete a los 12,450+ apostadores que ya están ganando con picks verificados y análisis IA.
           </p>
-          <Link href="/registro" className="btn-pulse inline-flex items-center gap-2">
+          <Link href="/registro" className="bg-[#00FF88] hover:bg-[#00E07A] text-[#050505] font-bold py-4 px-8 rounded-lg transition inline-flex items-center gap-2 shadow-[0_0_30px_rgba(0,255,136,0.3)]">
             Comenzar Gratis Ahora
             <ArrowRight className="h-5 w-5" />
           </Link>
@@ -384,10 +390,10 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-10 px-6 border-t border-[#334155]">
+      <footer className="py-10 px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-[#00D1B2]" />
+            <Trophy className="h-5 w-5 text-[#00FF88]" />
             <span className="font-bold text-white">TipsterPortal</span>
           </div>
           <p className="text-[#64748B] text-sm">
