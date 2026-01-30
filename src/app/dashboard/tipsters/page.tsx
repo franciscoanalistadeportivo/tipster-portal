@@ -1,281 +1,341 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Search, TrendingUp, TrendingDown, Filter, ChevronRight, Trophy, Star } from 'lucide-react';
-import { tipstersAPI } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { Trophy, Search, Edit, Save, X, Eye, EyeOff, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface Tipster {
   id: number;
+  nombre_real: string;
   alias: string;
   deporte: string;
-  total_apuestas: number;
-  ganadas: number;
-  perdidas: number;
-  porcentaje_acierto: number;
-  ganancia_total: number;
+  activo: boolean;
+  total_apuestas?: number;
+  ganadas?: number;
+  perdidas?: number;
+  roi?: number;
+  racha?: number;
 }
 
-// Win Rate Circle Component
-const WinRateCircle = ({ percentage }: { percentage: number }) => {
-  const radius = 24;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-  
-  return (
-    <div className="win-rate-circle">
-      <svg width="60" height="60" viewBox="0 0 60 60">
-        {/* Background circle */}
-        <circle
-          cx="30"
-          cy="30"
-          r={radius}
-          fill="none"
-          stroke="#334155"
-          strokeWidth="4"
-        />
-        {/* Progress circle */}
-        <circle
-          cx="30"
-          cy="30"
-          r={radius}
-          fill="none"
-          stroke={percentage >= 60 ? '#00D1B2' : percentage >= 40 ? '#FFDD57' : '#EF4444'}
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          style={{ transition: 'stroke-dashoffset 1s ease-out' }}
-        />
-      </svg>
-      <span className="percentage font-mono">{percentage}%</span>
-    </div>
-  );
-};
-
-// Sparkline Component
-const Sparkline = ({ positive }: { positive: boolean }) => {
-  const points = positive 
-    ? "0,18 8,15 16,16 24,10 32,12 40,8 48,5 56,7 64,3"
-    : "0,5 8,8 16,6 24,12 32,10 40,15 48,14 56,18 64,20";
-  
-  return (
-    <svg width="70" height="25" viewBox="0 0 70 25" className="ml-auto">
-      <polyline
-        points={points}
-        className={positive ? 'sparkline-up' : 'sparkline-down'}
-      />
-    </svg>
-  );
-};
-
-export default function TipstersPage() {
+export default function AdminTipstersPage() {
   const [tipsters, setTipsters] = useState<Tipster[]>([]);
-  const [filteredTipsters, setFilteredTipsters] = useState<Tipster[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [deporteFilter, setDeporteFilter] = useState('Todos');
+  const [busqueda, setBusqueda] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ alias: '', deporte: '', activo: true });
+  const [showRealNames, setShowRealNames] = useState(false);
 
   useEffect(() => {
-    const fetchTipsters = async () => {
-      try {
-        const response = await tipstersAPI.getAll();
-        setTipsters(response.tipsters || []);
-        setFilteredTipsters(response.tipsters || []);
-      } catch (error) {
-        console.error('Error fetching tipsters:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchTipsters();
   }, []);
 
-  useEffect(() => {
-    let filtered = tipsters;
-
-    if (search) {
-      filtered = filtered.filter((t) =>
-        t.alias.toLowerCase().includes(search.toLowerCase())
+  const fetchTipsters = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/tipsters`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setTipsters(data.tipsters || []);
+      }
+    } catch (error) {
+      console.error('Error fetching tipsters:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    if (deporteFilter !== 'Todos') {
-      filtered = filtered.filter((t) => t.deporte === deporteFilter);
+  const startEdit = (tipster: Tipster) => {
+    setEditingId(tipster.id);
+    setEditForm({
+      alias: tipster.alias,
+      deporte: tipster.deporte,
+      activo: tipster.activo
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm({ alias: '', deporte: '', activo: true });
+  };
+
+  const saveEdit = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/tipsters/${id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(editForm)
+        }
+      );
+
+      if (response.ok) {
+        fetchTipsters();
+        cancelEdit();
+      }
+    } catch (error) {
+      console.error('Error actualizando tipster:', error);
     }
+  };
 
-    setFilteredTipsters(filtered);
-  }, [search, deporteFilter, tipsters]);
+  const toggleActivo = async (id: number, activo: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/tipsters/${id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ activo: !activo })
+        }
+      );
+      fetchTipsters();
+    } catch (error) {
+      console.error('Error toggling tipster:', error);
+    }
+  };
 
-  const deportes = ['Todos', ...Array.from(new Set(tipsters.map((t) => t.deporte)))];
+  const filteredTipsters = tipsters.filter(t => 
+    t.alias.toLowerCase().includes(busqueda.toLowerCase()) ||
+    t.nombre_real.toLowerCase().includes(busqueda.toLowerCase()) ||
+    t.deporte.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
-  // Top 3 tipsters
-  const topTipsters = [...tipsters]
-    .sort((a, b) => b.ganancia_total - a.ganancia_total)
-    .slice(0, 3);
+  const deportes = ['Futbol', 'Tenis', 'NBA', 'Voleibol', 'Mixto'];
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-10 h-10 border-3 border-[#00D1B2]/30 border-t-[#00D1B2] rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-3 border-[#00FF88]/30 border-t-[#00FF88] rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Directorio de Tipsters</h1>
-        <p className="text-[#94A3B8] mt-1">
-          <span className="font-mono text-[#00D1B2]">{filteredTipsters.length}</span> tipsters verificados
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-[#FFD700]" />
+            Gestión de Tipsters
+          </h1>
+          <p className="text-[#94A3B8] mt-1">Administra alias, deportes y estado</p>
+        </div>
+        
+        {/* Toggle nombres reales */}
+        <button
+          onClick={() => setShowRealNames(!showRealNames)}
+          className={`flex items-center gap-2 px-4 py-2 rounded transition ${
+            showRealNames 
+              ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30' 
+              : 'bg-white/5 text-[#94A3B8] border border-white/10'
+          }`}
+        >
+          {showRealNames ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {showRealNames ? 'Ocultar Nombres Reales' : 'Ver Nombres Reales'}
+        </button>
       </div>
 
-      {/* Top 3 Ranking */}
-      <div className="grid md:grid-cols-3 gap-4">
-        {topTipsters.map((tipster, idx) => (
-          <div 
-            key={tipster.id} 
-            className={`card-elite relative overflow-hidden animate-fadeInUp stagger-${idx + 1} ${
-              idx === 0 ? 'border-[#FFDD57]/30' : ''
-            }`}
-          >
-            {/* Medal Badge */}
-            <div className={`absolute top-3 right-3 p-1.5 rounded-full ${
-              idx === 0 ? 'bg-[#FFDD57]/20' : idx === 1 ? 'bg-slate-400/20' : 'bg-amber-600/20'
-            }`}>
-              <Trophy className={`h-4 w-4 ${
-                idx === 0 ? 'text-[#FFDD57]' : idx === 1 ? 'text-slate-400' : 'text-amber-600'
-              }`} />
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
-                idx === 0 ? 'bg-[#FFDD57]/20 text-[#FFDD57]' : 
-                idx === 1 ? 'bg-slate-400/20 text-slate-400' : 'bg-amber-600/20 text-amber-600'
-              }`}>
-                {idx + 1}
-              </div>
-              <div>
-                <p className="font-bold text-white">{tipster.alias}</p>
-                <p className="text-xs text-[#94A3B8]">{tipster.deporte}</p>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-[#00D1B2] font-mono font-bold flex items-center gap-1">
-                <TrendingUp className="h-4 w-4" />
-                +${tipster.ganancia_total.toLocaleString()}
-              </span>
-              <span className="text-xs text-[#94A3B8]">{tipster.porcentaje_acierto}% win</span>
-            </div>
-          </div>
-        ))}
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-4">
+          <p className="text-[#94A3B8] text-sm">Total Tipsters</p>
+          <p className="text-2xl font-bold text-white font-mono">{tipsters.length}</p>
+        </div>
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-4">
+          <p className="text-[#94A3B8] text-sm">Activos</p>
+          <p className="text-2xl font-bold text-[#00FF88] font-mono">
+            {tipsters.filter(t => t.activo).length}
+          </p>
+        </div>
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-4">
+          <p className="text-[#94A3B8] text-sm">Inactivos</p>
+          <p className="text-2xl font-bold text-[#EF4444] font-mono">
+            {tipsters.filter(t => !t.activo).length}
+          </p>
+        </div>
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-4">
+          <p className="text-[#94A3B8] text-sm">Deportes</p>
+          <p className="text-2xl font-bold text-white font-mono">
+            {new Set(tipsters.map(t => t.deporte)).size}
+          </p>
+        </div>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
+      {/* Búsqueda */}
+      <div className="bg-[#0A0A0A] border border-white/5 rounded-lg p-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B]" />
           <input
             type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar tipster..."
-            className="input-field pl-11"
+            placeholder="Buscar por alias, nombre real o deporte..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full bg-[#050505] border border-white/10 rounded pl-10 pr-4 py-2 text-white placeholder-[#64748B] focus:outline-none focus:border-[#00FF88]/50"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {deportes.map((deporte) => (
-            <button
-              key={deporte}
-              onClick={() => setDeporteFilter(deporte)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                deporteFilter === deporte
-                  ? 'bg-[#00D1B2] text-white'
-                  : 'bg-[#1E293B] text-[#94A3B8] hover:bg-[#334155]'
-              }`}
-            >
-              {deporte}
-            </button>
-          ))}
+      </div>
+
+      {/* Tabla de Tipsters */}
+      <div className="bg-[#0A0A0A] border border-white/5 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/5">
+                <th className="text-left text-[#94A3B8] text-xs font-medium uppercase tracking-wider px-4 py-3">ID</th>
+                {showRealNames && (
+                  <th className="text-left text-[#EF4444] text-xs font-medium uppercase tracking-wider px-4 py-3">
+                    🔒 Nombre Real
+                  </th>
+                )}
+                <th className="text-left text-[#94A3B8] text-xs font-medium uppercase tracking-wider px-4 py-3">Alias (Público)</th>
+                <th className="text-left text-[#94A3B8] text-xs font-medium uppercase tracking-wider px-4 py-3">Deporte</th>
+                <th className="text-center text-[#94A3B8] text-xs font-medium uppercase tracking-wider px-4 py-3">Estado</th>
+                <th className="text-center text-[#94A3B8] text-xs font-medium uppercase tracking-wider px-4 py-3">Apuestas</th>
+                <th className="text-center text-[#94A3B8] text-xs font-medium uppercase tracking-wider px-4 py-3">ROI</th>
+                <th className="text-center text-[#94A3B8] text-xs font-medium uppercase tracking-wider px-4 py-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTipsters.length === 0 ? (
+                <tr>
+                  <td colSpan={showRealNames ? 8 : 7} className="text-center text-[#94A3B8] py-8">
+                    No hay tipsters que coincidan con la búsqueda
+                  </td>
+                </tr>
+              ) : (
+                filteredTipsters.map((tipster) => (
+                  <tr key={tipster.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td className="px-4 py-3 text-sm text-[#64748B] font-mono">{tipster.id}</td>
+                    
+                    {showRealNames && (
+                      <td className="px-4 py-3 text-sm text-[#EF4444] font-medium">
+                        {tipster.nombre_real}
+                      </td>
+                    )}
+                    
+                    <td className="px-4 py-3">
+                      {editingId === tipster.id ? (
+                        <input
+                          type="text"
+                          value={editForm.alias}
+                          onChange={(e) => setEditForm({ ...editForm, alias: e.target.value })}
+                          className="bg-[#050505] border border-[#00FF88]/50 rounded px-2 py-1 text-white text-sm w-full"
+                        />
+                      ) : (
+                        <span className="text-white font-medium">{tipster.alias}</span>
+                      )}
+                    </td>
+                    
+                    <td className="px-4 py-3">
+                      {editingId === tipster.id ? (
+                        <select
+                          value={editForm.deporte}
+                          onChange={(e) => setEditForm({ ...editForm, deporte: e.target.value })}
+                          className="bg-[#050505] border border-[#00FF88]/50 rounded px-2 py-1 text-white text-sm"
+                        >
+                          {deportes.map(d => (
+                            <option key={d} value={d}>{d}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          tipster.deporte === 'Futbol' ? 'bg-[#00FF88]/10 text-[#00FF88]' :
+                          tipster.deporte === 'Tenis' ? 'bg-[#FFD700]/10 text-[#FFD700]' :
+                          tipster.deporte === 'NBA' ? 'bg-[#3B82F6]/10 text-[#3B82F6]' :
+                          'bg-white/10 text-white'
+                        }`}>
+                          {tipster.deporte}
+                        </span>
+                      )}
+                    </td>
+                    
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => toggleActivo(tipster.id, tipster.activo)}
+                        className={`px-2.5 py-1 rounded text-xs font-medium transition ${
+                          tipster.activo 
+                            ? 'bg-[#00FF88]/10 text-[#00FF88] hover:bg-[#00FF88]/20' 
+                            : 'bg-[#EF4444]/10 text-[#EF4444] hover:bg-[#EF4444]/20'
+                        }`}
+                      >
+                        {tipster.activo ? 'ACTIVO' : 'INACTIVO'}
+                      </button>
+                    </td>
+                    
+                    <td className="px-4 py-3 text-center text-sm text-white font-mono">
+                      {tipster.total_apuestas || 0}
+                    </td>
+                    
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-sm font-mono font-bold ${
+                        (tipster.roi || 0) >= 0 ? 'text-[#00FF88]' : 'text-[#EF4444]'
+                      }`}>
+                        {(tipster.roi || 0) >= 0 ? '+' : ''}{tipster.roi || 0}%
+                      </span>
+                    </td>
+                    
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-2">
+                        {editingId === tipster.id ? (
+                          <>
+                            <button
+                              onClick={() => saveEdit(tipster.id)}
+                              className="p-1.5 bg-[#00FF88]/10 hover:bg-[#00FF88]/20 rounded text-[#00FF88] transition"
+                              title="Guardar"
+                            >
+                              <Save className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              className="p-1.5 bg-[#EF4444]/10 hover:bg-[#EF4444]/20 rounded text-[#EF4444] transition"
+                              title="Cancelar"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => startEdit(tipster)}
+                            className="p-1.5 bg-white/5 hover:bg-white/10 rounded text-[#94A3B8] hover:text-white transition"
+                            title="Editar"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Grid de Tipsters */}
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredTipsters.map((tipster, index) => (
-          <div
-            key={tipster.id}
-            className="card-elite group animate-fadeInUp"
-            style={{ animationDelay: `${index * 0.03}s` }}
-          >
-            {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1E293B] to-[#334155] flex items-center justify-center">
-                  <span className="text-xl font-bold text-white">
-                    {tipster.alias.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-white">{tipster.alias}</h3>
-                  <span className="badge-sport text-[#94A3B8]">{tipster.deporte}</span>
-                </div>
-              </div>
-              <WinRateCircle percentage={tipster.porcentaje_acierto} />
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="text-center p-2 rounded-lg bg-[#0F172A]">
-                <p className="text-lg font-bold text-white font-mono">{tipster.total_apuestas}</p>
-                <p className="text-[10px] text-[#94A3B8]">Total</p>
-              </div>
-              <div className="text-center p-2 rounded-lg bg-[#0F172A]">
-                <p className="text-lg font-bold text-[#00D1B2] font-mono">{tipster.ganadas}</p>
-                <p className="text-[10px] text-[#94A3B8]">Ganadas</p>
-              </div>
-              <div className="text-center p-2 rounded-lg bg-[#0F172A]">
-                <p className="text-lg font-bold text-[#EF4444] font-mono">{tipster.perdidas}</p>
-                <p className="text-[10px] text-[#94A3B8]">Perdidas</p>
-              </div>
-            </div>
-
-            {/* Ganancia + Sparkline */}
-            <div className="flex items-center justify-between py-3 border-t border-[#334155]">
-              <div>
-                <p className="text-xs text-[#94A3B8]">Ganancia Total</p>
-                <p className={`text-xl font-bold font-mono flex items-center gap-1 ${
-                  tipster.ganancia_total >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'
-                }`}>
-                  {tipster.ganancia_total >= 0 ? (
-                    <TrendingUp className="h-4 w-4" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4" />
-                  )}
-                  ${Math.abs(tipster.ganancia_total).toLocaleString()}
-                </p>
-              </div>
-              <Sparkline positive={tipster.ganancia_total >= 0} />
-            </div>
-
-            {/* Button */}
-            <Link
-              href={`/dashboard/tipsters/${tipster.id}`}
-              className="btn-outline w-full mt-3 flex items-center justify-center gap-2 group-hover:border-[#00D1B2] group-hover:text-[#00D1B2]"
-            >
-              Ver Perfil
-              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        ))}
-      </div>
-
-      {filteredTipsters.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-[#94A3B8]">No se encontraron tipsters</p>
+      {/* Nota de seguridad */}
+      {showRealNames && (
+        <div className="bg-[#EF4444]/5 border border-[#EF4444]/20 rounded-lg p-4">
+          <p className="text-[#EF4444] text-sm flex items-center gap-2">
+            <span>⚠️</span>
+            <span>Los nombres reales son confidenciales y nunca se muestran a los usuarios del portal.</span>
+          </p>
         </div>
       )}
     </div>
