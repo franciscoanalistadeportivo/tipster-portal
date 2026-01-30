@@ -64,7 +64,7 @@ export default function ApuestasAdminPage() {
       const todas = data.apuestas || [];
       setAllApuestas(todas);
       
-      const uniqueTipsters = [...new Set(todas.map((a: Apuesta) => a.tipster_alias))].filter(Boolean).sort();
+      const uniqueTipsters = Array.from(new Set(todas.map((a: Apuesta) => a.tipster_alias))).filter(Boolean).sort();
       setTipsters(uniqueTipsters as string[]);
       
       let filtered = todas;
