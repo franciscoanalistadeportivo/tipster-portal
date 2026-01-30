@@ -117,7 +117,10 @@ export default function ApuestasAdminPage() {
         accessToken
       );
       if (response.ok) {
-        await loadApuestas();
+        // Actualizar estado local sin recargar toda la lista
+        const updatedData = { ...editData };
+        setApuestas(prev => prev.map(a => a.id === editingId ? { ...a, ...updatedData } : a));
+        setAllApuestas(prev => prev.map(a => a.id === editingId ? { ...a, ...updatedData } : a));
         setEditingId(null);
         setEditData({});
       }
@@ -138,7 +141,9 @@ export default function ApuestasAdminPage() {
         accessToken
       );
       if (response.ok) {
-        await loadApuestas();
+        // Actualizar estado local sin recargar
+        setApuestas(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+        setAllApuestas(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
       }
     } catch (error) {
       console.error('Error:', error);
@@ -148,8 +153,12 @@ export default function ApuestasAdminPage() {
   const deleteApuesta = async (id: number) => {
     if (!accessToken || !confirm(`¿Eliminar apuesta #${id}?`)) return;
     try {
-      await adminFetch(`/api/admin/apuestas/${id}`, { method: 'DELETE' }, accessToken);
-      await loadApuestas();
+      const response = await adminFetch(`/api/admin/apuestas/${id}`, { method: 'DELETE' }, accessToken);
+      if (response.ok) {
+        // Actualizar estado local sin recargar
+        setApuestas(prev => prev.filter(a => a.id !== id));
+        setAllApuestas(prev => prev.filter(a => a.id !== id));
+      }
     } catch (error) {
       console.error('Error:', error);
     }
