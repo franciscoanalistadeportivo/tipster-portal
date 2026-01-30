@@ -6,7 +6,7 @@ import { useAuth, adminFetch } from '../layout';
 
 interface SecurityLog {
   id: number;
-  tipo_evento: string;
+  tipo: string;
   ip_address: string;
   user_agent: string;
   detalles: string;
@@ -17,9 +17,8 @@ const EVENT_TYPES = [
   { value: '', label: 'Todos' },
   { value: 'LOGIN_EXITOSO', label: '✅ Login OK' },
   { value: 'LOGIN_FALLIDO', label: '❌ Login Fallido' },
-  { value: 'SQL_INJECTION_ATTEMPT', label: '🚨 SQL Injection' },
-  { value: 'XSS_ATTEMPT', label: '🚨 XSS' },
-  { value: 'RATE_LIMIT_EXCEEDED', label: '⚠️ Rate Limit' },
+  { value: 'BRUTE_FORCE', label: '🚨 Brute Force' },
+  { value: 'ACCESO_NO_AUTORIZADO', label: '⚠️ Acceso No Autorizado' },
 ];
 
 export default function SeguridadPage() {
@@ -39,29 +38,36 @@ export default function SeguridadPage() {
       const params = filterType ? `?tipo=${filterType}` : '';
       const response = await adminFetch(`/api/admin/security-logs${params}`, {}, accessToken);
       const data = await response.json();
-      setLogs(data);
+      setLogs(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error:', error);
+      setLogs([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const getEventIcon = (tipo: string) => {
-    if (tipo.includes('EXITOSO') || tipo.includes('SUCCESS')) return <CheckCircle className="w-4 h-4 text-emerald-400" />;
-    if (tipo.includes('FALLIDO') || tipo.includes('FAILED')) return <XCircle className="w-4 h-4 text-red-400" />;
-    if (tipo.includes('INJECTION') || tipo.includes('XSS')) return <AlertTriangle className="w-4 h-4 text-red-500" />;
+    if (tipo?.includes('EXITOSO') || tipo?.includes('SUCCESS')) return <CheckCircle className="w-4 h-4 text-emerald-400" />;
+    if (tipo?.includes('FALLIDO') || tipo?.includes('FAILED')) return <XCircle className="w-4 h-4 text-red-400" />;
+    if (tipo?.includes('BRUTE') || tipo?.includes('INJECTION')) return <AlertTriangle className="w-4 h-4 text-red-500" />;
     return <Eye className="w-4 h-4 text-gray-400" />;
   };
 
   const getEventColor = (tipo: string) => {
-    if (tipo.includes('EXITOSO') || tipo.includes('SUCCESS')) return 'border-l-emerald-500 bg-emerald-500/5';
-    if (tipo.includes('FALLIDO') || tipo.includes('FAILED')) return 'border-l-red-500 bg-red-500/5';
-    if (tipo.includes('INJECTION') || tipo.includes('XSS')) return 'border-l-red-600 bg-red-500/10';
+    if (tipo?.includes('EXITOSO') || tipo?.includes('SUCCESS')) return 'border-l-emerald-500 bg-emerald-500/5';
+    if (tipo?.includes('FALLIDO') || tipo?.includes('FAILED')) return 'border-l-red-500 bg-red-500/5';
+    if (tipo?.includes('BRUTE') || tipo?.includes('INJECTION')) return 'border-l-red-600 bg-red-500/10';
     return 'border-l-gray-500 bg-slate-700/30';
   };
 
-  const formatDate = (d: string) => new Date(d).toLocaleString('es-CL');
+  const formatDate = (d: string) => {
+    try {
+      return new Date(d).toLocaleString('es-CL');
+    } catch {
+      return d;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -96,19 +102,19 @@ export default function SeguridadPage() {
 
       <div className="space-y-2">
         {logs.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">No hay logs</div>
+          <div className="text-center py-12 text-gray-400">No hay logs de seguridad</div>
         ) : (
           logs.map((log) => (
-            <div key={log.id} className={`p-4 rounded-lg border-l-4 ${getEventColor(log.tipo_evento)}`}>
+            <div key={log.id} className={`p-4 rounded-lg border-l-4 ${getEventColor(log.tipo)}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {getEventIcon(log.tipo_evento)}
-                  <span className="text-white font-medium">{log.tipo_evento}</span>
+                  {getEventIcon(log.tipo)}
+                  <span className="text-white font-medium">{log.tipo || 'EVENTO'}</span>
                 </div>
                 <span className="text-gray-500 text-sm">{formatDate(log.created_at)}</span>
               </div>
               <div className="mt-2 text-sm text-gray-400">
-                <span className="bg-slate-700 px-2 py-0.5 rounded font-mono">{log.ip_address}</span>
+                <span className="bg-slate-700 px-2 py-0.5 rounded font-mono">{log.ip_address || 'N/A'}</span>
                 {log.detalles && <span className="ml-3">{log.detalles}</span>}
               </div>
             </div>
