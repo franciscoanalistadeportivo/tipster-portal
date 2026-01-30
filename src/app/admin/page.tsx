@@ -42,12 +42,12 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { title: 'Usuarios Totales', value: stats?.usuarios.total || 0, icon: Users, color: 'teal' },
-    { title: 'Premium Activos', value: stats?.usuarios.premium || 0, icon: DollarSign, color: 'emerald' },
-    { title: 'En Trial', value: stats?.usuarios.trial || 0, icon: Activity, color: 'amber' },
+    { title: 'Usuarios Totales', value: stats?.usuarios?.total || 0, icon: Users, color: 'teal' },
+    { title: 'Premium Activos', value: stats?.usuarios?.premium || 0, icon: DollarSign, color: 'emerald' },
+    { title: 'En Trial', value: stats?.usuarios?.trial || 0, icon: Activity, color: 'amber' },
     { title: 'Tipsters Activos', value: stats?.tipsters || 0, icon: Trophy, color: 'purple' },
     { title: 'Total Apuestas', value: stats?.apuestas || 0, icon: TrendingUp, color: 'blue' },
-    { title: 'Logins 24h', value: stats?.actividad.logins_24h || 0, icon: Shield, color: 'gray' },
+    { title: 'Logins 24h', value: stats?.actividad?.logins_24h || 0, icon: Shield, color: 'gray' },
   ];
 
   return (
@@ -65,21 +65,21 @@ export default function AdminDashboard() {
                 <p className="text-gray-400 text-sm">{card.title}</p>
                 <p className="text-3xl font-bold text-white mt-1">{card.value.toLocaleString()}</p>
               </div>
-              <div className={`w-12 h-12 rounded-xl bg-${card.color}-500/20 flex items-center justify-center`}>
-                <card.icon className={`w-6 h-6 text-${card.color}-400`} />
+              <div className="w-12 h-12 rounded-xl bg-slate-700 flex items-center justify-center">
+                <card.icon className="w-6 h-6 text-teal-400" />
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {stats?.actividad.ataques_24h > 0 && (
+      {(stats?.actividad?.ataques_24h ?? 0) > 0 && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <Shield className="w-6 h-6 text-red-400" />
             <div>
               <p className="text-red-400 font-semibold">Alerta de Seguridad</p>
-              <p className="text-gray-400 text-sm">{stats.actividad.ataques_24h} intentos de ataque detectados en las últimas 24 horas</p>
+              <p className="text-gray-400 text-sm">{stats?.actividad?.ataques_24h} intentos de ataque detectados en las últimas 24 horas</p>
             </div>
           </div>
         </div>
