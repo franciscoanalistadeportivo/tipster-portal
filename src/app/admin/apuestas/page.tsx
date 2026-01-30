@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
-  Search, Filter, Edit2, Save, X, RefreshCw, CheckCircle, 
-  XCircle, Clock, AlertTriangle, Database, Calendar
+  Search, Edit2, Save, X, RefreshCw, Database, Download, AlertTriangle
 } from 'lucide-react';
 import { useAuth, adminFetch } from '../layout';
 
@@ -21,49 +20,79 @@ interface Apuesta {
   racha_actual: number;
 }
 
+const TIPOS_MERCADO = [
+  'OVER GOLES', 'UNDER GOLES', 'AMBOS MARCAN', 'GANADOR', 'HANDICAP',
+  'OVER CORNERS', 'UNDER CORNERS', 'OVER TARJETAS', 'UNDER TARJETAS',
+  'COMBINADAS', 'TENIS', 'NBA', 'OTRO'
+];
+
+const RESULTADOS = ['PENDIENTE', 'GANADA', 'PERDIDA', 'NULA'];
+
 export default function ApuestasAdminPage() {
   const [apuestas, setApuestas] = useState<Apuesta[]>([]);
+  const [allApuestas, setAllApuestas] = useState<Apuesta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<Apuesta>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [filterResultado, setFilterResultado] = useState<string>('todos');
   const [filterFecha, setFilterFecha] = useState<string>('');
+  const [filterTipster, setFilterTipster] = useState<string>('todos');
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [tipsters, setTipsters] = useState<string[]>([]);
   const { accessToken } = useAuth();
 
-  useEffect(() => {
-    loadApuestas();
-  }, [accessToken, filterResultado, filterFecha]);
-
-  const loadApuestas = async () => {
+  const loadApuestas = useCallback(async () => {
     if (!accessToken) return;
     setIsLoading(true);
     try {
-      let url = '/api/admin/apuestas?limit=100';
-      if (filterResultado !== 'todos') url += `&resultado=${filterResultado}`;
-      if (filterFecha) url += `&fecha=${filterFecha}`;
-      
-      const response = await adminFetch(url, {}, accessToken);
+      // Cargar todas las apuestas para el Excel
+      const response = await adminFetch(`/api/admin/apuestas?limit=1000`, {}, accessToken);
+      if (!response.ok) throw new Error('Error al cargar');
       const data = await response.json();
-      setApuestas(data.apuestas || []);
+      const todas = data.apuestas || [];
+      setAllApuestas(todas);
+      
+      // Extraer tipsters únicos
+      const uniqueTipsters = [...new Set(todas.map((a: Apuesta) => a.tipster_alias))].filter(Boolean).sort();
+      setTipsters(uniqueTipsters as string[]);
+      
+      // Aplicar filtros para mostrar
+      let filtered = todas;
+      if (filterResultado !== 'todos') {
+        filtered = filtered.filter((a: Apuesta) => a.resultado === filterResultado);
+      }
+      if (filterFecha) {
+        filtered = filtered.filter((a: Apuesta) => a.fecha?.startsWith(filterFecha));
+      }
+      if (filterTipster !== 'todos') {
+        filtered = filtered.filter((a: Apuesta) => a.tipster_alias === filterTipster);
+      }
+      
+      setApuestas(filtered.slice(0, 100));
     } catch (error) {
-      console.error('Error loading apuestas:', error);
+      console.error('Error:', error);
+      setApuestas([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [accessToken, filterResultado, filterFecha, filterTipster]);
+
+  useEffect(() => {
+    loadApuestas();
+  }, [loadApuestas]);
 
   const startEdit = (apuesta: Apuesta) => {
     setEditingId(apuesta.id);
     setEditData({
       fecha: apuesta.fecha?.split('T')[0] || '',
-      resultado: apuesta.resultado,
-      cuota: apuesta.cuota,
-      stake_ia: apuesta.stake_ia,
-      tipo_mercado: apuesta.tipo_mercado
+      resultado: apuesta.resultado || 'PENDIENTE',
+      cuota: apuesta.cuota || 0,
+      stake_ia: apuesta.stake_ia || 0,
+      tipo_mercado: apuesta.tipo_mercado || 'OTRO'
     });
   };
 
@@ -78,76 +107,168 @@ export default function ApuestasAdminPage() {
     try {
       const response = await adminFetch(
         `/api/admin/apuestas/${editingId}`,
-        { 
-          method: 'PUT', 
-          body: JSON.stringify(editData) 
-        },
+        { method: 'PUT', body: JSON.stringify(editData) },
         accessToken
       );
-      
       if (response.ok) {
         await loadApuestas();
         setEditingId(null);
         setEditData({});
       }
     } catch (error) {
-      console.error('Error saving:', error);
+      console.error('Error:', error);
     } finally {
       setIsSaving(false);
     }
   };
 
   const deleteApuesta = async (id: number) => {
-    if (!accessToken || !confirm('¿Eliminar esta apuesta?')) return;
+    if (!accessToken || !confirm(`¿Eliminar apuesta #${id}?`)) return;
     try {
       await adminFetch(`/api/admin/apuestas/${id}`, { method: 'DELETE' }, accessToken);
       await loadApuestas();
     } catch (error) {
-      console.error('Error deleting:', error);
+      console.error('Error:', error);
     }
   };
 
   const runAudit = async () => {
-    if (!accessToken) return;
+    if (!accessToken || !confirm('¿Recalcular rachas y ganancias?')) return;
     setIsAuditing(true);
     setAuditResult(null);
     try {
-      const response = await adminFetch(
-        '/api/admin/auditar',
-        { method: 'POST' },
-        accessToken
-      );
+      const response = await adminFetch('/api/admin/auditar', { method: 'POST' }, accessToken);
       const data = await response.json();
-      setAuditResult(`✅ Auditoría completada: ${data.rachas_corregidas || 0} rachas corregidas, ${data.stakes_corregidos || 0} stakes actualizados`);
+      setAuditResult(`✅ ${data.rachas_corregidas} rachas, ${data.stakes_corregidos} ganancias actualizadas`);
       await loadApuestas();
     } catch (error) {
-      setAuditResult('❌ Error en auditoría');
+      setAuditResult('❌ Error');
     } finally {
       setIsAuditing(false);
     }
   };
 
-  const filteredApuestas = apuestas.filter(a => {
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      return a.apuesta.toLowerCase().includes(search) || 
-             a.tipster_alias?.toLowerCase().includes(search) ||
-             a.id.toString().includes(search);
+  const exportToExcel = async () => {
+    if (allApuestas.length === 0) return;
+    setIsExporting(true);
+    
+    try {
+      // Importar SheetJS dinámicamente
+      const XLSX = await import('xlsx');
+      
+      // Crear workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Hoja 1: TODAS las apuestas
+      const allData = allApuestas.map(a => ({
+        'ID': a.id,
+        'Fecha': a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '',
+        'Tipster': a.tipster_alias || '',
+        'Apuesta': a.apuesta || '',
+        'Cuota': a.cuota || 0,
+        'Stake': a.stake_ia || 0,
+        'Tipo': a.tipo_mercado || '',
+        'Resultado': a.resultado || 'PENDIENTE',
+        'Ganancia': a.ganancia_neta || 0,
+        'Racha': a.racha_actual || 0
+      }));
+      const wsAll = XLSX.utils.json_to_sheet(allData);
+      wsAll['!cols'] = [
+        {wch: 6}, {wch: 12}, {wch: 15}, {wch: 50}, 
+        {wch: 8}, {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 8}
+      ];
+      XLSX.utils.book_append_sheet(wb, wsAll, 'TODAS');
+      
+      // Hoja 2: Por TIPSTER (una hoja por cada tipster)
+      const tipsterGroups = allApuestas.reduce((acc: Record<string, Apuesta[]>, a) => {
+        const key = a.tipster_alias || 'Sin Tipster';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(a);
+        return acc;
+      }, {});
+      
+      Object.entries(tipsterGroups).forEach(([tipster, apuestas]) => {
+        const data = apuestas.map(a => ({
+          'ID': a.id,
+          'Fecha': a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '',
+          'Apuesta': a.apuesta || '',
+          'Cuota': a.cuota || 0,
+          'Stake': a.stake_ia || 0,
+          'Tipo': a.tipo_mercado || '',
+          'Resultado': a.resultado || 'PENDIENTE',
+          'Ganancia': a.ganancia_neta || 0,
+          'Racha': a.racha_actual || 0
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        ws['!cols'] = [{wch: 6}, {wch: 12}, {wch: 50}, {wch: 8}, {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 8}];
+        // Limpiar nombre de hoja (max 31 chars, sin caracteres especiales)
+        const sheetName = tipster.replace(/[\\/*?:\[\]]/g, '').slice(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      });
+      
+      // Hoja 3: RESUMEN por tipster
+      const resumen = Object.entries(tipsterGroups).map(([tipster, apuestas]) => {
+        const ganadas = apuestas.filter(a => a.resultado === 'GANADA').length;
+        const perdidas = apuestas.filter(a => a.resultado === 'PERDIDA').length;
+        const pendientes = apuestas.filter(a => a.resultado === 'PENDIENTE').length;
+        const gananciaTotal = apuestas.reduce((sum, a) => sum + (a.ganancia_neta || 0), 0);
+        return {
+          'Tipster': tipster,
+          'Total': apuestas.length,
+          'Ganadas': ganadas,
+          'Perdidas': perdidas,
+          'Pendientes': pendientes,
+          'Win Rate': apuestas.length > 0 ? `${((ganadas / (ganadas + perdidas || 1)) * 100).toFixed(1)}%` : '0%',
+          'Ganancia Total': gananciaTotal
+        };
+      });
+      const wsResumen = XLSX.utils.json_to_sheet(resumen);
+      wsResumen['!cols'] = [{wch: 20}, {wch: 8}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 10}, {wch: 15}];
+      XLSX.utils.book_append_sheet(wb, wsResumen, 'RESUMEN');
+      
+      // Hoja 4: PENDIENTES
+      const pendientesData = allApuestas
+        .filter(a => a.resultado === 'PENDIENTE')
+        .map(a => ({
+          'ID': a.id,
+          'Fecha': a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '',
+          'Tipster': a.tipster_alias || '',
+          'Apuesta': a.apuesta || '',
+          'Cuota': a.cuota || 0,
+          'Stake': a.stake_ia || 0,
+          'Tipo': a.tipo_mercado || ''
+        }));
+      const wsPendientes = XLSX.utils.json_to_sheet(pendientesData);
+      XLSX.utils.book_append_sheet(wb, wsPendientes, 'PENDIENTES');
+      
+      // Descargar
+      XLSX.writeFile(wb, `apuestas_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+    } catch (error) {
+      console.error('Error exportando:', error);
+      alert('Error al exportar. Intenta de nuevo.');
+    } finally {
+      setIsExporting(false);
     }
-    return true;
+  };
+
+  const filteredApuestas = apuestas.filter(a => {
+    if (!searchTerm) return true;
+    const s = searchTerm.toLowerCase();
+    return a.apuesta?.toLowerCase().includes(s) || 
+           a.tipster_alias?.toLowerCase().includes(s) ||
+           a.id.toString().includes(s) ||
+           a.tipo_mercado?.toLowerCase().includes(s);
   });
 
-  const getResultadoBadge = (resultado: string) => {
-    switch (resultado) {
-      case 'GANADA':
-        return <span className="px-2 py-1 text-xs font-bold rounded bg-emerald-500/20 text-emerald-400">GANADA</span>;
-      case 'PERDIDA':
-        return <span className="px-2 py-1 text-xs font-bold rounded bg-red-500/20 text-red-400">PERDIDA</span>;
-      case 'NULA':
-        return <span className="px-2 py-1 text-xs font-bold rounded bg-gray-500/20 text-gray-400">NULA</span>;
-      default:
-        return <span className="px-2 py-1 text-xs font-bold rounded bg-amber-500/20 text-amber-400">PENDIENTE</span>;
-    }
+  const getBadge = (resultado: string) => {
+    const styles: Record<string, string> = {
+      'GANADA': 'bg-emerald-500/20 text-emerald-400',
+      'PERDIDA': 'bg-red-500/20 text-red-400',
+      'NULA': 'bg-gray-500/20 text-gray-400',
+      'PENDIENTE': 'bg-amber-500/20 text-amber-400'
+    };
+    return <span className={`px-2 py-1 text-xs font-bold rounded ${styles[resultado] || styles['PENDIENTE']}`}>{resultado}</span>;
   };
 
   if (isLoading) {
@@ -164,243 +285,151 @@ export default function ApuestasAdminPage() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Gestión de Apuestas</h1>
-          <p className="text-gray-400">{filteredApuestas.length} apuestas encontradas</p>
+          <p className="text-gray-400">{filteredApuestas.length} mostradas / {allApuestas.length} total</p>
         </div>
-        
-        <button
-          onClick={runAudit}
-          disabled={isAuditing}
-          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50"
-        >
-          {isAuditing ? (
-            <RefreshCw className="w-4 h-4 animate-spin" />
-          ) : (
-            <Database className="w-4 h-4" />
-          )}
-          {isAuditing ? 'Auditando...' : '🔄 Auditar BD'}
-        </button>
-      </div>
-
-      {/* Audit Result */}
-      {auditResult && (
-        <div className={`p-4 rounded-lg ${auditResult.includes('✅') ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
-          <p className={auditResult.includes('✅') ? 'text-emerald-400' : 'text-red-400'}>{auditResult}</p>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar ID, tipster, apuesta..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:border-teal-500"
-            />
-          </div>
-
-          {/* Filter Resultado */}
-          <select
-            value={filterResultado}
-            onChange={(e) => setFilterResultado(e.target.value)}
-            className="px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-teal-500"
-          >
-            <option value="todos">Todos los resultados</option>
-            <option value="PENDIENTE">Pendientes</option>
-            <option value="GANADA">Ganadas</option>
-            <option value="PERDIDA">Perdidas</option>
-            <option value="NULA">Nulas</option>
-          </select>
-
-          {/* Filter Fecha */}
-          <input
-            type="date"
-            value={filterFecha}
-            onChange={(e) => setFilterFecha(e.target.value)}
-            className="px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-teal-500"
-          />
-
-          {/* Reload */}
-          <button
-            onClick={loadApuestas}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center justify-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Recargar
+        <div className="flex gap-2">
+          <button onClick={exportToExcel} disabled={isExporting || allApuestas.length === 0}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50">
+            {isExporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Excel Completo
+          </button>
+          <button onClick={runAudit} disabled={isAuditing}
+            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50">
+            {isAuditing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+            Auditar BD
           </button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-900/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Fecha</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Tipster</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Apuesta</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Cuota</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Stake</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Tipo</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Resultado</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Racha</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700">
-              {filteredApuestas.map((apuesta) => (
-                <tr key={apuesta.id} className="hover:bg-slate-700/30">
-                  <td className="px-4 py-3 text-sm text-gray-300 font-mono">#{apuesta.id}</td>
-                  
-                  {/* Fecha */}
-                  <td className="px-4 py-3">
-                    {editingId === apuesta.id ? (
-                      <input
-                        type="date"
-                        value={editData.fecha || ''}
-                        onChange={(e) => setEditData({...editData, fecha: e.target.value})}
-                        className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm w-32"
-                      />
-                    ) : (
-                      <span className="text-sm text-gray-300">
-                        {apuesta.fecha ? new Date(apuesta.fecha).toLocaleDateString('es-CL') : '-'}
-                      </span>
-                    )}
-                  </td>
-                  
-                  <td className="px-4 py-3 text-sm text-teal-400">{apuesta.tipster_alias}</td>
-                  <td className="px-4 py-3 text-sm text-white max-w-xs truncate" title={apuesta.apuesta}>
-                    {apuesta.apuesta}
-                  </td>
-                  
-                  {/* Cuota */}
-                  <td className="px-4 py-3">
-                    {editingId === apuesta.id ? (
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={editData.cuota || ''}
-                        onChange={(e) => setEditData({...editData, cuota: parseFloat(e.target.value)})}
-                        className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm w-20"
-                      />
-                    ) : (
-                      <span className="text-sm text-white font-mono">@{apuesta.cuota}</span>
-                    )}
-                  </td>
-                  
-                  {/* Stake */}
-                  <td className="px-4 py-3">
-                    {editingId === apuesta.id ? (
-                      <input
-                        type="number"
-                        value={editData.stake_ia || ''}
-                        onChange={(e) => setEditData({...editData, stake_ia: parseInt(e.target.value)})}
-                        className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm w-24"
-                      />
-                    ) : (
-                      <span className="text-sm text-gray-300 font-mono">${apuesta.stake_ia?.toLocaleString()}</span>
-                    )}
-                  </td>
-                  
-                  {/* Tipo Mercado */}
-                  <td className="px-4 py-3">
-                    {editingId === apuesta.id ? (
-                      <select
-                        value={editData.tipo_mercado || ''}
-                        onChange={(e) => setEditData({...editData, tipo_mercado: e.target.value})}
-                        className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm"
-                      >
-                        <option value="OVER GOLES">OVER GOLES</option>
-                        <option value="UNDER GOLES">UNDER GOLES</option>
-                        <option value="AMBOS MARCAN">AMBOS MARCAN</option>
-                        <option value="GANADOR">GANADOR</option>
-                        <option value="HANDICAP">HANDICAP</option>
-                        <option value="OVER CORNERS">OVER CORNERS</option>
-                        <option value="UNDER CORNERS">UNDER CORNERS</option>
-                        <option value="OVER TARJETAS">OVER TARJETAS</option>
-                        <option value="UNDER TARJETAS">UNDER TARJETAS</option>
-                        <option value="COMBINADAS">COMBINADAS</option>
-                        <option value="TENIS">TENIS</option>
-                        <option value="NBA">NBA</option>
-                      </select>
-                    ) : (
-                      <span className="text-xs text-gray-400">{apuesta.tipo_mercado}</span>
-                    )}
-                  </td>
-                  
-                  {/* Resultado */}
-                  <td className="px-4 py-3">
-                    {editingId === apuesta.id ? (
-                      <select
-                        value={editData.resultado || ''}
-                        onChange={(e) => setEditData({...editData, resultado: e.target.value})}
-                        className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm"
-                      >
-                        <option value="PENDIENTE">PENDIENTE</option>
-                        <option value="GANADA">GANADA</option>
-                        <option value="PERDIDA">PERDIDA</option>
-                        <option value="NULA">NULA</option>
-                      </select>
-                    ) : (
-                      getResultadoBadge(apuesta.resultado)
-                    )}
-                  </td>
-                  
-                  <td className="px-4 py-3 text-sm text-gray-300 font-mono">
-                    {apuesta.racha_actual > 0 ? '+' : ''}{apuesta.racha_actual || 0}
-                  </td>
-                  
-                  {/* Actions */}
-                  <td className="px-4 py-3">
-                    {editingId === apuesta.id ? (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={saveEdit}
-                          disabled={isSaving}
-                          className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded hover:bg-emerald-500/30"
-                        >
-                          {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => startEdit(apuesta)}
-                          className="p-1.5 bg-slate-700 text-gray-300 rounded hover:bg-slate-600"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => deleteApuesta(apuesta.id)}
-                          className="p-1.5 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {auditResult && (
+        <div className={`p-4 rounded-lg ${auditResult.includes('✅') ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>
+          {auditResult}
         </div>
-        
+      )}
+
+      {/* Filters */}
+      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white" />
+        </div>
+        <select value={filterTipster} onChange={(e) => setFilterTipster(e.target.value)}
+          className="px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
+          <option value="todos">Todos Tipsters</option>
+          {tipsters.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select value={filterResultado} onChange={(e) => setFilterResultado(e.target.value)}
+          className="px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white">
+          <option value="todos">Todos Resultados</option>
+          {RESULTADOS.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <input type="date" value={filterFecha} onChange={(e) => setFilterFecha(e.target.value)}
+          className="px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white" />
+        <button onClick={loadApuestas} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center justify-center gap-2">
+          <RefreshCw className="w-4 h-4" /> Recargar
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-slate-900/50">
+            <tr>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">ID</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Fecha</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Tipster</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Apuesta</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Cuota</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Stake</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Tipo</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Resultado</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Racha</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-700">
+            {filteredApuestas.map((a) => (
+              <tr key={a.id} className="hover:bg-slate-700/30">
+                <td className="px-3 py-2 text-sm text-gray-300 font-mono">#{a.id}</td>
+                <td className="px-3 py-2">
+                  {editingId === a.id ? (
+                    <input type="date" value={editData.fecha || ''} onChange={(e) => setEditData({...editData, fecha: e.target.value})}
+                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm w-32" />
+                  ) : (
+                    <span className="text-sm text-gray-300">{a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '-'}</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-sm text-teal-400">{a.tipster_alias}</td>
+                <td className="px-3 py-2 text-sm text-white max-w-[200px] truncate" title={a.apuesta}>{a.apuesta}</td>
+                <td className="px-3 py-2">
+                  {editingId === a.id ? (
+                    <input type="number" step="0.01" value={editData.cuota || ''} onChange={(e) => setEditData({...editData, cuota: parseFloat(e.target.value)})}
+                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm w-16" />
+                  ) : (
+                    <span className="text-sm text-white font-mono">@{a.cuota}</span>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  {editingId === a.id ? (
+                    <input type="number" value={editData.stake_ia || ''} onChange={(e) => setEditData({...editData, stake_ia: parseInt(e.target.value)})}
+                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-sm w-20" />
+                  ) : (
+                    <span className="text-sm text-gray-300 font-mono">${a.stake_ia?.toLocaleString()}</span>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  {editingId === a.id ? (
+                    <select value={editData.tipo_mercado || ''} onChange={(e) => setEditData({...editData, tipo_mercado: e.target.value})}
+                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs">
+                      {TIPOS_MERCADO.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  ) : (
+                    <span className="text-xs text-gray-400">{a.tipo_mercado}</span>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  {editingId === a.id ? (
+                    <select value={editData.resultado || ''} onChange={(e) => setEditData({...editData, resultado: e.target.value})}
+                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs">
+                      {RESULTADOS.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  ) : (
+                    getBadge(a.resultado)
+                  )}
+                </td>
+                <td className="px-3 py-2 text-sm text-gray-300 font-mono">
+                  {a.racha_actual > 0 ? '+' : ''}{a.racha_actual || 0}
+                </td>
+                <td className="px-3 py-2">
+                  {editingId === a.id ? (
+                    <div className="flex gap-1">
+                      <button onClick={saveEdit} disabled={isSaving} className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded hover:bg-emerald-500/30">
+                        {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      </button>
+                      <button onClick={cancelEdit} className="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-1">
+                      <button onClick={() => startEdit(a)} className="p-1.5 bg-slate-700 text-gray-300 rounded hover:bg-slate-600">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => deleteApuesta(a.id)} className="p-1.5 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         {filteredApuestas.length === 0 && (
           <div className="text-center py-12">
             <AlertTriangle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No se encontraron apuestas</p>
+            <p className="text-gray-400">No hay apuestas</p>
           </div>
         )}
       </div>
