@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   LayoutDashboard, FileText, Users, Trophy, Settings,
-  Shield, LogOut, Menu, X, Lock
+  Shield, LogOut, Menu, X, Lock, Target
 } from 'lucide-react';
 
 // ============================================
@@ -121,13 +121,14 @@ function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 // ============================================
-// NAVIGATION
+// NAVIGATION (ACTUALIZADO CON APUESTAS)
 // ============================================
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Landing Page', href: '/admin/landing', icon: FileText },
+  { name: 'Apuestas', href: '/admin/apuestas', icon: Target },
   { name: 'Tipsters', href: '/admin/tipsters', icon: Trophy },
   { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
+  { name: 'Landing Page', href: '/admin/landing', icon: FileText },
   { name: 'Configuración', href: '/admin/config', icon: Settings },
   { name: 'Seguridad', href: '/admin/seguridad', icon: Shield },
 ];
