@@ -42,24 +42,53 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadep
 // COMPONENTES
 // ============================================
 
-// Ticker de ganancias (demo)
-const DEMO_WINS = [
-  { user: 'Carlos M.', amount: 245000, sport: '⚽', time: '2min' },
-  { user: 'Andrea L.', amount: 180000, sport: '🎾', time: '5min' },
-  { user: 'Miguel R.', amount: 520000, sport: '🏀', time: '8min' },
-];
-
+// Ticker de ganancias (real conectada)
 function WinsTicker() {
+  const [ganancias, setGanancias] = useState<Array<{tipster: string, ganancia: number, apuesta: string}>>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % DEMO_WINS.length);
-    }, 3000);
-    return () => clearInterval(interval);
+    const loadGanancias = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/ganancias/live`);
+        const data = await response.json();
+        if (data.ganancias && data.ganancias.length > 0) {
+          setGanancias(data.ganancias);
+        }
+      } catch (error) {
+        console.error('Error loading ganancias:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadGanancias();
+    const refreshInterval = setInterval(loadGanancias, 30000);
+    return () => clearInterval(refreshInterval);
   }, []);
 
-  const win = DEMO_WINS[currentIndex];
+  useEffect(() => {
+    if (ganancias.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % ganancias.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [ganancias]);
+
+  if (isLoading || ganancias.length === 0) {
+    return (
+      <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-full px-4 py-2 flex items-center gap-2">
+        <span className="relative flex h-3 w-3">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+        </span>
+        <span className="text-emerald-400 text-sm font-medium">CARGANDO GANANCIAS...</span>
+      </div>
+    );
+  }
+
+  const win = ganancias[currentIndex];
+  const iniciales = win.tipster.split(' ').map(word => word[0]).join('.') + '.';
   
   return (
     <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-full px-4 py-2 flex items-center gap-2">
@@ -68,13 +97,12 @@ function WinsTicker() {
         <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
       </span>
       <span className="text-emerald-400 text-sm font-medium">GANANCIA EN VIVO</span>
-      <span className="text-white font-bold">{win.user}</span>
-      <span className="text-emerald-400 font-mono font-bold">+${win.amount.toLocaleString()}</span>
-      <span>{win.sport}</span>
+      <span className="text-white font-bold">{iniciales}</span>
+      <span className="text-emerald-400 font-mono font-bold">+${Math.round(win.ganancia).toLocaleString()}</span>
+      <span>🎾</span>
     </div>
   );
 }
-
 function TrialCountdown({ dias }: { dias: number }) {
   const [timeLeft, setTimeLeft] = useState({ days: dias, hours: 23, minutes: 59, seconds: 59 });
 
