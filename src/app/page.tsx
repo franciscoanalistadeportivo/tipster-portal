@@ -96,10 +96,12 @@ function WinsTicker() {
         <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
       </span>
       <span className="text-emerald-400 text-sm font-medium flex-shrink-0">GANANCIA EN VIVO</span>
-      <span className="text-gray-400">|</span>
+      <span className="text-gray-400 flex-shrink-0">|</span>
       <span className="text-white font-bold flex-shrink-0">{win.tipster}</span>
-      <span className="text-gray-400">|</span>
-      <span className="text-emerald-400 text-sm truncate">{win.apuesta}</span>
+      <span className="text-gray-400 flex-shrink-0">|</span>
+      <span className="text-gray-300 text-sm truncate">{win.apuesta}</span>
+      <span className="text-gray-400 flex-shrink-0">|</span>
+      <span className="text-emerald-400 font-bold flex-shrink-0">✅ GANADA</span>
       <span className="flex-shrink-0">🎾</span>
     </div>
   );
