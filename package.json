@@ -15,7 +15,8 @@
     "axios": "^1.6.5",
     "zustand": "^4.5.0",
     "lucide-react": "^0.312.0",
-    "recharts": "^2.10.4"
+    "recharts": "^2.10.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
