@@ -28,6 +28,15 @@ const TIPOS_MERCADO = [
 
 const RESULTADOS = ['PENDIENTE', 'GANADA', 'PERDIDA', 'NULA'];
 
+const escapeCSV = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes(';')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
 export default function ApuestasAdminPage() {
   const [apuestas, setApuestas] = useState<Apuesta[]>([]);
   const [allApuestas, setAllApuestas] = useState<Apuesta[]>([]);
@@ -49,18 +58,15 @@ export default function ApuestasAdminPage() {
     if (!accessToken) return;
     setIsLoading(true);
     try {
-      // Cargar todas las apuestas para el Excel
       const response = await adminFetch(`/api/admin/apuestas?limit=1000`, {}, accessToken);
       if (!response.ok) throw new Error('Error al cargar');
       const data = await response.json();
       const todas = data.apuestas || [];
       setAllApuestas(todas);
       
-      // Extraer tipsters únicos
       const uniqueTipsters = [...new Set(todas.map((a: Apuesta) => a.tipster_alias))].filter(Boolean).sort();
       setTipsters(uniqueTipsters as string[]);
       
-      // Aplicar filtros para mostrar
       let filtered = todas;
       if (filterResultado !== 'todos') {
         filtered = filtered.filter((a: Apuesta) => a.resultado === filterResultado);
@@ -148,108 +154,83 @@ export default function ApuestasAdminPage() {
     }
   };
 
-  const exportToExcel = async () => {
+  const downloadCSV = (data: any[], filename: string) => {
+    const BOM = '\uFEFF';
+    const csv = BOM + data.map(row => Object.values(row).map(escapeCSV).join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportAll = () => {
     if (allApuestas.length === 0) return;
     setIsExporting(true);
-    
     try {
-      // Importar SheetJS dinámicamente
-      const XLSX = await import('xlsx');
-      
-      // Crear workbook
-      const wb = XLSX.utils.book_new();
-      
-      // Hoja 1: TODAS las apuestas
-      const allData = allApuestas.map(a => ({
-        'ID': a.id,
-        'Fecha': a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '',
-        'Tipster': a.tipster_alias || '',
-        'Apuesta': a.apuesta || '',
-        'Cuota': a.cuota || 0,
-        'Stake': a.stake_ia || 0,
-        'Tipo': a.tipo_mercado || '',
-        'Resultado': a.resultado || 'PENDIENTE',
-        'Ganancia': a.ganancia_neta || 0,
-        'Racha': a.racha_actual || 0
-      }));
-      const wsAll = XLSX.utils.json_to_sheet(allData);
-      wsAll['!cols'] = [
-        {wch: 6}, {wch: 12}, {wch: 15}, {wch: 50}, 
-        {wch: 8}, {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 8}
-      ];
-      XLSX.utils.book_append_sheet(wb, wsAll, 'TODAS');
-      
-      // Hoja 2: Por TIPSTER (una hoja por cada tipster)
-      const tipsterGroups = allApuestas.reduce((acc: Record<string, Apuesta[]>, a) => {
-        const key = a.tipster_alias || 'Sin Tipster';
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(a);
-        return acc;
-      }, {});
-      
-      Object.entries(tipsterGroups).forEach(([tipster, apuestas]) => {
-        const data = apuestas.map(a => ({
-          'ID': a.id,
-          'Fecha': a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '',
-          'Apuesta': a.apuesta || '',
-          'Cuota': a.cuota || 0,
-          'Stake': a.stake_ia || 0,
-          'Tipo': a.tipo_mercado || '',
-          'Resultado': a.resultado || 'PENDIENTE',
-          'Ganancia': a.ganancia_neta || 0,
-          'Racha': a.racha_actual || 0
-        }));
-        const ws = XLSX.utils.json_to_sheet(data);
-        ws['!cols'] = [{wch: 6}, {wch: 12}, {wch: 50}, {wch: 8}, {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 8}];
-        // Limpiar nombre de hoja (max 31 chars, sin caracteres especiales)
-        const sheetName = tipster.replace(/[\\/*?:\[\]]/g, '').slice(0, 31);
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
-      });
-      
-      // Hoja 3: RESUMEN por tipster
-      const resumen = Object.entries(tipsterGroups).map(([tipster, apuestas]) => {
-        const ganadas = apuestas.filter(a => a.resultado === 'GANADA').length;
-        const perdidas = apuestas.filter(a => a.resultado === 'PERDIDA').length;
-        const pendientes = apuestas.filter(a => a.resultado === 'PENDIENTE').length;
-        const gananciaTotal = apuestas.reduce((sum, a) => sum + (a.ganancia_neta || 0), 0);
-        return {
-          'Tipster': tipster,
-          'Total': apuestas.length,
-          'Ganadas': ganadas,
-          'Perdidas': perdidas,
-          'Pendientes': pendientes,
-          'Win Rate': apuestas.length > 0 ? `${((ganadas / (ganadas + perdidas || 1)) * 100).toFixed(1)}%` : '0%',
-          'Ganancia Total': gananciaTotal
-        };
-      });
-      const wsResumen = XLSX.utils.json_to_sheet(resumen);
-      wsResumen['!cols'] = [{wch: 20}, {wch: 8}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 10}, {wch: 15}];
-      XLSX.utils.book_append_sheet(wb, wsResumen, 'RESUMEN');
-      
-      // Hoja 4: PENDIENTES
-      const pendientesData = allApuestas
-        .filter(a => a.resultado === 'PENDIENTE')
-        .map(a => ({
-          'ID': a.id,
-          'Fecha': a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '',
-          'Tipster': a.tipster_alias || '',
-          'Apuesta': a.apuesta || '',
-          'Cuota': a.cuota || 0,
-          'Stake': a.stake_ia || 0,
-          'Tipo': a.tipo_mercado || ''
-        }));
-      const wsPendientes = XLSX.utils.json_to_sheet(pendientesData);
-      XLSX.utils.book_append_sheet(wb, wsPendientes, 'PENDIENTES');
-      
-      // Descargar
-      XLSX.writeFile(wb, `apuestas_${new Date().toISOString().split('T')[0]}.xlsx`);
-      
-    } catch (error) {
-      console.error('Error exportando:', error);
-      alert('Error al exportar. Intenta de nuevo.');
+      const headers = { ID: 'ID', Fecha: 'Fecha', Tipster: 'Tipster', Apuesta: 'Apuesta', Cuota: 'Cuota', Stake: 'Stake', Tipo: 'Tipo', Resultado: 'Resultado', Ganancia: 'Ganancia', Racha: 'Racha' };
+      const data = [headers, ...allApuestas.map(a => ({
+        ID: a.id,
+        Fecha: a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '',
+        Tipster: a.tipster_alias || '',
+        Apuesta: a.apuesta || '',
+        Cuota: a.cuota || 0,
+        Stake: a.stake_ia || 0,
+        Tipo: a.tipo_mercado || '',
+        Resultado: a.resultado || 'PENDIENTE',
+        Ganancia: a.ganancia_neta || 0,
+        Racha: a.racha_actual || 0
+      }))];
+      downloadCSV(data, `apuestas_todas_${new Date().toISOString().split('T')[0]}.csv`);
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const exportResumen = () => {
+    if (allApuestas.length === 0) return;
+    const tipsterGroups = allApuestas.reduce((acc: Record<string, Apuesta[]>, a) => {
+      const key = a.tipster_alias || 'Sin Tipster';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(a);
+      return acc;
+    }, {});
+    
+    const headers = { Tipster: 'Tipster', Total: 'Total', Ganadas: 'Ganadas', Perdidas: 'Perdidas', Pendientes: 'Pendientes', WinRate: 'Win Rate %', Ganancia: 'Ganancia Total' };
+    const data = [headers, ...Object.entries(tipsterGroups).map(([tipster, apuestas]) => {
+      const ganadas = apuestas.filter(a => a.resultado === 'GANADA').length;
+      const perdidas = apuestas.filter(a => a.resultado === 'PERDIDA').length;
+      const pendientes = apuestas.filter(a => a.resultado === 'PENDIENTE').length;
+      const gananciaTotal = apuestas.reduce((sum, a) => sum + (a.ganancia_neta || 0), 0);
+      return {
+        Tipster: tipster,
+        Total: apuestas.length,
+        Ganadas: ganadas,
+        Perdidas: perdidas,
+        Pendientes: pendientes,
+        WinRate: ((ganadas / (ganadas + perdidas || 1)) * 100).toFixed(1),
+        Ganancia: gananciaTotal.toFixed(0)
+      };
+    })];
+    downloadCSV(data, `resumen_tipsters_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  const exportPendientes = () => {
+    const pendientes = allApuestas.filter(a => a.resultado === 'PENDIENTE');
+    if (pendientes.length === 0) { alert('No hay pendientes'); return; }
+    const headers = { ID: 'ID', Fecha: 'Fecha', Tipster: 'Tipster', Apuesta: 'Apuesta', Cuota: 'Cuota', Stake: 'Stake', Tipo: 'Tipo' };
+    const data = [headers, ...pendientes.map(a => ({
+      ID: a.id,
+      Fecha: a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : '',
+      Tipster: a.tipster_alias || '',
+      Apuesta: a.apuesta || '',
+      Cuota: a.cuota || 0,
+      Stake: a.stake_ia || 0,
+      Tipo: a.tipo_mercado || ''
+    }))];
+    downloadCSV(data, `pendientes_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
   const filteredApuestas = apuestas.filter(a => {
@@ -281,20 +262,26 @@ export default function ApuestasAdminPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Gestión de Apuestas</h1>
           <p className="text-gray-400">{filteredApuestas.length} mostradas / {allApuestas.length} total</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={exportToExcel} disabled={isExporting || allApuestas.length === 0}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50">
-            {isExporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Excel Completo
+        <div className="flex flex-wrap gap-2">
+          <button onClick={exportAll} disabled={isExporting || allApuestas.length === 0}
+            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50">
+            <Download className="w-4 h-4" /> Todas
+          </button>
+          <button onClick={exportResumen} disabled={allApuestas.length === 0}
+            className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50">
+            <Download className="w-4 h-4" /> Resumen
+          </button>
+          <button onClick={exportPendientes} disabled={allApuestas.length === 0}
+            className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50">
+            <Download className="w-4 h-4" /> Pendientes
           </button>
           <button onClick={runAudit} disabled={isAuditing}
-            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50">
+            className="px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 disabled:opacity-50">
             {isAuditing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
             Auditar BD
           </button>
@@ -307,7 +294,6 @@ export default function ApuestasAdminPage() {
         </div>
       )}
 
-      {/* Filters */}
       <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -331,7 +317,6 @@ export default function ApuestasAdminPage() {
         </button>
       </div>
 
-      {/* Table */}
       <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-900/50">
