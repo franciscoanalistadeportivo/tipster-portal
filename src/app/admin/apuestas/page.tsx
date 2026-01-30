@@ -23,7 +23,7 @@ interface Apuesta {
 const TIPOS_MERCADO = [
   'OVER GOLES', 'UNDER GOLES', 'AMBOS MARCAN', 'GANADOR', 'HANDICAP',
   'OVER CORNERS', 'UNDER CORNERS', 'OVER TARJETAS', 'UNDER TARJETAS',
-  'COMBINADAS', 'TENIS', 'NBA', 'OTRO'
+  'OVER PUNTOS', 'UNDER PUNTOS', 'COMBINADAS', 'TENIS', 'NBA', 'OTRO'
 ];
 
 const RESULTADOS = ['PENDIENTE', 'GANADA', 'PERDIDA', 'NULA'];
@@ -125,6 +125,23 @@ export default function ApuestasAdminPage() {
       console.error('Error:', error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Actualizar campo individual directamente
+  const updateField = async (id: number, field: string, value: string) => {
+    if (!accessToken) return;
+    try {
+      const response = await adminFetch(
+        `/api/admin/apuestas/${id}`,
+        { method: 'PUT', body: JSON.stringify({ [field]: value }) },
+        accessToken
+      );
+      if (response.ok) {
+        await loadApuestas();
+      }
+    } catch (error) {
+      console.error('Error:', error);
     }
   };
 
@@ -242,16 +259,6 @@ export default function ApuestasAdminPage() {
            a.tipo_mercado?.toLowerCase().includes(s);
   });
 
-  const getBadge = (resultado: string) => {
-    const styles: Record<string, string> = {
-      'GANADA': 'bg-emerald-500/20 text-emerald-400',
-      'PERDIDA': 'bg-red-500/20 text-red-400',
-      'NULA': 'bg-gray-500/20 text-gray-400',
-      'PENDIENTE': 'bg-amber-500/20 text-amber-400'
-    };
-    return <span className={`px-2 py-1 text-xs font-bold rounded ${styles[resultado] || styles['PENDIENTE']}`}>{resultado}</span>;
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -363,25 +370,30 @@ export default function ApuestasAdminPage() {
                     <span className="text-sm text-gray-300 font-mono">${a.stake_ia?.toLocaleString()}</span>
                   )}
                 </td>
+                {/* TIPO - Siempre editable */}
                 <td className="px-3 py-2">
-                  {editingId === a.id ? (
-                    <select value={editData.tipo_mercado || ''} onChange={(e) => setEditData({...editData, tipo_mercado: e.target.value})}
-                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs">
-                      {TIPOS_MERCADO.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  ) : (
-                    <span className="text-xs text-gray-400">{a.tipo_mercado}</span>
-                  )}
+                  <select 
+                    value={a.tipo_mercado || 'OTRO'} 
+                    onChange={(e) => updateField(a.id, 'tipo_mercado', e.target.value)}
+                    className="px-2 py-1 bg-slate-800 border border-slate-600 rounded text-white text-xs cursor-pointer hover:bg-slate-700"
+                  >
+                    {TIPOS_MERCADO.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
                 </td>
+                {/* RESULTADO - Siempre editable */}
                 <td className="px-3 py-2">
-                  {editingId === a.id ? (
-                    <select value={editData.resultado || ''} onChange={(e) => setEditData({...editData, resultado: e.target.value})}
-                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs">
-                      {RESULTADOS.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                  ) : (
-                    getBadge(a.resultado)
-                  )}
+                  <select 
+                    value={a.resultado || 'PENDIENTE'} 
+                    onChange={(e) => updateField(a.id, 'resultado', e.target.value)}
+                    className={`px-2 py-1 border rounded text-xs font-bold cursor-pointer ${
+                      a.resultado === 'GANADA' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' :
+                      a.resultado === 'PERDIDA' ? 'bg-red-500/20 border-red-500 text-red-400' :
+                      a.resultado === 'NULA' ? 'bg-gray-500/20 border-gray-500 text-gray-400' :
+                      'bg-amber-500/20 border-amber-500 text-amber-400'
+                    }`}
+                  >
+                    {RESULTADOS.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
                 </td>
                 <td className="px-3 py-2 text-sm text-gray-300 font-mono">
                   {a.racha_actual > 0 ? '+' : ''}{a.racha_actual || 0}
@@ -398,10 +410,10 @@ export default function ApuestasAdminPage() {
                     </div>
                   ) : (
                     <div className="flex gap-1">
-                      <button onClick={() => startEdit(a)} className="p-1.5 bg-slate-700 text-gray-300 rounded hover:bg-slate-600">
+                      <button onClick={() => startEdit(a)} className="p-1.5 bg-slate-700 text-gray-300 rounded hover:bg-slate-600" title="Editar fecha, cuota, stake">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      <button onClick={() => deleteApuesta(a.id)} className="p-1.5 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20">
+                      <button onClick={() => deleteApuesta(a.id)} className="p-1.5 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20" title="Eliminar">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
