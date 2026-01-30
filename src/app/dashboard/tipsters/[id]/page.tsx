@@ -6,12 +6,12 @@ import Link from 'next/link';
 import { 
   ArrowLeft, TrendingUp, TrendingDown, Target, Zap, 
   Brain, Calendar, ChevronLeft, ChevronRight,
-  DollarSign, Percent, Activity, AlertTriangle, Edit3, Check, X
+  DollarSign, Percent, Activity, AlertTriangle, Edit3, Check, X, Loader2
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid 
 } from 'recharts';
-import { tipstersAPI, bancaAPI } from '@/lib/api';
+import { tipstersAPI, bancaAPI, consejoIAAPI } from '@/lib/api';
 
 // ==============================================================================
 // TIPOS E INTERFACES
@@ -88,6 +88,37 @@ const calcularStakeKelly = (racha: number, banca: number = BANCA_BASE) => {
 };
 
 // ==============================================================================
+// CALCULAR GANANCIA SIMULADA (BASADA EN BANCA DEL CLIENTE)
+// ==============================================================================
+
+const calcularGananciaSimulada = (historial: Apuesta[], banca: number): number => {
+  if (!historial || historial.length === 0) return 0;
+  
+  let gananciaTotal = 0;
+  let racha = 0;
+  
+  // Procesar en orden cronológico
+  const historialOrdenado = [...historial].reverse();
+  
+  historialOrdenado.forEach(ap => {
+    if (ap.resultado === 'PENDIENTE') return;
+    
+    const stakeInfo = calcularStakeKelly(racha, banca);
+    const stake = stakeInfo.stake;
+    
+    if (ap.resultado === 'GANADA') {
+      gananciaTotal += stake * (sanitizeNumber(ap.cuota) - 1);
+      racha = racha >= 0 ? racha + 1 : 1;
+    } else if (ap.resultado === 'PERDIDA') {
+      gananciaTotal -= stake;
+      racha = racha <= 0 ? racha - 1 : -1;
+    }
+  });
+  
+  return gananciaTotal;
+};
+
+// ==============================================================================
 // COMPONENTES
 // ==============================================================================
 
@@ -142,43 +173,58 @@ const RachaBadge = ({ racha, label }: { racha: number; label: string }) => {
   );
 };
 
-const MetricCard = ({ icon, label, value, color = '#FFF' }: { icon: React.ReactNode; label: string; value: string | number; color?: string }) => (
+const MetricCard = ({ icon, label, value, color = '#FFF', subtext }: { icon: React.ReactNode; label: string; value: string | number; color?: string; subtext?: string }) => (
   <div className="bg-[#1E293B] rounded-xl p-4 border border-[#334155] hover:border-[#00D1B2]/50 transition-all">
     <div className="flex items-center gap-2 mb-2">
       <div className="p-1.5 rounded-lg bg-[#0F172A]" style={{ color }}>{icon}</div>
       <span className="text-xs text-[#94A3B8] uppercase">{label}</span>
     </div>
     <p className="text-2xl font-bold font-mono" style={{ color }}>{typeof value === 'number' ? value.toLocaleString() : value}</p>
+    {subtext && <p className="text-xs text-[#94A3B8] mt-1">{subtext}</p>}
   </div>
 );
 
-const ConsejoIACard = ({ historial, tipsterNombre }: { historial: Apuesta[]; tipsterNombre: string }) => {
-  const consejo = useMemo(() => {
-    if (!historial || historial.length < 5) return { mercado: 'Analizando...', winRate: 0, consejo: 'Necesitamos más datos', emoji: '🔍' };
-    const porMercado: Record<string, { g: number; t: number }> = {};
-    historial.forEach(ap => {
-      const tipo = ap.tipo_mercado || 'GENERAL';
-      if (!porMercado[tipo]) porMercado[tipo] = { g: 0, t: 0 };
-      porMercado[tipo].t++;
-      if (ap.resultado === 'GANADA') porMercado[tipo].g++;
-    });
-    const mercados = Object.entries(porMercado).filter(([_, s]) => s.t >= 3).map(([m, s]) => ({ m, wr: Math.round((s.g / s.t) * 100) })).sort((a, b) => b.wr - a.wr);
-    if (mercados.length === 0) return { mercado: 'GENERAL', winRate: 0, consejo: 'Buen historial general', emoji: '📊' };
-    const mejor = mercados[0];
-    return { mercado: mejor.m, winRate: mejor.wr, consejo: mejor.wr >= 80 ? `¡${tipsterNombre} es ÉLITE en ${mejor.m}!` : `${tipsterNombre} domina ${mejor.m}`, emoji: '🎯' };
-  }, [historial, tipsterNombre]);
+// ==============================================================================
+// COMPONENTE: CONSEJO IA REAL (CLAUDE)
+// ==============================================================================
+
+const ConsejoIACard = ({ tipsterId }: { tipsterId: number }) => {
+  const [consejo, setConsejo] = useState<string | null>(null);
+  const [emoji, setEmoji] = useState('🤖');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchConsejo = async () => {
+      try {
+        const data = await consejoIAAPI.get(tipsterId);
+        setConsejo(data.consejo);
+        setEmoji(data.emoji || '🤖');
+      } catch (err) {
+        console.error('Error consejo IA:', err);
+        setConsejo('No se pudo cargar el consejo en este momento.');
+        setEmoji('⚠️');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConsejo();
+  }, [tipsterId]);
+
   return (
-    <div className="bg-gradient-to-br from-[#00D1B2]/20 to-[#1E293B] rounded-xl p-4 border border-[#00D1B2]/30">
+    <div className="bg-gradient-to-br from-[#00D1B2]/20 to-[#1E293B] rounded-xl p-4 border border-[#00D1B2]/30 col-span-2 sm:col-span-1">
       <div className="flex items-center gap-2 mb-3">
         <Brain className="h-4 w-4 text-[#00D1B2]" />
         <span className="text-xs text-[#00D1B2] uppercase font-bold">Consejo IA</span>
-        <span>{consejo.emoji}</span>
+        <span>{emoji}</span>
       </div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-[#94A3B8]">Especialidad</span>
-        <span className="text-sm font-bold text-[#00D1B2]">{consejo.mercado} <span className="px-1.5 py-0.5 bg-[#00D1B2]/20 rounded text-xs">{consejo.winRate}%</span></span>
-      </div>
-      <p className="text-xs text-white/80 pt-2 border-t border-[#334155]">💡 {consejo.consejo}</p>
+      {loading ? (
+        <div className="flex items-center gap-2 text-[#94A3B8]">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="text-xs">Analizando con Claude...</span>
+        </div>
+      ) : (
+        <p className="text-sm text-white/90 leading-relaxed">{consejo}</p>
+      )}
     </div>
   );
 };
@@ -217,7 +263,8 @@ const SimuladorCompacto = ({ historial, banca }: { historial: Apuesta[]; banca: 
   const sim = useMemo(() => {
     if (!historial || historial.length === 0) return { balance: banca, rend: 0, n: 0 };
     let bal = banca, racha = 0;
-    historial.forEach(ap => {
+    const ordenado = [...historial].reverse();
+    ordenado.forEach(ap => {
       if (ap.resultado === 'PENDIENTE') return;
       const stake = calcularStakeKelly(racha, banca).stake;
       if (ap.resultado === 'GANADA') { bal += stake * (sanitizeNumber(ap.cuota) - 1); racha = racha >= 0 ? racha + 1 : 1; }
@@ -310,13 +357,18 @@ export default function TipsterDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [bancaUsuario, setBancaUsuario] = useState(BANCA_BASE);
 
+  // Calcular ganancia simulada basada en banca del cliente
+  const gananciaSimulada = useMemo(() => {
+    if (!data) return 0;
+    return calcularGananciaSimulada(data.historial, bancaUsuario);
+  }, [data, bancaUsuario]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const id = parseInt(tipsterId);
         if (isNaN(id) || id < 1) { setError('ID inválido'); setIsLoading(false); return; }
 
-        // Usar API que tiene el token en memoria
         try {
           const bancaData = await bancaAPI.get();
           setBancaUsuario(bancaData.banca || BANCA_BASE);
@@ -378,8 +430,16 @@ export default function TipsterDetailPage() {
         <MetricCard icon={<TrendingUp className="h-4 w-4" />} label="Ganadas" value={estadisticas.ganadas} color="#00D1B2" />
         <MetricCard icon={<TrendingDown className="h-4 w-4" />} label="Perdidas" value={estadisticas.perdidas} color="#EF4444" />
         <MetricCard icon={<Percent className="h-4 w-4" />} label="Acierto" value={`${estadisticas.porcentaje_acierto}%`} color="#3B82F6" />
-        <MetricCard icon={<Zap className="h-4 w-4" />} label="Ganancia" value={formatCurrency(estadisticas.ganancia_total)} color={estadisticas.ganancia_total >= 0 ? '#00D1B2' : '#EF4444'} />
-        <ConsejoIACard historial={historial} tipsterNombre={tipster.alias} />
+        {/* GANANCIA AHORA USA LA BANCA DEL CLIENTE */}
+        <MetricCard 
+          icon={<Zap className="h-4 w-4" />} 
+          label="Tu Ganancia" 
+          value={formatCurrency(gananciaSimulada)} 
+          color={gananciaSimulada >= 0 ? '#00D1B2' : '#EF4444'} 
+          subtext="Basada en tu banca"
+        />
+        {/* CONSEJO IA REAL CON CLAUDE */}
+        <ConsejoIACard tipsterId={parseInt(tipsterId)} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
