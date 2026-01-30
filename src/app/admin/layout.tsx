@@ -14,17 +14,15 @@ import {
 interface AdminUser {
   id: number;
   email: string;
-  is_admin: boolean;
+  is_admin?: boolean;
 }
 
 interface AuthContextType {
   user: AdminUser | null;
   accessToken: string | null;
-  csrfToken: string | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
-  refreshCsrf: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -45,8 +43,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadep
 export async function adminFetch(
   endpoint: string, 
   options: RequestInit = {},
-  accessToken: string | null,
-  csrfToken: string | null
+  accessToken: string | null
 ) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -55,10 +52,6 @@ export async function adminFetch(
   
   if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
-  }
-  
-  if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method || 'GET')) {
-    headers['X-CSRF-Token'] = csrfToken;
   }
   
   return fetch(`${API_URL}${endpoint}`, { ...options, headers });
@@ -70,40 +63,19 @@ export async function adminFetch(
 function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const savedToken = localStorage.getItem('admin_access_token');
     const savedUser = localStorage.getItem('admin_user');
-    const savedCsrf = localStorage.getItem('admin_csrf_token');
     
     if (savedToken && savedUser) {
       setAccessToken(savedToken);
       setUser(JSON.parse(savedUser));
-      setCsrfToken(savedCsrf);
     }
     setIsLoading(false);
   }, []);
-
-  const refreshCsrf = async (): Promise<string | null> => {
-    if (!accessToken) return null;
-    try {
-      const response = await fetch(`${API_URL}/api/admin/auth/csrf`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
-      const data = await response.json();
-      if (data.csrf_token) {
-        setCsrfToken(data.csrf_token);
-        localStorage.setItem('admin_csrf_token', data.csrf_token);
-        return data.csrf_token;
-      }
-    } catch (error) {
-      console.error('Error refreshing CSRF:', error);
-    }
-    return null;
-  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -115,15 +87,13 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.access_token) {
         setAccessToken(data.access_token);
         setUser(data.user);
-        setCsrfToken(data.csrf_token);
         
         localStorage.setItem('admin_access_token', data.access_token);
-        localStorage.setItem('admin_refresh_token', data.refresh_token);
+        localStorage.setItem('admin_refresh_token', data.refresh_token || '');
         localStorage.setItem('admin_user', JSON.stringify(data.user));
-        localStorage.setItem('admin_csrf_token', data.csrf_token);
         
         return true;
       }
@@ -135,29 +105,16 @@ function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    try {
-      if (accessToken) {
-        await fetch(`${API_URL}/api/admin/auth/logout`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-    
     setUser(null);
     setAccessToken(null);
-    setCsrfToken(null);
     localStorage.removeItem('admin_access_token');
     localStorage.removeItem('admin_refresh_token');
     localStorage.removeItem('admin_user');
-    localStorage.removeItem('admin_csrf_token');
     router.push('/admin/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, csrfToken, login, logout, isLoading, refreshCsrf }}>
+    <AuthContext.Provider value={{ user, accessToken, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -286,3 +243,4 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </AuthProvider>
   );
 }
+
