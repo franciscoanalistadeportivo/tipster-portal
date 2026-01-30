@@ -1,5 +1,6 @@
 /**
  * API Client - Conexión segura al backend
+ * Versión con seguridad mejorada
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
@@ -9,7 +10,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadep
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 
+// Cliente para endpoints protegidos (con JWT)
 const api: AxiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 15000,
+});
+
+// Cliente para endpoints públicos (sin JWT)
+const publicApi: AxiosInstance = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
@@ -68,7 +77,7 @@ export const clearTokens = () => {
 export const isAuthenticated = () => !!accessToken || !!refreshToken;
 
 // ============================================================================
-// AUTH API
+// AUTH API (Protegido)
 // ============================================================================
 export const authAPI = {
   register: async (email: string, password: string, nombre: string) => {
@@ -89,12 +98,29 @@ export const authAPI = {
 };
 
 // ============================================================================
-// TIPSTERS API
+// DASHBOARD API (Público - Solo lectura de datos generales)
+// ============================================================================
+export const dashboardAPI = {
+  getData: async () => {
+    const response = await publicApi.get('/api/public/dashboard');
+    return response.data;
+  },
+};
+
+// ============================================================================
+// TIPSTERS API (Protegido)
 // ============================================================================
 export const tipstersAPI = {
   getAll: async () => {
-    const response = await api.get('/api/tipsters');
-    return response.data;
+    // Intenta con autenticación, fallback a público
+    try {
+      const response = await api.get('/api/tipsters');
+      return response.data;
+    } catch (error) {
+      // Fallback: usa datos del dashboard público
+      const dashboard = await dashboardAPI.getData();
+      return { tipsters: [], total: dashboard.tipsters?.total || 0 };
+    }
   },
   getById: async (id: number) => {
     const response = await api.get(`/api/tipsters/${id}`);
@@ -103,7 +129,7 @@ export const tipstersAPI = {
 };
 
 // ============================================================================
-// BANCA API
+// BANCA API (Protegido)
 // ============================================================================
 export const bancaAPI = {
   get: async () => {
@@ -117,7 +143,7 @@ export const bancaAPI = {
 };
 
 // ============================================================================
-// CONSEJO IA API (CLAUDE)
+// CONSEJO IA API (Protegido)
 // ============================================================================
 export const consejoIAAPI = {
   get: async (tipsterId: number) => {
@@ -127,22 +153,34 @@ export const consejoIAAPI = {
 };
 
 // ============================================================================
-// APUESTAS API
+// APUESTAS API (Mixto)
 // ============================================================================
 export const apuestasAPI = {
   getHoy: async () => {
-    const response = await api.get('/api/apuestas/hoy');
-    return response.data;
+    // Intenta con autenticación, fallback a público
+    try {
+      const response = await api.get('/api/apuestas/hoy');
+      return response.data;
+    } catch (error) {
+      // Fallback: usa datos del dashboard público
+      const dashboard = await dashboardAPI.getData();
+      return dashboard.apuestas || { total: 0, apuestas: [] };
+    }
   },
 };
 
 // ============================================================================
-// RECOMENDACIONES API
+// RECOMENDACIONES API (Protegido)
 // ============================================================================
 export const recomendacionesAPI = {
   get: async () => {
-    const response = await api.get('/api/recomendaciones');
-    return response.data;
+    try {
+      const response = await api.get('/api/recomendaciones');
+      return response.data;
+    } catch (error) {
+      // Fallback vacío
+      return { seguir: [], evitar: [] };
+    }
   },
 };
 
