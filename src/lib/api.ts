@@ -1,6 +1,6 @@
 /**
  * API Client - Conexión segura al backend
- * Versión con seguridad mejorada
+ * Versión 2.0 - Con Mi Banca, Notificaciones y Logros
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
@@ -77,7 +77,7 @@ export const clearTokens = () => {
 export const isAuthenticated = () => !!accessToken || !!refreshToken;
 
 // ============================================================================
-// AUTH API (Protegido)
+// AUTH API
 // ============================================================================
 export const authAPI = {
   register: async (email: string, password: string, nombre: string) => {
@@ -98,7 +98,7 @@ export const authAPI = {
 };
 
 // ============================================================================
-// DASHBOARD API (Público - Solo lectura de datos generales)
+// DASHBOARD API
 // ============================================================================
 export const dashboardAPI = {
   getData: async () => {
@@ -108,16 +108,14 @@ export const dashboardAPI = {
 };
 
 // ============================================================================
-// TIPSTERS API (Protegido)
+// TIPSTERS API
 // ============================================================================
 export const tipstersAPI = {
   getAll: async () => {
-    // Intenta con autenticación, fallback a público
     try {
       const response = await api.get('/api/tipsters');
       return response.data;
     } catch (error) {
-      // Fallback: usa datos del dashboard público
       const dashboard = await dashboardAPI.getData();
       return { tipsters: [], total: dashboard.tipsters?.total || 0 };
     }
@@ -129,7 +127,7 @@ export const tipstersAPI = {
 };
 
 // ============================================================================
-// BANCA API (Protegido)
+// BANCA API (Legacy)
 // ============================================================================
 export const bancaAPI = {
   get: async () => {
@@ -143,7 +141,160 @@ export const bancaAPI = {
 };
 
 // ============================================================================
-// CONSEJO IA API (Protegido)
+// MI BANCA API (Nuevo v7)
+// ============================================================================
+export const miBancaAPI = {
+  // Configurar banca inicial (onboarding)
+  setup: async (data: {
+    banca_inicial: number;
+    perfil_riesgo: 'conservador' | 'moderado' | 'agresivo';
+    deportes_interes: string[];
+    casa_apuestas: string;
+    meta_mensual: number;
+  }) => {
+    const response = await api.post('/api/banca/setup', data);
+    return response.data;
+  },
+
+  // Obtener estado actual
+  getEstado: async () => {
+    const response = await api.get('/api/banca/estado');
+    return response.data;
+  },
+
+  // Actualizar configuración
+  actualizar: async (data: Partial<{
+    perfil_riesgo: string;
+    deportes_interes: string[];
+    casa_apuestas: string;
+    meta_mensual: number;
+    banca_actual: number;
+  }>) => {
+    const response = await api.put('/api/banca/actualizar', data);
+    return response.data;
+  },
+
+  // Obtener historial para gráfico
+  getHistorial: async (dias: number = 30) => {
+    const response = await api.get(`/api/banca/historial?dias=${dias}`);
+    return response.data;
+  },
+
+  // Obtener estadísticas detalladas
+  getEstadisticas: async (periodo: 'semana' | 'mes' | 'todo' = 'mes') => {
+    const response = await api.get(`/api/banca/estadisticas?periodo=${periodo}`);
+    return response.data;
+  },
+};
+
+// ============================================================================
+// MIS APUESTAS API (Nuevo v7)
+// ============================================================================
+export const misApuestasAPI = {
+  // Listar mis apuestas
+  getAll: async (estado?: string, limite: number = 50) => {
+    let url = `/api/mis-apuestas?limite=${limite}`;
+    if (estado) url += `&estado=${estado}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  // Registrar nueva apuesta
+  crear: async (data: {
+    apuesta_sistema_id?: number;
+    tipster_id?: number;
+    descripcion: string;
+    cuota_usuario: number;
+    stake: number;
+    fecha_evento?: string;
+    notas?: string;
+  }) => {
+    const response = await api.post('/api/mis-apuestas', data);
+    return response.data;
+  },
+
+  // Marcar resultado
+  marcarResultado: async (id: number, resultado: 'GANADA' | 'PERDIDA' | 'NULA') => {
+    const response = await api.put(`/api/mis-apuestas/${id}/resultado`, { resultado });
+    return response.data;
+  },
+
+  // Eliminar apuesta pendiente
+  eliminar: async (id: number) => {
+    const response = await api.delete(`/api/mis-apuestas/${id}`);
+    return response.data;
+  },
+};
+
+// ============================================================================
+// PICKS RECOMENDADOS API (Nuevo v7)
+// ============================================================================
+export const picksAPI = {
+  // Obtener picks recomendados
+  getRecomendados: async () => {
+    const response = await api.get('/api/picks/recomendados');
+    return response.data;
+  },
+};
+
+// ============================================================================
+// NOTIFICACIONES API (Nuevo v7)
+// ============================================================================
+export const notificacionesAPI = {
+  // Obtener configuración
+  getConfig: async () => {
+    const response = await api.get('/api/notificaciones/config');
+    return response.data;
+  },
+
+  // Actualizar configuración
+  updateConfig: async (data: {
+    push_enabled?: boolean;
+    email_enabled?: boolean;
+    telegram_enabled?: boolean;
+    alertas?: {
+      pick_alto?: boolean;
+      pick_medio?: boolean;
+      racha_tipster?: boolean;
+      resultado?: boolean;
+      recordatorio?: boolean;
+      drawdown?: boolean;
+      meta?: boolean;
+    };
+    horario_inicio?: string;
+    horario_fin?: string;
+    silenciar_fines_semana?: boolean;
+  }) => {
+    const response = await api.put('/api/notificaciones/config', data);
+    return response.data;
+  },
+
+  // Generar código para vincular Telegram
+  vincularTelegram: async () => {
+    const response = await api.post('/api/notificaciones/vincular-telegram');
+    return response.data;
+  },
+
+  // Desvincular Telegram
+  desvincularTelegram: async () => {
+    const response = await api.delete('/api/notificaciones/desvincular-telegram');
+    return response.data;
+  },
+};
+
+// ============================================================================
+// LOGROS API (Nuevo v7)
+// ============================================================================
+export const logrosAPI = {
+  // Obtener mis logros
+  getMisLogros: async () => {
+    const response = await api.get('/api/logros/mis-logros');
+    return response.data;
+  },
+};
+
+// ============================================================================
+// CONSEJO IA API
 // ============================================================================
 export const consejoIAAPI = {
   get: async (tipsterId: number) => {
@@ -153,16 +304,14 @@ export const consejoIAAPI = {
 };
 
 // ============================================================================
-// APUESTAS API (Mixto)
+// APUESTAS API
 // ============================================================================
 export const apuestasAPI = {
   getHoy: async () => {
-    // Intenta con autenticación, fallback a público
     try {
       const response = await api.get('/api/apuestas/hoy');
       return response.data;
     } catch (error) {
-      // Fallback: usa datos del dashboard público
       const dashboard = await dashboardAPI.getData();
       return dashboard.apuestas || { total: 0, apuestas: [] };
     }
@@ -170,7 +319,7 @@ export const apuestasAPI = {
 };
 
 // ============================================================================
-// RECOMENDACIONES API (Protegido)
+// RECOMENDACIONES API
 // ============================================================================
 export const recomendacionesAPI = {
   get: async () => {
@@ -178,7 +327,6 @@ export const recomendacionesAPI = {
       const response = await api.get('/api/recomendaciones');
       return response.data;
     } catch (error) {
-      // Fallback vacío
       return { seguir: [], evitar: [] };
     }
   },
