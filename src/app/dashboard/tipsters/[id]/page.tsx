@@ -508,7 +508,7 @@ const HistorialApuestas = ({ historial }: { historial: Apuesta[] }) => {
                       {a.tipo_mercado || 'N/A'}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 text-center text-sm font-mono text-white">@{a.cuota?.toFixed(2)}</td>
+                  <td className="py-3 pr-4 text-center text-sm font-mono text-white">@{Number(a.cuota || 0).toFixed(2)}</td>
                   <td className="py-3 pr-4 text-center">
                     <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg font-bold ${e.bg}`}>
                       {e.icon}
@@ -685,10 +685,10 @@ export default function TipsterDetallePage() {
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
               <p className={`text-3xl font-bold font-mono ${
-                estadisticas.porcentaje_acierto >= 60 ? 'text-[#00D1B2]' : 
-                estadisticas.porcentaje_acierto >= 50 ? 'text-[#FFDD57]' : 'text-[#EF4444]'
+                (estadisticas.porcentaje_acierto || 0) >= 60 ? 'text-[#00D1B2]' : 
+                (estadisticas.porcentaje_acierto || 0) >= 50 ? 'text-[#FFDD57]' : 'text-[#EF4444]'
               }`}>
-                {estadisticas.porcentaje_acierto?.toFixed(1) || 0}%
+                {Number(estadisticas.porcentaje_acierto || 0).toFixed(1)}%
               </p>
               <p className="text-xs text-[#64748B] mt-1">Win Rate</p>
             </div>
@@ -702,7 +702,7 @@ export default function TipsterDetallePage() {
             </div>
             <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
               <p className={`text-3xl font-bold font-mono ${isRentable ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-                {isRentable ? '+' : ''}${(estadisticas.ganancia_total / 1000).toFixed(1)}K
+                {isRentable ? '+' : ''}${(Number(estadisticas.ganancia_total || 0) / 1000).toFixed(1)}K
               </p>
               <p className="text-xs text-[#64748B] mt-1">Profit</p>
             </div>
