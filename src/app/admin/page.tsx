@@ -1,179 +1,56 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useAuth, adminFetch } from './layout';
 import { 
   AlertTriangle, TrendingUp, TrendingDown, Users, Calendar,
-  CheckCircle, XCircle, Eye, Pause, Play, RefreshCw, 
-  ChevronDown, ChevronUp, Bell, Activity, DollarSign,
-  Shield, Clock, Filter, Search
+  CheckCircle, XCircle, RefreshCw, Trophy, Target,
+  DollarSign, Activity, Clock
 } from 'lucide-react';
 
 // ============================================================
 // TIPOS
 // ============================================================
 
-interface ResumenAdmin {
-  tipsters_activos: number;
-  apuestas_hoy: number;
-  apuestas_mes: number;
-  ganancia_mes: number;
-  alertas_criticas: number;
-  alertas_alerta: number;
-  alertas_precaucion: number;
-  alertas_total_pendientes: number;
+interface DashboardStats {
+  total_usuarios?: number;
+  usuarios_activos?: number;
+  total_tipsters?: number;
+  tipsters_activos?: number;
+  total_apuestas?: number;
+  apuestas_pendientes?: number;
+  profit_total?: number;
+  win_rate?: number;
 }
 
-interface TipsterMonitor {
-  tipster_id: number;
+interface TipsterStat {
+  id: number;
+  nombre_real: string;
   alias: string;
   deporte: string;
-  estrategia_activa: string;
-  wr_historico: number;
-  roi_historico: number;
   total_apuestas: number;
-  estado: string;
-  racha_actual: number;
-  wr_mes: number;
-  apuestas_mes: number;
-  alertas_criticas: number;
-  alertas_alerta: number;
-  alertas_precaucion: number;
-  mercados_config: Record<string, MercadoConfig>;
-}
-
-interface MercadoConfig {
-  multiplicador: number;
+  ganadas: number;
+  perdidas: number;
+  pendientes: number;
   win_rate: number;
-  prioridad: string;
-  activo: boolean;
+  profit: number;
+  roi: number;
+  racha_actual: number;
 }
 
-interface Alerta {
+interface ApuestaReciente {
   id: number;
+  fecha: string;
   tipster_id: number;
-  alias: string;
-  deporte: string;
-  tipo_alerta: string;
-  nivel: string;
-  mercado: string | null;
-  valor_anterior: number;
-  valor_actual: number;
-  diferencia: number;
-  mensaje: string;
-  recomendacion: string;
-  fecha_alerta: string;
-  dias_sin_revisar: number;
+  tipster_nombre?: string;
+  apuesta: string;
+  cuota: number;
+  stake_ia: number;
+  resultado: string;
+  ganancia_neta: number;
+  tipo_mercado?: string;
+  racha_actual?: number;
 }
-
-interface HistorialAccion {
-  id: number;
-  fecha_accion: string;
-  alias: string;
-  tipo_accion: string;
-  mercado: string | null;
-  valor_anterior: string;
-  valor_nuevo: string;
-  motivo: string;
-  usuario: string;
-}
-
-// ============================================================
-// API CLIENT CON SEGURIDAD
-// ============================================================
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://tu-api.pythonanywhere.com';
-
-const getAuthHeaders = (): HeadersInit => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
-};
-
-const adminAPI = {
-  getResumen: async (): Promise<ResumenAdmin> => {
-    const res = await fetch(`${API_BASE}/api/admin/resumen`, { headers: getAuthHeaders() });
-    if (!res.ok) throw new Error('Error al obtener resumen');
-    const data = await res.json();
-    return data.data;
-  },
-  
-  getTipsters: async (): Promise<TipsterMonitor[]> => {
-    const res = await fetch(`${API_BASE}/api/admin/tipsters`, { headers: getAuthHeaders() });
-    if (!res.ok) throw new Error('Error al obtener tipsters');
-    const data = await res.json();
-    return data.data;
-  },
-  
-  getAlertas: async (): Promise<Alerta[]> => {
-    const res = await fetch(`${API_BASE}/api/admin/alertas`, { headers: getAuthHeaders() });
-    if (!res.ok) throw new Error('Error al obtener alertas');
-    const data = await res.json();
-    return data.data;
-  },
-  
-  getHistorial: async (): Promise<HistorialAccion[]> => {
-    const res = await fetch(`${API_BASE}/api/admin/historial`, { headers: getAuthHeaders() });
-    if (!res.ok) throw new Error('Error al obtener historial');
-    const data = await res.json();
-    return data.data;
-  },
-  
-  resolverAlerta: async (alertaId: number, accion: string): Promise<void> => {
-    const res = await fetch(`${API_BASE}/api/admin/alertas/${alertaId}/resolver`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ accion_tomada: accion }),
-    });
-    if (!res.ok) throw new Error('Error al resolver alerta');
-  },
-  
-  ignorarAlerta: async (alertaId: number, motivo: string): Promise<void> => {
-    const res = await fetch(`${API_BASE}/api/admin/alertas/${alertaId}/ignorar`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ motivo }),
-    });
-    if (!res.ok) throw new Error('Error al ignorar alerta');
-  },
-  
-  actualizarMultiplicador: async (tipsterId: number, mercado: string, multiplicador: number, motivo: string): Promise<void> => {
-    const res = await fetch(`${API_BASE}/api/admin/tipsters/${tipsterId}/mercado`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ mercado, multiplicador, motivo }),
-    });
-    if (!res.ok) throw new Error('Error al actualizar multiplicador');
-  },
-  
-  pausarTipster: async (tipsterId: number, motivo: string): Promise<void> => {
-    const res = await fetch(`${API_BASE}/api/admin/tipsters/${tipsterId}/pausar`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ motivo }),
-    });
-    if (!res.ok) throw new Error('Error al pausar tipster');
-  },
-  
-  activarTipster: async (tipsterId: number): Promise<void> => {
-    const res = await fetch(`${API_BASE}/api/admin/tipsters/${tipsterId}/activar`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-    });
-    if (!res.ok) throw new Error('Error al activar tipster');
-  },
-  
-  detectarAlertas: async (): Promise<string> => {
-    const res = await fetch(`${API_BASE}/api/admin/detectar-alertas`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-    });
-    if (!res.ok) throw new Error('Error al detectar alertas');
-    const data = await res.json();
-    return data.message;
-  },
-};
 
 // ============================================================
 // COMPONENTES
@@ -187,73 +64,73 @@ const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
-const formatDate = (dateStr: string): string => {
-  return new Date(dateStr).toLocaleDateString('es-CL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-// Tarjeta de resumen
-const ResumenCard = ({ 
-  icon, 
+// Tarjeta de estadística
+const StatCard = ({ 
+  icon: Icon, 
   label, 
   value, 
-  color = 'text-white',
-  bgColor = 'bg-[#1E293B]'
+  color = 'teal',
+  trend
 }: { 
-  icon: React.ReactNode; 
+  icon: React.ElementType; 
   label: string; 
   value: string | number; 
-  color?: string;
-  bgColor?: string;
-}) => (
-  <div className={`${bgColor} rounded-xl p-4 border border-[#334155]`}>
-    <div className="flex items-center gap-2 mb-2">
-      <span className="text-[#94A3B8]">{icon}</span>
-      <span className="text-xs text-[#94A3B8] uppercase">{label}</span>
-    </div>
-    <p className={`text-2xl font-bold font-mono ${color}`}>{value}</p>
-  </div>
-);
-
-// Badge de alerta
-const AlertaBadge = ({ nivel }: { nivel: string }) => {
-  const config: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-    'CRITICO': { bg: 'bg-red-500/20', text: 'text-red-400', icon: <AlertTriangle className="h-3 w-3" /> },
-    'ALERTA': { bg: 'bg-orange-500/20', text: 'text-orange-400', icon: <AlertTriangle className="h-3 w-3" /> },
-    'PRECAUCION': { bg: 'bg-yellow-500/20', text: 'text-yellow-400', icon: <Eye className="h-3 w-3" /> },
-    'INFO': { bg: 'bg-blue-500/20', text: 'text-blue-400', icon: <Bell className="h-3 w-3" /> },
+  color?: 'teal' | 'emerald' | 'amber' | 'red' | 'blue' | 'purple';
+  trend?: 'up' | 'down' | null;
+}) => {
+  const colorClasses = {
+    teal: 'from-teal-500 to-teal-600',
+    emerald: 'from-emerald-500 to-emerald-600',
+    amber: 'from-amber-500 to-amber-600',
+    red: 'from-red-500 to-red-600',
+    blue: 'from-blue-500 to-blue-600',
+    purple: 'from-purple-500 to-purple-600'
   };
-  
-  const c = config[nivel] || config['INFO'];
-  
+
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${c.bg} ${c.text}`}>
-      {c.icon} {nivel}
-    </span>
+    <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+        {trend && (
+          <span className={trend === 'up' ? 'text-emerald-400' : 'text-red-400'}>
+            {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+          </span>
+        )}
+      </div>
+      <p className="text-gray-400 text-sm mb-1">{label}</p>
+      <p className="text-2xl font-bold text-white">{value}</p>
+    </div>
   );
 };
 
-// Badge de estado
-const EstadoBadge = ({ estado }: { estado: string }) => {
-  const isActive = estado === 'ACTIVO';
+// Badge de resultado
+const ResultBadge = ({ resultado }: { resultado: string }) => {
+  if (resultado === 'GANADA') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-medium">
+        <CheckCircle className="w-3 h-3" /> GANADA
+      </span>
+    );
+  }
+  if (resultado === 'PERDIDA') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs font-medium">
+        <XCircle className="w-3 h-3" /> PERDIDA
+      </span>
+    );
+  }
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${
-      isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-    }`}>
-      {isActive ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-      {estado}
+    <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 rounded-lg text-xs font-medium">
+      <Clock className="w-3 h-3" /> PENDIENTE
     </span>
   );
 };
 
 // Badge de racha
 const RachaBadge = ({ racha }: { racha: number }) => {
-  const color = racha >= 3 ? 'text-amber-400' : racha > 0 ? 'text-green-400' : racha === 0 ? 'text-blue-400' : racha >= -2 ? 'text-yellow-400' : 'text-red-400';
+  const color = racha >= 3 ? 'text-amber-400' : racha > 0 ? 'text-emerald-400' : racha === 0 ? 'text-gray-400' : 'text-red-400';
   const emoji = racha >= 3 ? '🔥' : racha > 0 ? '📈' : racha === 0 ? '➡️' : '📉';
   
   return (
@@ -263,297 +140,90 @@ const RachaBadge = ({ racha }: { racha: number }) => {
   );
 };
 
-// Tarjeta de alerta
-const AlertaCard = ({ 
-  alerta, 
-  onResolver, 
-  onIgnorar 
-}: { 
-  alerta: Alerta; 
-  onResolver: (id: number) => void;
-  onIgnorar: (id: number) => void;
-}) => (
-  <div className={`bg-[#1E293B] rounded-xl p-4 border ${
-    alerta.nivel === 'CRITICO' ? 'border-red-500/50' :
-    alerta.nivel === 'ALERTA' ? 'border-orange-500/50' :
-    'border-yellow-500/50'
-  }`}>
-    <div className="flex items-start justify-between mb-3">
-      <div className="flex items-center gap-2">
-        <AlertaBadge nivel={alerta.nivel} />
-        <span className="text-white font-bold">{alerta.alias}</span>
-        <span className="text-xs text-[#94A3B8]">• {alerta.deporte}</span>
-      </div>
-      <span className="text-xs text-[#94A3B8]">Hace {alerta.dias_sin_revisar} días</span>
-    </div>
-    
-    <p className="text-sm text-[#94A3B8] mb-2">{alerta.mensaje}</p>
-    
-    {alerta.recomendacion && (
-      <p className="text-xs text-[#00D1B2] mb-3">
-        💡 {alerta.recomendacion}
-      </p>
-    )}
-    
-    <div className="flex gap-2">
-      <button 
-        onClick={() => onResolver(alerta.id)}
-        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-500/20 text-green-400 rounded-lg text-xs font-bold hover:bg-green-500/30 transition-colors"
-      >
-        <CheckCircle className="h-3 w-3" /> Resolver
-      </button>
-      <button 
-        onClick={() => onIgnorar(alerta.id)}
-        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-[#334155] text-[#94A3B8] rounded-lg text-xs font-bold hover:bg-[#475569] transition-colors"
-      >
-        <XCircle className="h-3 w-3" /> Ignorar
-      </button>
-    </div>
-  </div>
-);
-
-// Fila de tipster expandible
-const TipsterRow = ({ 
-  tipster, 
-  onPausar, 
-  onActivar,
-  onActualizarMercado 
-}: { 
-  tipster: TipsterMonitor;
-  onPausar: (id: number) => void;
-  onActivar: (id: number) => void;
-  onActualizarMercado: (tipsterId: number, mercado: string, mult: number) => void;
-}) => {
-  const [expanded, setExpanded] = useState(false);
-  
-  const totalAlertas = tipster.alertas_criticas + tipster.alertas_alerta + tipster.alertas_precaucion;
-  
-  return (
-    <>
-      <tr 
-        className="border-b border-[#334155] hover:bg-[#0F172A]/50 cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <td className="py-3 px-4">
-          <div className="flex items-center gap-2">
-            {expanded ? <ChevronUp className="h-4 w-4 text-[#94A3B8]" /> : <ChevronDown className="h-4 w-4 text-[#94A3B8]" />}
-            <span className="font-bold text-white">{tipster.alias}</span>
-          </div>
-        </td>
-        <td className="py-3 px-4 text-[#94A3B8] text-sm">{tipster.deporte}</td>
-        <td className="py-3 px-4"><RachaBadge racha={tipster.racha_actual || 0} /></td>
-        <td className="py-3 px-4 font-mono text-sm text-white">{tipster.wr_mes?.toFixed(1) || '-'}%</td>
-        <td className="py-3 px-4 font-mono text-sm">
-          <span className={tipster.roi_historico >= 0 ? 'text-[#00D1B2]' : 'text-red-400'}>
-            {tipster.roi_historico >= 0 ? '+' : ''}{tipster.roi_historico?.toFixed(2)}%
-          </span>
-        </td>
-        <td className="py-3 px-4"><EstadoBadge estado={tipster.estado} /></td>
-        <td className="py-3 px-4">
-          {totalAlertas > 0 ? (
-            <div className="flex gap-1">
-              {tipster.alertas_criticas > 0 && <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">🔴 {tipster.alertas_criticas}</span>}
-              {tipster.alertas_alerta > 0 && <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs">🟠 {tipster.alertas_alerta}</span>}
-              {tipster.alertas_precaucion > 0 && <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">🟡 {tipster.alertas_precaucion}</span>}
-            </div>
-          ) : (
-            <span className="text-green-400 text-xs">✅ OK</span>
-          )}
-        </td>
-        <td className="py-3 px-4">
-          {tipster.estado === 'ACTIVO' ? (
-            <button 
-              onClick={(e) => { e.stopPropagation(); onPausar(tipster.tipster_id); }}
-              className="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30"
-              title="Pausar tipster"
-            >
-              <Pause className="h-4 w-4" />
-            </button>
-          ) : (
-            <button 
-              onClick={(e) => { e.stopPropagation(); onActivar(tipster.tipster_id); }}
-              className="p-1.5 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30"
-              title="Activar tipster"
-            >
-              <Play className="h-4 w-4" />
-            </button>
-          )}
-        </td>
-      </tr>
-      
-      {expanded && tipster.mercados_config && (
-        <tr>
-          <td colSpan={8} className="bg-[#0F172A] p-4">
-            <div className="text-xs text-[#94A3B8] mb-2">Configuración de Mercados:</div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {Object.entries(tipster.mercados_config).map(([mercado, config]) => (
-                <div 
-                  key={mercado}
-                  className={`p-2 rounded-lg border ${
-                    config.multiplicador === 0 ? 'border-red-500/30 bg-red-500/10' :
-                    config.multiplicador >= 1.3 ? 'border-green-500/30 bg-green-500/10' :
-                    'border-[#334155] bg-[#1E293B]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-white text-xs font-bold">{mercado}</span>
-                    <span className={`text-xs ${config.activo ? 'text-green-400' : 'text-red-400'}`}>
-                      {config.activo ? '✅' : '❌'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#94A3B8]">WR: {config.win_rate}%</span>
-                    <span className="text-[#00D1B2] font-mono">×{config.multiplicador}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
-  );
-};
-
 // ============================================================
 // COMPONENTE PRINCIPAL
 // ============================================================
 
 export default function AdminDashboard() {
-  const [resumen, setResumen] = useState<ResumenAdmin | null>(null);
-  const [tipsters, setTipsters] = useState<TipsterMonitor[]>([]);
-  const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [historial, setHistorial] = useState<HistorialAccion[]>([]);
+  const { accessToken } = useAuth();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [tipsters, setTipsters] = useState<TipsterStat[]>([]);
+  const [apuestas, setApuestas] = useState<ApuestaReciente[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'alertas' | 'tipsters' | 'historial'>('alertas');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (!accessToken) return;
+    
     try {
       setIsLoading(true);
-      const [resumenData, tipstersData, alertasData, historialData] = await Promise.all([
-        adminAPI.getResumen(),
-        adminAPI.getTipsters(),
-        adminAPI.getAlertas(),
-        adminAPI.getHistorial(),
-      ]);
-      
-      setResumen(resumenData);
-      setTipsters(tipstersData);
-      setAlertas(alertasData);
-      setHistorial(historialData);
       setError(null);
+
+      // Fetch dashboard stats
+      const statsRes = await adminFetch('/api/admin/dashboard/stats', {}, accessToken);
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData.data || statsData);
+      }
+
+      // Fetch tipsters stats
+      const tipstersRes = await adminFetch('/api/admin/tipsters/stats', {}, accessToken);
+      if (tipstersRes.ok) {
+        const tipstersData = await tipstersRes.json();
+        // Ordenar por profit descendente
+        const sorted = (tipstersData.data || tipstersData || [])
+          .sort((a: TipsterStat, b: TipsterStat) => (b.profit || 0) - (a.profit || 0))
+          .slice(0, 10);
+        setTipsters(sorted);
+      }
+
+      // Fetch apuestas recientes
+      const apuestasRes = await adminFetch('/api/admin/apuestas?limit=15', {}, accessToken);
+      if (apuestasRes.ok) {
+        const apuestasData = await apuestasRes.json();
+        setApuestas((apuestasData.data || apuestasData.apuestas || []).slice(0, 10));
+      }
+
+      setLastUpdate(new Date());
     } catch (err) {
+      console.error('Error fetching dashboard data:', err);
       setError('Error al cargar datos. Verifica tu conexión.');
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
     fetchData();
     
-    // Auto-refresh cada 5 minutos
-    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    // Auto-refresh cada 2 minutos
+    const interval = setInterval(fetchData, 2 * 60 * 1000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const handleResolverAlerta = async (alertaId: number) => {
-    const accion = prompt('¿Qué acción tomaste?');
-    if (!accion) return;
-    
-    try {
-      await adminAPI.resolverAlerta(alertaId, accion);
-      fetchData();
-    } catch (err) {
-      alert('Error al resolver alerta');
-    }
-  };
-
-  const handleIgnorarAlerta = async (alertaId: number) => {
-    const motivo = prompt('¿Por qué ignoras esta alerta?', 'Racha temporal');
-    if (!motivo) return;
-    
-    try {
-      await adminAPI.ignorarAlerta(alertaId, motivo);
-      fetchData();
-    } catch (err) {
-      alert('Error al ignorar alerta');
-    }
-  };
-
-  const handlePausarTipster = async (tipsterId: number) => {
-    const motivo = prompt('¿Por qué pausas este tipster?');
-    if (!motivo) return;
-    
-    try {
-      await adminAPI.pausarTipster(tipsterId, motivo);
-      fetchData();
-    } catch (err) {
-      alert('Error al pausar tipster');
-    }
-  };
-
-  const handleActivarTipster = async (tipsterId: number) => {
-    if (!confirm('¿Activar este tipster?')) return;
-    
-    try {
-      await adminAPI.activarTipster(tipsterId);
-      fetchData();
-    } catch (err) {
-      alert('Error al activar tipster');
-    }
-  };
-
-  const handleActualizarMercado = async (tipsterId: number, mercado: string, multiplicador: number) => {
-    const motivo = prompt(`¿Por qué cambias el multiplicador de ${mercado}?`);
-    if (!motivo) return;
-    
-    try {
-      await adminAPI.actualizarMultiplicador(tipsterId, mercado, multiplicador, motivo);
-      fetchData();
-    } catch (err) {
-      alert('Error al actualizar multiplicador');
-    }
-  };
-
-  const handleDetectarAlertas = async () => {
-    try {
-      const message = await adminAPI.detectarAlertas();
-      alert(message);
-      fetchData();
-    } catch (err) {
-      alert('Error al detectar alertas');
-    }
-  };
-
-  const filteredTipsters = tipsters.filter(t => 
-    t.alias.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (isLoading) {
+  if (isLoading && !stats) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#0F172A]">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#00D1B2]/30 border-t-[#00D1B2] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#94A3B8]">Cargando panel de administración...</p>
+          <div className="w-12 h-12 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Cargando dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !stats) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#0F172A]">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
           <p className="text-red-400 mb-4">{error}</p>
           <button 
             onClick={fetchData}
-            className="px-4 py-2 bg-[#00D1B2] text-white rounded-lg"
+            className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg flex items-center gap-2 mx-auto"
           >
+            <RefreshCw className="w-4 h-4" />
             Reintentar
           </button>
         </div>
@@ -562,225 +232,183 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F172A] p-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Shield className="h-6 w-6 text-[#00D1B2]" />
-            Panel de Control Admin
-          </h1>
-          <p className="text-[#94A3B8] text-sm mt-1">
-            Sistema de alertas y monitoreo de tipsters
-          </p>
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-gray-400">Resumen general del sistema</p>
         </div>
         <div className="flex items-center gap-3">
-          <button 
-            onClick={handleDetectarAlertas}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition-colors"
-          >
-            <Bell className="h-4 w-4" />
-            Detectar Alertas
-          </button>
+          {lastUpdate && (
+            <span className="text-xs text-gray-500">
+              Actualizado: {lastUpdate.toLocaleTimeString()}
+            </span>
+          )}
           <button 
             onClick={fetchData}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1E293B] text-[#94A3B8] rounded-lg hover:bg-[#334155] transition-colors"
+            disabled={isLoading}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white rounded-lg flex items-center gap-2"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             Actualizar
           </button>
         </div>
       </div>
 
-      {/* Resumen Cards */}
-      {resumen && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
-          <ResumenCard 
-            icon={<Users className="h-4 w-4" />} 
-            label="Tipsters" 
-            value={resumen.tipsters_activos} 
-          />
-          <ResumenCard 
-            icon={<Calendar className="h-4 w-4" />} 
-            label="Hoy" 
-            value={resumen.apuestas_hoy} 
-          />
-          <ResumenCard 
-            icon={<Activity className="h-4 w-4" />} 
-            label="Este Mes" 
-            value={resumen.apuestas_mes} 
-          />
-          <ResumenCard 
-            icon={<DollarSign className="h-4 w-4" />} 
-            label="Ganancia Mes" 
-            value={formatCurrency(resumen.ganancia_mes)}
-            color={resumen.ganancia_mes >= 0 ? 'text-[#00D1B2]' : 'text-red-400'}
-          />
-          <ResumenCard 
-            icon={<AlertTriangle className="h-4 w-4" />} 
-            label="Críticas" 
-            value={resumen.alertas_criticas}
-            color="text-red-400"
-            bgColor={resumen.alertas_criticas > 0 ? 'bg-red-500/10 border-red-500/30' : 'bg-[#1E293B]'}
-          />
-          <ResumenCard 
-            icon={<AlertTriangle className="h-4 w-4" />} 
-            label="Alertas" 
-            value={resumen.alertas_alerta}
-            color="text-orange-400"
-          />
-          <ResumenCard 
-            icon={<Eye className="h-4 w-4" />} 
-            label="Precaución" 
-            value={resumen.alertas_precaucion}
-            color="text-yellow-400"
-          />
-          <ResumenCard 
-            icon={<Bell className="h-4 w-4" />} 
-            label="Total Pend." 
-            value={resumen.alertas_total_pendientes}
-            color={resumen.alertas_total_pendientes > 0 ? 'text-amber-400' : 'text-green-400'}
-          />
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4">
-        {(['alertas', 'tipsters', 'historial'] as const).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === tab 
-                ? 'bg-[#00D1B2] text-white' 
-                : 'bg-[#1E293B] text-[#94A3B8] hover:bg-[#334155]'
-            }`}
-          >
-            {tab === 'alertas' && `🚨 Alertas (${alertas.length})`}
-            {tab === 'tipsters' && `👥 Tipsters (${tipsters.length})`}
-            {tab === 'historial' && `📜 Historial`}
-          </button>
-        ))}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          icon={Users}
+          label="Usuarios Registrados" 
+          value={stats?.total_usuarios || 0}
+          color="blue"
+        />
+        <StatCard 
+          icon={Trophy}
+          label="Tipsters Activos" 
+          value={stats?.tipsters_activos || stats?.total_tipsters || 0}
+          color="purple"
+        />
+        <StatCard 
+          icon={Target}
+          label="Total Apuestas" 
+          value={stats?.total_apuestas || 0}
+          color="teal"
+        />
+        <StatCard 
+          icon={Activity}
+          label="Win Rate Global" 
+          value={`${(stats?.win_rate || 0).toFixed(1)}%`}
+          color="amber"
+          trend={(stats?.win_rate || 0) >= 55 ? 'up' : (stats?.win_rate || 0) < 50 ? 'down' : null}
+        />
       </div>
 
-      {/* Content */}
-      <div className="bg-[#1E293B] rounded-xl border border-[#334155]">
-        {/* Tab: Alertas */}
-        {activeTab === 'alertas' && (
-          <div className="p-4">
-            {alertas.length === 0 ? (
-              <div className="text-center py-12">
-                <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-                <p className="text-green-400 font-bold">¡Todo en orden!</p>
-                <p className="text-[#94A3B8] text-sm">No hay alertas pendientes</p>
-              </div>
+      {/* Profit Card */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-700 border border-slate-600 rounded-xl p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-gray-400 text-sm mb-1">Profit Total Acumulado</p>
+            <p className={`text-4xl font-bold ${(stats?.profit_total || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {formatCurrency(stats?.profit_total || 0)}
+            </p>
+          </div>
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${(stats?.profit_total || 0) >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
+            <DollarSign className={`w-8 h-8 ${(stats?.profit_total || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`} />
+          </div>
+        </div>
+        {stats?.apuestas_pendientes && stats.apuestas_pendientes > 0 && (
+          <p className="text-amber-400 text-sm mt-3 flex items-center gap-1">
+            <Clock className="w-4 h-4" />
+            {stats.apuestas_pendientes} apuestas pendientes
+          </p>
+        )}
+      </div>
+
+      {/* Two Column Layout */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Apuestas Recientes */}
+        <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Target className="w-5 h-5 text-teal-400" />
+              Apuestas Recientes
+            </h2>
+            <a href="/admin/apuestas" className="text-teal-400 hover:text-teal-300 text-sm">
+              Ver todas →
+            </a>
+          </div>
+          
+          <div className="divide-y divide-slate-700">
+            {apuestas.length > 0 ? (
+              apuestas.map((apuesta) => (
+                <div key={apuesta.id} className="p-4 hover:bg-slate-700/30 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-teal-400 font-mono text-sm">#{apuesta.id}</span>
+                      {apuesta.racha_actual !== undefined && (
+                        <RachaBadge racha={apuesta.racha_actual} />
+                      )}
+                    </div>
+                    <ResultBadge resultado={apuesta.resultado} />
+                  </div>
+                  <p className="text-white text-sm mb-2 line-clamp-1">{apuesta.apuesta}</p>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">
+                      @{apuesta.cuota} • {formatCurrency(apuesta.stake_ia)}
+                      {apuesta.tipo_mercado && ` • ${apuesta.tipo_mercado}`}
+                    </span>
+                    <span className={apuesta.ganancia_neta >= 0 ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>
+                      {apuesta.ganancia_neta >= 0 ? '+' : ''}{formatCurrency(apuesta.ganancia_neta)}
+                    </span>
+                  </div>
+                </div>
+              ))
             ) : (
-              <div className="grid md:grid-cols-2 gap-4">
-                {alertas.map(alerta => (
-                  <AlertaCard 
-                    key={alerta.id} 
-                    alerta={alerta}
-                    onResolver={handleResolverAlerta}
-                    onIgnorar={handleIgnorarAlerta}
-                  />
-                ))}
+              <div className="p-8 text-center text-gray-500">
+                No hay apuestas recientes
               </div>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Tab: Tipsters */}
-        {activeTab === 'tipsters' && (
-          <div>
-            <div className="p-4 border-b border-[#334155]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar tipster..."
-                  className="w-full pl-10 pr-4 py-2 bg-[#0F172A] border border-[#334155] rounded-lg text-white placeholder-[#94A3B8] focus:outline-none focus:border-[#00D1B2]"
-                />
+        {/* Top Tipsters */}
+        <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-400" />
+              Top Tipsters por Profit
+            </h2>
+            <a href="/admin/tipsters" className="text-teal-400 hover:text-teal-300 text-sm">
+              Ver todos →
+            </a>
+          </div>
+          
+          <div className="divide-y divide-slate-700">
+            {tipsters.length > 0 ? (
+              tipsters.map((tipster, index) => (
+                <div key={tipster.id} className="p-4 hover:bg-slate-700/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      index === 0 ? 'bg-amber-500/20 text-amber-400' :
+                      index === 1 ? 'bg-gray-400/20 text-gray-300' :
+                      index === 2 ? 'bg-orange-500/20 text-orange-400' :
+                      'bg-slate-600 text-gray-400'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-medium truncate">{tipster.alias}</span>
+                        <span className="text-xs text-gray-500">{tipster.deporte}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                        <span>{tipster.total_apuestas} apuestas</span>
+                        <span>WR: {(tipster.win_rate || 0).toFixed(1)}%</span>
+                        {tipster.racha_actual !== undefined && (
+                          <RachaBadge racha={tipster.racha_actual} />
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-bold ${(tipster.profit || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {formatCurrency(tipster.profit || 0)}
+                      </p>
+                      <p className={`text-xs ${(tipster.roi || 0) >= 0 ? 'text-emerald-400/70' : 'text-red-400/70'}`}>
+                        ROI: {(tipster.roi || 0).toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                No hay datos de tipsters
               </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-[#0F172A]">
-                  <tr className="text-left text-xs text-[#94A3B8] uppercase">
-                    <th className="py-3 px-4">Tipster</th>
-                    <th className="py-3 px-4">Deporte</th>
-                    <th className="py-3 px-4">Racha</th>
-                    <th className="py-3 px-4">WR Mes</th>
-                    <th className="py-3 px-4">ROI</th>
-                    <th className="py-3 px-4">Estado</th>
-                    <th className="py-3 px-4">Alertas</th>
-                    <th className="py-3 px-4">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTipsters.map(tipster => (
-                    <TipsterRow 
-                      key={tipster.tipster_id}
-                      tipster={tipster}
-                      onPausar={handlePausarTipster}
-                      onActivar={handleActivarTipster}
-                      onActualizarMercado={handleActualizarMercado}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            )}
           </div>
-        )}
-
-        {/* Tab: Historial */}
-        {activeTab === 'historial' && (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#0F172A]">
-                <tr className="text-left text-xs text-[#94A3B8] uppercase">
-                  <th className="py-3 px-4">Fecha</th>
-                  <th className="py-3 px-4">Tipster</th>
-                  <th className="py-3 px-4">Acción</th>
-                  <th className="py-3 px-4">Mercado</th>
-                  <th className="py-3 px-4">Cambio</th>
-                  <th className="py-3 px-4">Motivo</th>
-                  <th className="py-3 px-4">Usuario</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historial.map(accion => (
-                  <tr key={accion.id} className="border-b border-[#334155] hover:bg-[#0F172A]/50">
-                    <td className="py-3 px-4 text-xs text-[#94A3B8] font-mono">
-                      {formatDate(accion.fecha_accion)}
-                    </td>
-                    <td className="py-3 px-4 text-white font-bold text-sm">{accion.alias}</td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-1 bg-[#334155] text-[#94A3B8] rounded text-xs">
-                        {accion.tipo_accion.replace(/_/g, ' ')}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-[#94A3B8] text-sm">{accion.mercado || '-'}</td>
-                    <td className="py-3 px-4 text-sm">
-                      {accion.valor_anterior && accion.valor_nuevo && (
-                        <span className="font-mono">
-                          <span className="text-red-400">{accion.valor_anterior}</span>
-                          {' → '}
-                          <span className="text-green-400">{accion.valor_nuevo}</span>
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-[#94A3B8] text-xs max-w-[200px] truncate">
-                      {accion.motivo}
-                    </td>
-                    <td className="py-3 px-4 text-[#94A3B8] text-xs">{accion.usuario}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
