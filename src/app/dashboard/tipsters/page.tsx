@@ -337,9 +337,47 @@ export default function TipstersPage() {
     const fetchTipsters = async () => {
       try {
         const response = await tipstersAPI.getAll();
-        setTipsters(response.tipsters || []);
+        // Manejar diferentes formatos de respuesta del backend
+        let tipstersList: Tipster[] = [];
+        
+        if (Array.isArray(response)) {
+          tipstersList = response;
+        } else if (response?.tipsters && Array.isArray(response.tipsters)) {
+          tipstersList = response.tipsters;
+        } else if (response?.data && Array.isArray(response.data)) {
+          tipstersList = response.data;
+        } else if (typeof response === 'object' && response !== null) {
+          const values = Object.values(response);
+          if (values.length > 0 && Array.isArray(values[0])) {
+            tipstersList = values[0] as Tipster[];
+          }
+        }
+        
+        // Validar y sanitizar datos del backend
+        const validatedTipsters = tipstersList
+          .filter((t): t is Tipster => 
+            t !== null && 
+            typeof t === 'object' && 
+            typeof t.id === 'number'
+          )
+          .map(t => ({
+            id: Number(t.id) || 0,
+            alias: String(t.alias || 'Sin nombre').slice(0, 50),
+            deporte: String(t.deporte || 'Mixto').slice(0, 30),
+            total_apuestas: Math.max(0, Number(t.total_apuestas) || 0),
+            ganadas: Math.max(0, Number(t.ganadas) || 0),
+            perdidas: Math.max(0, Number(t.perdidas) || 0),
+            porcentaje_acierto: Math.min(100, Math.max(0, Number(t.porcentaje_acierto) || 0)),
+            ganancia_total: Number(t.ganancia_total) || 0,
+            racha_actual: Number(t.racha_actual) || 0,
+            tipo_racha: String(t.tipo_racha || '').slice(0, 1),
+            tipo_estrategia: String(t.tipo_estrategia || 'RACHAS').slice(0, 20),
+          }));
+        
+        setTipsters(validatedTipsters);
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching tipsters:', error);
+        setTipsters([]);
       } finally {
         setIsLoading(false);
       }
@@ -348,22 +386,27 @@ export default function TipstersPage() {
     fetchTipsters();
   }, []);
 
+  // Sanitizar input para prevenir XSS
+  const sanitizeInput = (input: string): string => {
+    return input.replace(/[<>\"\'&]/g, '').slice(0, 100);
+  };
+
   // Filtrar y ordenar
   const filteredTipsters = tipsters
-    .filter(t => t.alias.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter(t => t.alias && t.alias.toLowerCase().includes(sanitizeInput(searchTerm).toLowerCase()))
     .sort((a, b) => {
-      if (sortBy === 'ganancia') return b.ganancia_total - a.ganancia_total;
-      if (sortBy === 'winrate') return b.porcentaje_acierto - a.porcentaje_acierto;
-      return b.total_apuestas - a.total_apuestas;
+      if (sortBy === 'ganancia') return (b.ganancia_total || 0) - (a.ganancia_total || 0);
+      if (sortBy === 'winrate') return (b.porcentaje_acierto || 0) - (a.porcentaje_acierto || 0);
+      return (b.total_apuestas || 0) - (a.total_apuestas || 0);
     });
 
-  // Calcular totales
-  const totalGanadas = tipsters.reduce((acc, t) => acc + t.ganadas, 0);
-  const totalPerdidas = tipsters.reduce((acc, t) => acc + t.perdidas, 0);
+  // Calcular totales con validación
+  const totalGanadas = tipsters.reduce((acc, t) => acc + (Number(t.ganadas) || 0), 0);
+  const totalPerdidas = tipsters.reduce((acc, t) => acc + (Number(t.perdidas) || 0), 0);
   const winRatePromedio = tipsters.length > 0 
-    ? (tipsters.reduce((acc, t) => acc + t.porcentaje_acierto, 0) / tipsters.length)
+    ? (tipsters.reduce((acc, t) => acc + (Number(t.porcentaje_acierto) || 0), 0) / tipsters.length)
     : 0;
-  const profitTotal = tipsters.reduce((acc, t) => acc + t.ganancia_total, 0);
+  const profitTotal = tipsters.reduce((acc, t) => acc + (Number(t.ganancia_total) || 0), 0);
 
   if (isLoading) {
     return (
