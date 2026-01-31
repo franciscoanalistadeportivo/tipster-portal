@@ -5,8 +5,9 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   ChevronLeft, Flame, Snowflake, AlertTriangle, AlertCircle, 
-  Info, Search, Calendar, BarChart3, DollarSign, TrendingUp,
-  CheckCircle, XCircle, Clock, Filter
+  Info, Search, Calendar, BarChart3, TrendingUp, Brain,
+  Shield, Target, Zap, Filter, CheckCircle, XCircle, Clock,
+  Star, Award, TrendingDown
 } from 'lucide-react';
 import { tipstersAPI } from '@/lib/api';
 
@@ -26,23 +27,11 @@ interface Apuesta {
   racha_actual?: number;
 }
 
-interface Alerta {
-  id: number;
-  nivel: 'INFO' | 'PRECAUCION' | 'ALERTA' | 'CRITICO';
-  mensaje: string;
-  recomendacion: string;
-}
-
 interface Estrategia {
   estrategia_activa: string;
-  estrategia_recomendada?: string;
   porcentaje_kelly: number;
   stake_minimo: number;
   stake_maximo: number;
-  win_rate?: number;
-  cuota_promedio?: number;
-  yield_calculado?: number;
-  notas?: string;
 }
 
 interface TipsterDetalle {
@@ -56,12 +45,8 @@ interface TipsterDetalle {
     racha_actual: number;
     tipo_racha?: string;
     mejor_racha: number;
-    cuota_promedio?: number;
-    roi?: number;
-    yield_total?: number;
   };
   estrategia: Estrategia;
-  alertas?: Alerta[];
   historial: Apuesta[];
 }
 
@@ -76,40 +61,60 @@ const getDeporteIcon = (deporte: string) => {
   return icons[deporte] || '🎯';
 };
 
-// Normalizar porcentaje Kelly (puede venir como 0.40 o como 40)
-const normalizeKelly = (value: number): number => {
-  if (value <= 1) return value * 100; // 0.40 → 40
-  return value; // ya es 40
+// Calcular ROI real del historial
+const calcularROI = (historial: Apuesta[]): number => {
+  const apuestasResueltas = historial.filter(a => a.resultado === 'GANADA' || a.resultado === 'PERDIDA');
+  if (apuestasResueltas.length === 0) return 0;
+  
+  const totalStakes = apuestasResueltas.reduce((acc, a) => acc + (a.stake_ia || a.stake || 5000), 0);
+  const gananciaTotal = apuestasResueltas.reduce((acc, a) => acc + (a.ganancia_neta || 0), 0);
+  
+  return totalStakes > 0 ? (gananciaTotal / totalStakes) * 100 : 0;
 };
 
-// Obtener el valor Kelly para cálculos (necesita ser decimal)
-const getKellyDecimal = (value: number): number => {
-  if (value > 1) return value / 100; // 40 → 0.40
-  return value; // ya es 0.40
+// Calcular cuota promedio
+const calcularCuotaPromedio = (historial: Apuesta[]): number => {
+  const apuestasResueltas = historial.filter(a => a.resultado === 'GANADA' || a.resultado === 'PERDIDA');
+  if (apuestasResueltas.length === 0) return 0;
+  return apuestasResueltas.reduce((acc, a) => acc + (a.cuota || 0), 0) / apuestasResueltas.length;
 };
 
-const getEstrategiaColor = (tipo: string): string => {
-  const colors: Record<string, string> = {
-    'KELLY': '#3B82F6',
-    'RACHAS': '#F59E0B',
-    'HIBRIDA': '#00D1B2',
-    'FLAT': '#94A3B8',
-    'CONSERVADOR': '#10B981',
-    'PORCENTAJE_FIJO': '#8B5CF6'
-  };
-  return colors[tipo] || '#94A3B8';
-};
-
-const getEstrategiaDescription = (tipo: string): string => {
-  const descriptions: Record<string, string> = {
-    'KELLY': 'Criterion Kelly - Stakes óptimos matemáticos',
-    'RACHAS': 'Ajusta stakes según rachas positivas/negativas',
-    'HIBRIDA': 'Combina Kelly + Rachas + Análisis por mercado',
-    'FLAT': 'Stakes fijos sin variación',
-    'CONSERVADOR': 'Stakes reducidos para minimizar riesgo',
-    'PORCENTAJE_FIJO': 'Porcentaje fijo de la banca'
-  };
-  return descriptions[tipo] || 'Estrategia personalizada';
+// Nivel de confianza basado en métricas
+const calcularNivelConfianza = (winRate: number, roi: number, totalApuestas: number, rachaActual: number): { nivel: string; estrellas: number; color: string } => {
+  let puntos = 0;
+  
+  // Win Rate (max 30 puntos)
+  if (winRate >= 70) puntos += 30;
+  else if (winRate >= 60) puntos += 25;
+  else if (winRate >= 55) puntos += 20;
+  else if (winRate >= 50) puntos += 15;
+  else puntos += 5;
+  
+  // ROI (max 30 puntos)
+  if (roi >= 20) puntos += 30;
+  else if (roi >= 10) puntos += 25;
+  else if (roi >= 5) puntos += 20;
+  else if (roi >= 0) puntos += 10;
+  else puntos += 0;
+  
+  // Total apuestas (max 20 puntos)
+  if (totalApuestas >= 50) puntos += 20;
+  else if (totalApuestas >= 30) puntos += 15;
+  else if (totalApuestas >= 20) puntos += 10;
+  else puntos += 5;
+  
+  // Racha actual (max 20 puntos)
+  if (rachaActual >= 5) puntos += 20;
+  else if (rachaActual >= 3) puntos += 15;
+  else if (rachaActual >= 0) puntos += 10;
+  else puntos += 0;
+  
+  // Determinar nivel
+  if (puntos >= 85) return { nivel: 'EXCELENTE', estrellas: 5, color: '#00D1B2' };
+  if (puntos >= 70) return { nivel: 'MUY BUENO', estrellas: 4, color: '#00D1B2' };
+  if (puntos >= 55) return { nivel: 'BUENO', estrellas: 3, color: '#FFDD57' };
+  if (puntos >= 40) return { nivel: 'REGULAR', estrellas: 2, color: '#F59E0B' };
+  return { nivel: 'EN OBSERVACIÓN', estrellas: 1, color: '#EF4444' };
 };
 
 // ============================================================================
@@ -163,149 +168,196 @@ const RachaBar = ({ racha, tipo }: { racha: number; tipo: string }) => {
 };
 
 // ============================================================================
-// COMPONENTE: Alertas
+// COMPONENTE: Análisis con IA
 // ============================================================================
-const AlertasSection = ({ alertas }: { alertas: Alerta[] }) => {
-  if (!alertas?.length) return null;
+const AnalisisIA = () => {
+  return (
+    <div className="rounded-2xl p-6 border border-[#00D1B2]/30 bg-gradient-to-br from-[#00D1B2]/10 to-transparent">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-[#00D1B2]/20 flex items-center justify-center">
+          <Brain className="h-5 w-5 text-[#00D1B2]" />
+        </div>
+        <div>
+          <h3 className="text-white font-bold">Analizado por Inteligencia Artificial</h3>
+          <p className="text-[#94A3B8] text-sm">Cada pick pasa por nuestro sistema de análisis</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { icon: Target, label: 'EV Positivo', desc: 'Valor esperado' },
+          { icon: BarChart3, label: 'Kelly Criterion', desc: 'Gestión de riesgo' },
+          { icon: Shield, label: 'Filtro Anti-Malo', desc: 'Rechaza picks malos' },
+          { icon: Zap, label: 'Rachas Dinámicas', desc: 'Ajuste automático' },
+        ].map((item, i) => (
+          <div key={i} className="bg-[#0F172A]/50 rounded-xl p-3 text-center">
+            <item.icon className="h-5 w-5 text-[#00D1B2] mx-auto mb-2" />
+            <p className="text-white text-sm font-medium">{item.label}</p>
+            <p className="text-[#64748B] text-xs">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
-  const config: Record<string, { icon: typeof AlertCircle; color: string; bg: string; border: string }> = {
-    CRITICO: { icon: AlertCircle, color: '#EF4444', bg: 'bg-[#EF4444]/10', border: 'border-[#EF4444]/30' },
-    ALERTA: { icon: AlertTriangle, color: '#F59E0B', bg: 'bg-[#F59E0B]/10', border: 'border-[#F59E0B]/30' },
-    PRECAUCION: { icon: Info, color: '#FFDD57', bg: 'bg-[#FFDD57]/10', border: 'border-[#FFDD57]/30' },
-    INFO: { icon: Info, color: '#3B82F6', bg: 'bg-[#3B82F6]/10', border: 'border-[#3B82F6]/30' }
-  };
+// ============================================================================
+// COMPONENTE: Comparación vs Inversiones
+// ============================================================================
+const ComparacionInversiones = ({ roi }: { roi: number }) => {
+  const comparaciones = [
+    { nombre: 'Depósito a plazo', valor: 0.4, color: '#64748B' },
+    { nombre: 'Fondos mutuos', valor: 1.2, color: '#94A3B8' },
+    { nombre: 'Acciones (promedio)', valor: 2.5, color: '#3B82F6' },
+    { nombre: 'Este tipster', valor: roi, color: '#00D1B2', destacado: true },
+  ];
+
+  const maxValor = Math.max(...comparaciones.map(c => c.valor), 1);
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-white font-bold flex items-center gap-2">
-        <AlertTriangle className="h-5 w-5 text-[#FFDD57]" /> Alertas Activas
+    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+      <h3 className="text-white font-bold flex items-center gap-2 mb-4">
+        <TrendingUp className="h-5 w-5 text-[#00D1B2]" />
+        Rentabilidad vs Inversiones Tradicionales
       </h3>
-      {alertas.map((alerta) => {
-        const c = config[alerta.nivel] || config.INFO;
-        const Icon = c.icon;
-        return (
-          <div key={alerta.id} className={`rounded-xl p-4 ${c.bg} border ${c.border}`}>
-            <div className="flex items-start gap-3">
-              <Icon className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: c.color }} />
-              <div>
-                <p className="text-white font-medium">{alerta.mensaje}</p>
-                <p className="text-sm text-[#94A3B8] mt-1">{alerta.recomendacion}</p>
-              </div>
+      
+      <div className="space-y-3">
+        {comparaciones.map((item, i) => (
+          <div key={i} className={`${item.destacado ? 'bg-[#00D1B2]/10 rounded-xl p-3 -mx-3' : ''}`}>
+            <div className="flex items-center justify-between mb-1">
+              <span className={`text-sm ${item.destacado ? 'text-[#00D1B2] font-bold' : 'text-[#94A3B8]'}`}>
+                {item.destacado && '🔥 '}{item.nombre}
+              </span>
+              <span className={`font-mono font-bold ${item.destacado ? 'text-[#00D1B2] text-lg' : 'text-white'}`}>
+                {item.valor > 0 ? '+' : ''}{item.valor.toFixed(1)}%
+                {item.destacado && <span className="text-xs font-normal text-[#94A3B8]"> /mes</span>}
+              </span>
+            </div>
+            <div className="h-2 bg-[#1E293B] rounded-full overflow-hidden">
+              <div 
+                className="h-full rounded-full transition-all duration-1000"
+                style={{ 
+                  width: `${Math.min((item.valor / maxValor) * 100, 100)}%`,
+                  backgroundColor: item.color,
+                  boxShadow: item.destacado ? `0 0 10px ${item.color}` : 'none'
+                }}
+              />
             </div>
           </div>
-        );
-      })}
+        ))}
+      </div>
+
+      {roi > 2.5 && (
+        <div className="mt-4 pt-4 border-t border-white/10 text-center">
+          <p className="text-[#00D1B2] font-bold text-lg">
+            {Math.round(roi / 0.4)}x mejor que el banco 🏦
+          </p>
+        </div>
+      )}
     </div>
   );
 };
 
 // ============================================================================
-// COMPONENTE: Simulador de Ganancias MEJORADO
+// COMPONENTE: Indicadores de Confianza
 // ============================================================================
-const SimuladorGanancias = ({ estrategia, historial }: { estrategia: Estrategia; historial: Apuesta[] }) => {
-  const [banca, setBanca] = useState(500000);
-  const [resultado, setResultado] = useState({ ganancia: 0, bancaFinal: 0, retorno: 0 });
-
-  // Normalizar el porcentaje Kelly
-  const kellyDisplay = normalizeKelly(estrategia.porcentaje_kelly);
-  const kellyDecimal = getKellyDecimal(estrategia.porcentaje_kelly);
-
-  useEffect(() => {
-    let bancaSimulada = banca;
-    const apuestasResueltas = historial.filter(a => a.resultado === 'GANADA' || a.resultado === 'PERDIDA');
-    
-    apuestasResueltas.forEach((apuesta) => {
-      // Calcular stake usando la estrategia del tipster
-      const stakeBase = bancaSimulada * kellyDecimal;
-      const stake = Math.max(
-        estrategia.stake_minimo, 
-        Math.min(stakeBase, estrategia.stake_maximo)
-      );
-      
-      if (apuesta.resultado === 'GANADA') {
-        bancaSimulada += stake * (apuesta.cuota - 1);
-      } else {
-        bancaSimulada -= stake;
-      }
-    });
-    
-    setResultado({
-      ganancia: bancaSimulada - banca,
-      bancaFinal: bancaSimulada,
-      retorno: banca > 0 ? ((bancaSimulada - banca) / banca) * 100 : 0
-    });
-  }, [banca, historial, estrategia, kellyDecimal]);
-
-  const estrategiaColor = getEstrategiaColor(estrategia.estrategia_activa);
+const IndicadoresConfianza = ({ 
+  winRate, 
+  roi, 
+  totalApuestas, 
+  rachaActual,
+  mejorRacha
+}: { 
+  winRate: number; 
+  roi: number; 
+  totalApuestas: number; 
+  rachaActual: number;
+  mejorRacha: number;
+}) => {
+  const confianza = calcularNivelConfianza(winRate, roi, totalApuestas, rachaActual);
 
   return (
-    <div className="rounded-2xl p-6 border border-white/10 h-full" style={{ background: 'rgba(30,41,59,0.7)', backdropFilter: 'blur(12px)' }}>
-      <h3 className="text-white font-bold flex items-center gap-2 mb-4">
-        <DollarSign className="h-5 w-5 text-[#FFDD57]" /> Simulador de Ganancias
-      </h3>
-      
-      {/* Info Estrategia */}
-      <div className="mb-4 p-3 rounded-xl bg-[#0F172A]/50">
-        <div className="flex items-center gap-2 mb-2">
-          <span 
-            className="px-2 py-1 rounded-lg text-xs font-bold text-white"
-            style={{ backgroundColor: estrategiaColor }}
-          >
-            {estrategia.estrategia_activa}
-          </span>
-          <span className="text-[#00D1B2] font-medium">Kelly {kellyDisplay}%</span>
-        </div>
-        <p className="text-xs text-[#64748B]">{getEstrategiaDescription(estrategia.estrategia_activa)}</p>
-        <div className="mt-2 flex gap-4 text-xs text-[#94A3B8]">
-          <span>Min: ${estrategia.stake_minimo.toLocaleString()}</span>
-          <span>Max: ${estrategia.stake_maximo.toLocaleString()}</span>
+    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-white font-bold flex items-center gap-2">
+          <Award className="h-5 w-5 text-[#FFDD57]" />
+          Nivel de Confianza
+        </h3>
+        <div className="flex items-center gap-1">
+          {[...Array(5)].map((_, i) => (
+            <Star 
+              key={i} 
+              className={`h-5 w-5 ${i < confianza.estrellas ? 'text-[#FFDD57] fill-[#FFDD57]' : 'text-[#334155]'}`} 
+            />
+          ))}
         </div>
       </div>
 
-      {/* Input Banca */}
-      <div className="mb-6">
-        <label className="text-sm text-[#94A3B8] mb-2 block">Tu banca inicial</label>
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]">$</span>
-          <input
-            type="number"
-            value={banca}
-            onChange={(e) => setBanca(Number(e.target.value) || 0)}
-            className="w-full pl-8 pr-4 py-3 rounded-xl bg-[#0F172A] border border-white/10 text-white font-mono focus:border-[#00D1B2]/50 focus:outline-none"
-          />
-        </div>
+      <div className="text-center mb-4">
+        <span 
+          className="text-2xl font-bold px-4 py-2 rounded-xl"
+          style={{ color: confianza.color, backgroundColor: `${confianza.color}20` }}
+        >
+          {confianza.nivel}
+        </span>
       </div>
 
-      {/* Resultados */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between p-3 rounded-xl bg-[#0F172A]/50">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-[#94A3B8]" />
-            <span className="text-[#94A3B8]">Ganancia</span>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-[#0F172A]/50 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[#94A3B8] text-sm">Win Rate</span>
+            <span className={`text-sm font-bold ${winRate >= 60 ? 'text-[#00D1B2]' : winRate >= 50 ? 'text-[#FFDD57]' : 'text-[#EF4444]'}`}>
+              {winRate >= 60 ? '✅ Excelente' : winRate >= 50 ? '⚠️ Bueno' : '❌ Bajo'}
+            </span>
           </div>
-          <span className={`font-bold font-mono ${resultado.ganancia >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {resultado.ganancia >= 0 ? '+' : ''}${Math.round(resultado.ganancia).toLocaleString()}
-          </span>
+          <div className="h-2 bg-[#1E293B] rounded-full overflow-hidden">
+            <div 
+              className="h-full rounded-full bg-[#00D1B2]"
+              style={{ width: `${Math.min(winRate, 100)}%` }}
+            />
+          </div>
+          <p className="text-white font-bold text-right mt-1">{winRate.toFixed(1)}%</p>
         </div>
 
-        <div className="flex items-center justify-between p-3 rounded-xl bg-[#0F172A]/50">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-[#94A3B8]" />
-            <span className="text-[#94A3B8]">Banca final</span>
+        <div className="bg-[#0F172A]/50 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[#94A3B8] text-sm">ROI</span>
+            <span className={`text-sm font-bold ${roi >= 10 ? 'text-[#00D1B2]' : roi >= 0 ? 'text-[#FFDD57]' : 'text-[#EF4444]'}`}>
+              {roi >= 10 ? '✅ Muy rentable' : roi >= 0 ? '⚠️ Positivo' : '❌ Negativo'}
+            </span>
           </div>
-          <span className="font-bold font-mono text-white">
-            ${Math.round(resultado.bancaFinal).toLocaleString()}
-          </span>
+          <div className="h-2 bg-[#1E293B] rounded-full overflow-hidden">
+            <div 
+              className="h-full rounded-full"
+              style={{ 
+                width: `${Math.min(Math.max(roi + 20, 0), 100)}%`,
+                backgroundColor: roi >= 0 ? '#00D1B2' : '#EF4444'
+              }}
+            />
+          </div>
+          <p className={`font-bold text-right mt-1 ${roi >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+            {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
+          </p>
         </div>
 
-        <div className="flex items-center justify-between p-3 rounded-xl bg-[#0F172A]/50">
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-[#94A3B8]" />
-            <span className="text-[#94A3B8]">Retorno</span>
+        <div className="bg-[#0F172A]/50 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[#94A3B8] text-sm">Muestra</span>
+            <span className={`text-sm font-bold ${totalApuestas >= 30 ? 'text-[#00D1B2]' : 'text-[#FFDD57]'}`}>
+              {totalApuestas >= 30 ? '✅ Sólida' : '⚠️ En desarrollo'}
+            </span>
           </div>
-          <span className={`font-bold font-mono ${resultado.retorno >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {resultado.retorno >= 0 ? '+' : ''}{resultado.retorno.toFixed(1)}%
-          </span>
+          <p className="text-white font-bold text-2xl text-center">{totalApuestas}</p>
+          <p className="text-[#64748B] text-xs text-center">apuestas verificadas</p>
+        </div>
+
+        <div className="bg-[#0F172A]/50 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[#94A3B8] text-sm">Mejor Racha</span>
+            <span className="text-[#FFDD57] text-sm font-bold">🏆 Récord</span>
+          </div>
+          <p className="text-[#FFDD57] font-bold text-2xl text-center">+{mejorRacha}</p>
+          <p className="text-[#64748B] text-xs text-center">victorias seguidas</p>
         </div>
       </div>
     </div>
@@ -313,9 +365,9 @@ const SimuladorGanancias = ({ estrategia, historial }: { estrategia: Estrategia;
 };
 
 // ============================================================================
-// COMPONENTE: Gráfico de Rendimiento
+// COMPONENTE: Gráfico de Rendimiento Mejorado
 // ============================================================================
-const GraficoRendimiento = ({ historial, estadisticas }: { historial: Apuesta[]; estadisticas: any }) => {
+const GraficoRendimiento = ({ historial }: { historial: Apuesta[] }) => {
   const apuestasResueltas = historial
     .filter(a => a.resultado === 'GANADA' || a.resultado === 'PERDIDA')
     .reverse();
@@ -334,8 +386,8 @@ const GraficoRendimiento = ({ historial, estadisticas }: { historial: Apuesta[];
   const rangeY = maxY - minY || 1;
 
   const width = 100;
-  const height = 100;
-  const padding = 10;
+  const height = 60;
+  const padding = 5;
 
   const pathPoints = puntos.map((p, i) => {
     const x = padding + (i / (puntos.length - 1)) * (width - 2 * padding);
@@ -346,19 +398,17 @@ const GraficoRendimiento = ({ historial, estadisticas }: { historial: Apuesta[];
   const areaPath = pathPoints + ` L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z`;
   const isPositive = acumulado >= 0;
 
-  // Calcular ROI y Cuota Promedio
-  const totalStakes = apuestasResueltas.reduce((acc, a) => acc + (a.stake_ia || a.stake || 0), 0);
-  const roi = totalStakes > 0 ? (acumulado / totalStakes) * 100 : 0;
-  const cuotaPromedio = apuestasResueltas.length > 0 
-    ? apuestasResueltas.reduce((acc, a) => acc + a.cuota, 0) / apuestasResueltas.length 
-    : 0;
-  const yieldCalc = apuestasResueltas.length > 0 ? acumulado / apuestasResueltas.length : 0;
+  // Calcular métricas
+  const roi = calcularROI(historial);
+  const cuotaPromedio = calcularCuotaPromedio(historial);
+  const yieldPorApuesta = apuestasResueltas.length > 0 ? acumulado / apuestasResueltas.length : 0;
 
   return (
-    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)', backdropFilter: 'blur(12px)' }}>
-      <div className="flex items-center justify-between mb-4">
+    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+      <div className="flex items-center justify-between mb-6">
         <h3 className="text-white font-bold flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-[#00D1B2]" /> Rendimiento
+          <BarChart3 className="h-5 w-5 text-[#00D1B2]" /> 
+          Evolución de Ganancias
         </h3>
         <div className="flex gap-2">
           {['7D', '30D', 'TODO'].map((periodo) => (
@@ -376,12 +426,12 @@ const GraficoRendimiento = ({ historial, estadisticas }: { historial: Apuesta[];
         </div>
       </div>
 
-      {/* Gráfico SVG */}
-      <div className="h-32 mb-4">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+      {/* Gráfico SVG más grande */}
+      <div className="h-40 mb-6">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
           <defs>
             <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={isPositive ? '#00D1B2' : '#EF4444'} stopOpacity="0.3" />
+              <stop offset="0%" stopColor={isPositive ? '#00D1B2' : '#EF4444'} stopOpacity="0.4" />
               <stop offset="100%" stopColor={isPositive ? '#00D1B2' : '#EF4444'} stopOpacity="0" />
             </linearGradient>
           </defs>
@@ -390,34 +440,37 @@ const GraficoRendimiento = ({ historial, estadisticas }: { historial: Apuesta[];
             d={pathPoints} 
             fill="none" 
             stroke={isPositive ? '#00D1B2' : '#EF4444'} 
-            strokeWidth="2"
+            strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            style={{ filter: `drop-shadow(0 0 6px ${isPositive ? '#00D1B2' : '#EF4444'})` }}
           />
         </svg>
       </div>
 
-      {/* Stats */}
+      {/* Stats en una fila */}
       <div className="grid grid-cols-4 gap-4">
         <div className="text-center">
-          <p className={`text-lg font-bold font-mono ${roi >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+          <p className={`text-xl font-bold font-mono ${roi >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
             {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
           </p>
           <p className="text-xs text-[#64748B]">ROI</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-bold font-mono text-white">@{cuotaPromedio.toFixed(2)}</p>
+          <p className="text-xl font-bold font-mono text-white">@{cuotaPromedio.toFixed(2)}</p>
           <p className="text-xs text-[#64748B]">Cuota Prom</p>
         </div>
         <div className="text-center">
-          <p className={`text-lg font-bold font-mono ${yieldCalc >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {yieldCalc >= 0 ? '+' : ''}${Math.round(yieldCalc).toLocaleString()}
+          <p className={`text-xl font-bold font-mono ${yieldPorApuesta >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+            {yieldPorApuesta >= 0 ? '+' : ''}${Math.abs(Math.round(yieldPorApuesta)).toLocaleString()}
           </p>
           <p className="text-xs text-[#64748B]">Yield/Apuesta</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-bold font-mono text-[#FFDD57]">{estadisticas.mejor_racha}</p>
-          <p className="text-xs text-[#64748B]">Mejor Racha</p>
+          <p className={`text-xl font-bold font-mono ${isPositive ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+            {isPositive ? '+' : ''}${Math.abs(Math.round(acumulado)).toLocaleString()}
+          </p>
+          <p className="text-xs text-[#64748B]">Profit Total</p>
         </div>
       </div>
     </div>
@@ -448,7 +501,7 @@ const HistorialApuestas = ({ historial }: { historial: Apuesta[] }) => {
   };
 
   return (
-    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)', backdropFilter: 'blur(12px)' }}>
+    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h3 className="text-white font-bold flex items-center gap-2">
           <Calendar className="h-5 w-5 text-[#00D1B2]" /> Historial de Apuestas
@@ -478,7 +531,7 @@ const HistorialApuestas = ({ historial }: { historial: Apuesta[] }) => {
               placeholder="Buscar..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="pl-7 pr-3 py-1.5 rounded-lg bg-[#334155] text-white text-xs placeholder-[#64748B] focus:outline-none focus:ring-1 focus:ring-[#00D1B2]"
+              className="pl-7 pr-3 py-1.5 rounded-lg bg-[#334155] text-white text-xs placeholder-[#64748B] focus:outline-none focus:ring-1 focus:ring-[#00D1B2] w-24"
             />
           </div>
         </div>
@@ -515,9 +568,9 @@ const HistorialApuestas = ({ historial }: { historial: Apuesta[] }) => {
                     </span>
                   </td>
                   <td className="py-3 text-right">
-                    <span className={`text-sm font-mono font-bold ${a.ganancia_neta >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+                    <span className={`text-sm font-mono font-bold ${(a.ganancia_neta || 0) >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
                       {a.resultado !== 'PENDIENTE' && a.resultado !== 'NULA' 
-                        ? `${a.ganancia_neta >= 0 ? '+' : ''}$${Math.round(a.ganancia_neta).toLocaleString()}` 
+                        ? `${(a.ganancia_neta || 0) >= 0 ? '+' : ''}$${Math.round(a.ganancia_neta || 0).toLocaleString()}` 
                         : '-'}
                     </span>
                   </td>
@@ -561,7 +614,6 @@ export default function TipsterDetallePage() {
         const response = await tipstersAPI.getById(tipsterId);
         
         if (response) {
-          // Mapear la respuesta del backend al formato esperado
           setData({
             tipster: response.tipster,
             estadisticas: {
@@ -571,16 +623,10 @@ export default function TipsterDetallePage() {
             },
             estrategia: {
               estrategia_activa: response.estrategia?.estrategia_activa || 'RACHAS',
-              estrategia_recomendada: response.estrategia?.estrategia_recomendada,
               porcentaje_kelly: response.estrategia?.porcentaje_kelly || 0.40,
               stake_minimo: response.estrategia?.stake_minimo || 1000,
               stake_maximo: response.estrategia?.stake_maximo || 5000,
-              win_rate: response.estrategia?.win_rate,
-              cuota_promedio: response.estrategia?.cuota_promedio,
-              yield_calculado: response.estrategia?.yield_calculado,
-              notas: response.estrategia?.notas
             },
-            alertas: response.alertas || [],
             historial: (response.historial || []).map((h: any) => ({
               id: h.id,
               fecha: h.fecha,
@@ -599,7 +645,7 @@ export default function TipsterDetallePage() {
         }
       } catch (err) {
         console.error('Error fetching tipster:', err);
-        setError('Error al cargar los datos. Por favor inicia sesión.');
+        setError('Inicia sesión para ver los detalles del tipster');
       } finally {
         setIsLoading(false);
       }
@@ -626,9 +672,10 @@ export default function TipsterDetallePage() {
     );
   }
 
-  const { tipster, estadisticas, estrategia, alertas, historial } = data;
+  const { tipster, estadisticas, historial } = data;
   const isRentable = estadisticas.ganancia_total > 0;
-  const kellyDisplay = normalizeKelly(estrategia.porcentaje_kelly);
+  const roi = calcularROI(historial);
+  const totalApuestasResueltas = historial.filter(a => a.resultado === 'GANADA' || a.resultado === 'PERDIDA').length;
 
   return (
     <div className="space-y-6 animate-fadeIn pb-20 lg:pb-6">
@@ -643,78 +690,72 @@ export default function TipsterDetallePage() {
       {/* Racha */}
       <RachaBar racha={estadisticas.racha_actual} tipo={estadisticas.tipo_racha || 'W'} />
 
-      {/* Alertas */}
-      {alertas && <AlertasSection alertas={alertas} />}
-
-      {/* Info + Simulador */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Card Info */}
-        <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)', backdropFilter: 'blur(12px)' }}>
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" 
-                style={{ background: 'linear-gradient(135deg,#1E293B,#334155)', border: '2px solid rgba(255,255,255,0.1)' }}>
-                {getDeporteIcon(tipster.deporte)}
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">{tipster.alias}</h2>
-                <p className="text-[#94A3B8]">{tipster.deporte}</p>
-              </div>
+      {/* Info Tipster */}
+      <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" 
+              style={{ background: 'linear-gradient(135deg,#1E293B,#334155)', border: '2px solid rgba(255,255,255,0.1)' }}>
+              {getDeporteIcon(tipster.deporte)}
             </div>
-            {isRentable && (
-              <span className="px-4 py-2 rounded-xl text-sm font-bold bg-[#00D1B2]/20 text-[#00D1B2] border border-[#00D1B2]/30"
-                style={{ boxShadow: '0 0 12px rgba(0,209,178,0.3)' }}>
-                Rentable
-              </span>
-            )}
+            <div>
+              <h2 className="text-2xl font-bold text-white">{tipster.alias}</h2>
+              <p className="text-[#94A3B8]">{tipster.deporte}</p>
+            </div>
           </div>
-
-          {/* Estrategia Badge */}
-          <div className="flex items-center gap-2 mb-6 p-3 rounded-xl bg-[#0F172A]/50">
-            <span 
-              className="px-3 py-1 rounded-lg text-sm font-bold text-white"
-              style={{ backgroundColor: getEstrategiaColor(estrategia.estrategia_activa) }}
-            >
-              {estrategia.estrategia_activa}
+          {isRentable && (
+            <span className="px-4 py-2 rounded-xl text-sm font-bold bg-[#00D1B2]/20 text-[#00D1B2] border border-[#00D1B2]/30"
+              style={{ boxShadow: '0 0 12px rgba(0,209,178,0.3)' }}>
+              Rentable
             </span>
-            <span className="text-[#64748B]">•</span>
-            <span className="text-[#00D1B2] font-medium">Kelly {kellyDisplay}%</span>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
-              <p className={`text-3xl font-bold font-mono ${
-                (estadisticas.porcentaje_acierto || 0) >= 60 ? 'text-[#00D1B2]' : 
-                (estadisticas.porcentaje_acierto || 0) >= 50 ? 'text-[#FFDD57]' : 'text-[#EF4444]'
-              }`}>
-                {Number(estadisticas.porcentaje_acierto || 0).toFixed(1)}%
-              </p>
-              <p className="text-xs text-[#64748B] mt-1">Win Rate</p>
-            </div>
-            <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
-              <p className="text-3xl font-bold font-mono">
-                <span className="text-[#00D1B2]">{estadisticas.ganadas}</span>
-                <span className="text-[#64748B]">/</span>
-                <span className="text-[#EF4444]">{estadisticas.perdidas}</span>
-              </p>
-              <p className="text-xs text-[#64748B] mt-1">W/L</p>
-            </div>
-            <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
-              <p className={`text-3xl font-bold font-mono ${isRentable ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-                {isRentable ? '+' : ''}${(Number(estadisticas.ganancia_total || 0) / 1000).toFixed(1)}K
-              </p>
-              <p className="text-xs text-[#64748B] mt-1">Profit</p>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Simulador */}
-        <SimuladorGanancias estrategia={estrategia} historial={historial} />
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
+            <p className={`text-3xl font-bold font-mono ${
+              (estadisticas.porcentaje_acierto || 0) >= 60 ? 'text-[#00D1B2]' : 
+              (estadisticas.porcentaje_acierto || 0) >= 50 ? 'text-[#FFDD57]' : 'text-[#EF4444]'
+            }`}>
+              {Number(estadisticas.porcentaje_acierto || 0).toFixed(1)}%
+            </p>
+            <p className="text-xs text-[#64748B] mt-1">Win Rate</p>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
+            <p className="text-3xl font-bold font-mono">
+              <span className="text-[#00D1B2]">{estadisticas.ganadas || 0}</span>
+              <span className="text-[#64748B]">/</span>
+              <span className="text-[#EF4444]">{estadisticas.perdidas || 0}</span>
+            </p>
+            <p className="text-xs text-[#64748B] mt-1">W/L</p>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
+            <p className={`text-3xl font-bold font-mono ${isRentable ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+              {isRentable ? '+' : ''}${(Number(estadisticas.ganancia_total || 0) / 1000).toFixed(1)}K
+            </p>
+            <p className="text-xs text-[#64748B] mt-1">Profit</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Análisis IA */}
+      <AnalisisIA />
+
+      {/* Grid: Comparación + Confianza */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <ComparacionInversiones roi={roi} />
+        <IndicadoresConfianza 
+          winRate={estadisticas.porcentaje_acierto || 0}
+          roi={roi}
+          totalApuestas={totalApuestasResueltas}
+          rachaActual={estadisticas.racha_actual || 0}
+          mejorRacha={estadisticas.mejor_racha || 0}
+        />
       </div>
 
       {/* Gráfico */}
-      <GraficoRendimiento historial={historial} estadisticas={estadisticas} />
+      <GraficoRendimiento historial={historial} />
 
       {/* Historial */}
       <HistorialApuestas historial={historial} />
