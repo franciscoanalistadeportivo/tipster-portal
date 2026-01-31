@@ -89,29 +89,35 @@ export default function RecomendacionesPage() {
   // Calcular recomendaciones
   const recomendacionesSeguir: RecomendacionTipster[] = tipsters
     .filter(t => t.porcentaje_acierto >= 55 && t.ganancia_total > 0)
-    .map(t => ({
-      tipster: t,
-      score: calcularScore(t),
-      racha: 0, // Se calcularía del historial
-      tendencia: t.ganancia_total > 0 ? 'up' : 'stable' as const,
-      motivo: t.porcentaje_acierto >= 65 
-        ? `Win rate excepcional (${t.porcentaje_acierto}%)` 
-        : `Rentabilidad consistente (+$${t.ganancia_total.toLocaleString()})`
-    }))
+    .map(t => {
+      const tendencia: 'up' | 'down' | 'stable' = t.ganancia_total > 0 ? 'up' : 'stable';
+      return {
+        tipster: t,
+        score: calcularScore(t),
+        racha: 0,
+        tendencia,
+        motivo: t.porcentaje_acierto >= 65 
+          ? `Win rate excepcional (${t.porcentaje_acierto}%)` 
+          : `Rentabilidad consistente (+$${t.ganancia_total.toLocaleString()})`
+      };
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
 
   const recomendacionesEvitar: RecomendacionTipster[] = tipsters
     .filter(t => t.porcentaje_acierto < 50 || t.ganancia_total < -50000)
-    .map(t => ({
-      tipster: t,
-      score: calcularScore(t),
-      racha: 0,
-      tendencia: 'down' as const,
-      motivo: t.porcentaje_acierto < 45 
-        ? `Win rate bajo (${t.porcentaje_acierto}%)` 
-        : `Pérdidas acumuladas ($${Math.abs(t.ganancia_total).toLocaleString()})`
-    }))
+    .map(t => {
+      const tendencia: 'up' | 'down' | 'stable' = 'down';
+      return {
+        tipster: t,
+        score: calcularScore(t),
+        racha: 0,
+        tendencia,
+        motivo: t.porcentaje_acierto < 45 
+          ? `Win rate bajo (${t.porcentaje_acierto}%)` 
+          : `Pérdidas acumuladas ($${Math.abs(t.ganancia_total).toLocaleString()})`
+      };
+    })
     .sort((a, b) => a.score - b.score)
     .slice(0, 3);
 
