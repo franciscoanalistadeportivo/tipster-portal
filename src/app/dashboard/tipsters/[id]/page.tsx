@@ -229,7 +229,7 @@ const ComparacionInversiones = ({ roi }: { roi: number }) => {
                 {item.destacado && '🔥 '}{item.nombre}
               </span>
               <span className={`font-mono font-bold ${item.destacado ? 'text-[#00D1B2] text-lg' : 'text-white'}`}>
-                {item.valor > 0 ? '+' : ''}{item.valor.toFixed(1)}%
+                {Number(item.valor || 0) > 0 ? '+' : ''}{Number(item.valor || 0).toFixed(1)}%
                 {item.destacado && <span className="text-xs font-normal text-[#94A3B8]"> /mes</span>}
               </span>
             </div>
@@ -316,7 +316,7 @@ const IndicadoresConfianza = ({
               style={{ width: `${Math.min(winRate, 100)}%` }}
             />
           </div>
-          <p className="text-white font-bold text-right mt-1">{winRate.toFixed(1)}%</p>
+          <p className="text-white font-bold text-right mt-1">{Number(winRate || 0).toFixed(1)}%</p>
         </div>
 
         <div className="bg-[#0F172A]/50 rounded-xl p-3">
@@ -335,8 +335,8 @@ const IndicadoresConfianza = ({
               }}
             />
           </div>
-          <p className={`font-bold text-right mt-1 ${roi >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
+          <p className={`font-bold text-right mt-1 ${Number(roi || 0) >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+            {Number(roi || 0) >= 0 ? '+' : ''}{Number(roi || 0).toFixed(1)}%
           </p>
         </div>
 
@@ -451,13 +451,13 @@ const GraficoRendimiento = ({ historial }: { historial: Apuesta[] }) => {
       {/* Stats en una fila */}
       <div className="grid grid-cols-4 gap-4">
         <div className="text-center">
-          <p className={`text-xl font-bold font-mono ${roi >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
+          <p className={`text-xl font-bold font-mono ${Number(roi || 0) >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+            {Number(roi || 0) >= 0 ? '+' : ''}{Number(roi || 0).toFixed(1)}%
           </p>
           <p className="text-xs text-[#64748B]">ROI</p>
         </div>
         <div className="text-center">
-          <p className="text-xl font-bold font-mono text-white">@{cuotaPromedio.toFixed(2)}</p>
+          <p className="text-xl font-bold font-mono text-white">@{Number(cuotaPromedio || 0).toFixed(2)}</p>
           <p className="text-xs text-[#64748B]">Cuota Prom</p>
         </div>
         <div className="text-center">
