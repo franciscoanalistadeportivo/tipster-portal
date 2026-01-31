@@ -113,16 +113,44 @@ export const dashboardAPI = {
 export const tipstersAPI = {
   getAll: async () => {
     try {
+      // Intentar endpoint autenticado primero
       const response = await api.get('/api/tipsters');
       return response.data;
     } catch (error) {
-      const dashboard = await dashboardAPI.getData();
-      return { tipsters: [], total: dashboard.tipsters?.total || 0 };
+      try {
+        // Fallback: intentar endpoint público
+        const publicResponse = await publicApi.get('/api/public/tipsters');
+        return publicResponse.data;
+      } catch (publicError) {
+        try {
+          // Último fallback: obtener del dashboard
+          const dashboard = await dashboardAPI.getData();
+          return { tipsters: dashboard.tipsters_list || [], total: dashboard.tipsters?.total || 0 };
+        } catch {
+          return { tipsters: [], total: 0 };
+        }
+      }
     }
   },
   getById: async (id: number) => {
-    const response = await api.get(`/api/tipsters/${id}`);
-    return response.data;
+    // Validar que el ID sea un número positivo
+    const safeId = Math.abs(Math.floor(Number(id)));
+    if (!safeId || safeId <= 0 || safeId > 999999) {
+      return null;
+    }
+    
+    try {
+      const response = await api.get(`/api/tipsters/${safeId}`);
+      return response.data;
+    } catch (error) {
+      // Fallback público
+      try {
+        const publicResponse = await publicApi.get(`/api/public/tipsters/${safeId}`);
+        return publicResponse.data;
+      } catch {
+        return null;
+      }
+    }
   },
 };
 
