@@ -1,6 +1,6 @@
 /**
  * API Client - Conexión segura al backend
- * Versión 2.1 - Token persistente en localStorage
+ * Versión 2.2 - Token persistente + Teléfono en registro
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
@@ -102,8 +102,9 @@ export const isAuthenticated = () => {
 // AUTH API
 // ============================================================================
 export const authAPI = {
-  register: async (email: string, password: string, nombre: string) => {
-    const response = await api.post('/api/auth/register', { email, password, nombre });
+  // ★ ACTUALIZADO v7: Ahora acepta teléfono como 4to parámetro opcional
+  register: async (email: string, password: string, nombre: string, telefono?: string) => {
+    const response = await api.post('/api/auth/register', { email, password, nombre, telefono });
     if (response.data.access_token) {
       setTokens(response.data.access_token, response.data.refresh_token);
     }
@@ -119,6 +120,16 @@ export const authAPI = {
   logout: () => clearTokens(),
   getMe: async () => {
     const response = await api.get('/api/auth/me');
+    return response.data;
+  },
+  // ★ NUEVO v7: Olvidé contraseña
+  forgotPassword: async (email: string) => {
+    const response = await api.post('/api/auth/forgot-password', { email });
+    return response.data;
+  },
+  // ★ NUEVO v7: Restablecer contraseña
+  resetPassword: async (token: string, password: string) => {
+    const response = await api.post('/api/auth/reset-password', { token, password });
     return response.data;
   },
 };
