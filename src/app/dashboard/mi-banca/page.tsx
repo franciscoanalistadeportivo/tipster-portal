@@ -4,22 +4,35 @@ import { useEffect, useState } from 'react';
 import { 
   Wallet, TrendingUp, TrendingDown, Plus, Check, X, 
   Calendar, Target, BarChart3, PiggyBank, Lightbulb,
-  Edit3, Save, Filter, ChevronDown, ChevronUp, Flame
+  Edit3, Save, Filter, ChevronDown, ChevronUp, Flame, Trash2
 } from 'lucide-react';
-import { apuestasUsuarioAPI, tipstersAPI } from '@/lib/api';
+
+// ============================================================================
+// API CONFIG
+// ============================================================================
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+};
 
 // ============================================================================
 // TIPOS
 // ============================================================================
 interface ApuestaUsuario {
   id: number;
-  fecha: string;
-  apuesta: string;
-  cuota: number;
+  fecha_evento: string;
+  descripcion: string;
+  cuota_usuario: number;
   stake: number;
-  resultado: 'PENDIENTE' | 'GANADA' | 'PERDIDA';
+  resultado: 'PENDIENTE' | 'GANADA' | 'PERDIDA' | 'NULA';
   tipster_alias?: string;
   ganancia_neta?: number;
+  tipo_mercado?: string;
 }
 
 interface PickRecomendado {
@@ -30,6 +43,12 @@ interface PickRecomendado {
   cuota: number;
   tipo_mercado: string;
   fecha: string;
+}
+
+interface BancaEstado {
+  banca_actual: number;
+  banca_inicial: number;
+  perfil_riesgo: string;
 }
 
 interface EstadisticasUsuario {
@@ -77,6 +96,10 @@ const BancaEditable = ({
 }) => {
   const [editando, setEditando] = useState(false);
   const [valor, setValor] = useState(banca.toString());
+
+  useEffect(() => {
+    setValor(banca.toString());
+  }, [banca]);
 
   const handleSave = () => {
     const nuevaBanca = parseFloat(valor) || 0;
@@ -128,7 +151,7 @@ const BancaEditable = ({
       )}
       
       <p className="text-[#64748B] text-sm mt-2">
-        Capital inicial para apuestas
+        Capital actual para apuestas
       </p>
     </div>
   );
@@ -146,17 +169,19 @@ const ModalRegistrarApuesta = ({
 }: { 
   isOpen: boolean; 
   onClose: () => void;
-  onSave: (apuesta: Omit<ApuestaUsuario, 'id' | 'resultado' | 'ganancia_neta'>) => void;
+  onSave: (apuesta: any) => void;
   banca: number;
   picksDelDia: PickRecomendado[];
 }) => {
-  const [modo, setModo] = useState<'picks' | 'manual'>('picks');
+  const [modo, setModo] = useState<'picks' | 'manual'>('manual');
   const [apuesta, setApuesta] = useState('');
   const [cuota, setCuota] = useState('');
   const [stake, setStake] = useState('');
+  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [pickSeleccionado, setPickSeleccionado] = useState<PickRecomendado | null>(null);
+  const [guardando, setGuardando] = useState(false);
 
-  // Calcular stake recomendado (1-3% de banca según confianza)
+  // Calcular stake recomendado (1-3% de banca según cuota)
   const calcularStakeRecomendado = (cuotaVal: number): number => {
     const porcentaje = cuotaVal <= 1.5 ? 0.03 : cuotaVal <= 2.0 ? 0.02 : 0.01;
     return Math.round(banca * porcentaje);
@@ -167,18 +192,20 @@ const ModalRegistrarApuesta = ({
     setApuesta(pick.apuesta);
     setCuota(pick.cuota.toString());
     setStake(calcularStakeRecomendado(pick.cuota).toString());
-    setModo('manual'); // Pasar a edición para ajustar si quiere
+    setModo('manual');
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!apuesta || !cuota || !stake) return;
     
-    onSave({
-      fecha: new Date().toISOString().split('T')[0],
-      apuesta,
-      cuota: parseFloat(cuota),
+    setGuardando(true);
+    await onSave({
+      descripcion: apuesta,
+      cuota_usuario: parseFloat(cuota),
       stake: parseFloat(stake),
-      tipster_alias: pickSeleccionado?.tipster_alias
+      fecha_evento: fecha,
+      tipster_id: pickSeleccionado?.id || null,
+      apuesta_sistema_id: pickSeleccionado?.id || null
     });
     
     // Reset
@@ -186,6 +213,7 @@ const ModalRegistrarApuesta = ({
     setCuota('');
     setStake('');
     setPickSeleccionado(null);
+    setGuardando(false);
     onClose();
   };
 
@@ -199,16 +227,6 @@ const ModalRegistrarApuesta = ({
         {/* Tabs */}
         <div className="flex gap-2 mb-4">
           <button
-            onClick={() => setModo('picks')}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-              modo === 'picks' 
-                ? 'bg-[#00D1B2] text-white' 
-                : 'bg-[#334155] text-[#94A3B8]'
-            }`}
-          >
-            Picks del Día
-          </button>
-          <button
             onClick={() => setModo('manual')}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
               modo === 'manual' 
@@ -217,6 +235,16 @@ const ModalRegistrarApuesta = ({
             }`}
           >
             Manual
+          </button>
+          <button
+            onClick={() => setModo('picks')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+              modo === 'picks' 
+                ? 'bg-[#00D1B2] text-white' 
+                : 'bg-[#334155] text-[#94A3B8]'
+            }`}
+          >
+            Picks del Día
           </button>
         </div>
 
@@ -238,12 +266,12 @@ const ModalRegistrarApuesta = ({
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[#00D1B2] text-sm font-medium">{pick.tipster_alias}</span>
-                    <span className="text-xs text-[#64748B]">Yield: +{pick.tipster_yield.toFixed(1)}%</span>
+                    <span className="text-xs text-[#64748B]">Yield: +{pick.tipster_yield?.toFixed(1) || 0}%</span>
                   </div>
                   <p className="text-white text-sm">{pick.apuesta}</p>
                   <div className="flex items-center justify-between mt-2 text-xs">
                     <span className="text-[#94A3B8]">{pick.tipo_mercado}</span>
-                    <span className="text-white font-mono">@{pick.cuota.toFixed(2)}</span>
+                    <span className="text-white font-mono">@{pick.cuota?.toFixed(2)}</span>
                   </div>
                 </button>
               ))
@@ -264,6 +292,16 @@ const ModalRegistrarApuesta = ({
                 className="w-full px-4 py-3 rounded-xl bg-[#0F172A] border border-white/10 text-white placeholder-[#64748B] focus:outline-none focus:border-[#00D1B2]"
               />
             </div>
+
+            <div>
+              <label className="text-[#94A3B8] text-sm mb-1 block">Fecha del evento</label>
+              <input
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-[#0F172A] border border-white/10 text-white focus:outline-none focus:border-[#00D1B2]"
+              />
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -274,7 +312,7 @@ const ModalRegistrarApuesta = ({
                   value={cuota}
                   onChange={(e) => {
                     setCuota(e.target.value);
-                    if (e.target.value) {
+                    if (e.target.value && banca > 0) {
                       setStake(calcularStakeRecomendado(parseFloat(e.target.value)).toString());
                     }
                   }}
@@ -294,7 +332,7 @@ const ModalRegistrarApuesta = ({
               </div>
             </div>
 
-            {cuota && stake && (
+            {cuota && stake && banca > 0 && (
               <div className="p-3 rounded-xl bg-[#00D1B2]/10 border border-[#00D1B2]/30">
                 <p className="text-sm text-[#94A3B8]">Recomendación IA</p>
                 <p className="text-[#00D1B2] font-medium">
@@ -316,10 +354,10 @@ const ModalRegistrarApuesta = ({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!apuesta || !cuota || !stake}
+            disabled={!apuesta || !cuota || !stake || guardando}
             className="flex-1 py-3 rounded-xl bg-[#00D1B2] text-white font-medium hover:bg-[#00B89F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Guardar
+            {guardando ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
       </div>
@@ -332,10 +370,12 @@ const ModalRegistrarApuesta = ({
 // ============================================================================
 const CardApuestaUsuario = ({ 
   apuesta, 
-  onMarcarResultado 
+  onMarcarResultado,
+  onEliminar
 }: { 
   apuesta: ApuestaUsuario;
   onMarcarResultado: (id: number, resultado: 'GANADA' | 'PERDIDA') => void;
+  onEliminar: (id: number) => void;
 }) => {
   const isPendiente = apuesta.resultado === 'PENDIENTE';
   const isGanada = apuesta.resultado === 'GANADA';
@@ -348,12 +388,12 @@ const CardApuestaUsuario = ({
       'border-[#F59E0B]/30 bg-[#F59E0B]/5'
     }`}>
       {/* Apuesta */}
-      <p className="text-white font-medium mb-2">{apuesta.apuesta}</p>
+      <p className="text-white font-medium mb-2">{apuesta.descripcion}</p>
       
       {/* Detalles */}
       <div className="flex items-center justify-between text-sm mb-3">
         <div className="flex items-center gap-2 text-[#94A3B8]">
-          <span>{apuesta.fecha}</span>
+          <span>{apuesta.fecha_evento}</span>
           {apuesta.tipster_alias && (
             <>
               <span>•</span>
@@ -362,9 +402,9 @@ const CardApuestaUsuario = ({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-mono text-white">@{apuesta.cuota.toFixed(2)}</span>
+          <span className="font-mono text-white">@{Number(apuesta.cuota_usuario || 0).toFixed(2)}</span>
           <span className="text-[#64748B]">|</span>
-          <span className="font-mono text-[#FFDD57]">${apuesta.stake.toLocaleString()}</span>
+          <span className="font-mono text-[#FFDD57]">${Number(apuesta.stake || 0).toLocaleString()}</span>
         </div>
       </div>
 
@@ -383,6 +423,12 @@ const CardApuestaUsuario = ({
           >
             <X className="h-4 w-4" /> Perdida
           </button>
+          <button
+            onClick={() => onEliminar(apuesta.id)}
+            className="p-2 rounded-lg bg-[#334155] text-[#94A3B8] hover:bg-[#475569] transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
       ) : (
         <div className={`flex items-center justify-between py-2 px-3 rounded-lg ${
@@ -392,12 +438,7 @@ const CardApuestaUsuario = ({
             {isGanada ? '✓ Ganada' : '✗ Perdida'}
           </span>
           <span className={`font-mono font-bold ${isGanada ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {isGanada ? '+' : ''}{apuesta.ganancia_neta?.toLocaleString() || 
-              (isGanada 
-                ? `+${Math.round(apuesta.stake * (apuesta.cuota - 1)).toLocaleString()}` 
-                : `-${apuesta.stake.toLocaleString()}`
-              )
-            }
+            {isGanada ? '+' : ''}${Number(apuesta.ganancia_neta || 0).toLocaleString()}
           </span>
         </div>
       )}
@@ -409,8 +450,8 @@ const CardApuestaUsuario = ({
 // COMPONENTE: Estadísticas
 // ============================================================================
 const Estadisticas = ({ stats }: { stats: EstadisticasUsuario }) => {
-  const winRate = stats.total_apuestas > 0 
-    ? ((stats.ganadas / (stats.ganadas + stats.perdidas)) * 100) || 0
+  const winRate = (stats.ganadas + stats.perdidas) > 0 
+    ? ((stats.ganadas / (stats.ganadas + stats.perdidas)) * 100)
     : 0;
 
   return (
@@ -423,13 +464,13 @@ const Estadisticas = ({ stats }: { stats: EstadisticasUsuario }) => {
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-[#0F172A]/50 rounded-xl p-3 text-center">
           <p className={`text-2xl font-bold font-mono ${stats.ganancia_neta >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {stats.ganancia_neta >= 0 ? '+' : ''}${stats.ganancia_neta.toLocaleString()}
+            {stats.ganancia_neta >= 0 ? '+' : ''}${Number(stats.ganancia_neta || 0).toLocaleString()}
           </p>
           <p className="text-xs text-[#64748B]">Ganancia Neta</p>
         </div>
         <div className="bg-[#0F172A]/50 rounded-xl p-3 text-center">
           <p className={`text-2xl font-bold font-mono ${stats.yield >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {stats.yield >= 0 ? '+' : ''}{stats.yield.toFixed(1)}%
+            {stats.yield >= 0 ? '+' : ''}{Number(stats.yield || 0).toFixed(1)}%
           </p>
           <p className="text-xs text-[#64748B]">Yield</p>
         </div>
@@ -471,107 +512,154 @@ const Estadisticas = ({ stats }: { stats: EstadisticasUsuario }) => {
 // PÁGINA PRINCIPAL
 // ============================================================================
 export default function MiBancaPage() {
-  const [banca, setBanca] = useState(100000); // CLP
+  const [banca, setBanca] = useState(0);
+  const [bancaInicial, setBancaInicial] = useState(0);
   const [apuestas, setApuestas] = useState<ApuestaUsuario[]>([]);
   const [picksDelDia, setPicksDelDia] = useState<PickRecomendado[]>([]);
+  const [stats, setStats] = useState<EstadisticasUsuario>({
+    banca_actual: 0, total_apostado: 0, ganancia_neta: 0, roi: 0, yield: 0,
+    total_apuestas: 0, ganadas: 0, perdidas: 0, pendientes: 0, mejor_racha: 0
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [filtro, setFiltro] = useState<'TODAS' | 'PENDIENTE' | 'GANADA' | 'PERDIDA'>('TODAS');
   const [mostrarTodas, setMostrarTodas] = useState(false);
 
   // Cargar datos
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Aquí irían las llamadas a la API
-        // Por ahora simulamos datos
-        const apuestasMock: ApuestaUsuario[] = [
-          { id: 1, fecha: '2026-01-31', apuesta: 'Real Madrid vs Barcelona - Over 2.5 goles', cuota: 1.85, stake: 5000, resultado: 'PENDIENTE', tipster_alias: 'Golden Picks' },
-          { id: 2, fecha: '2026-01-30', apuesta: 'Lakers vs Celtics - Lakers ML', cuota: 2.10, stake: 3000, resultado: 'GANADA', tipster_alias: 'Canasta VIP', ganancia_neta: 3300 },
-          { id: 3, fecha: '2026-01-30', apuesta: 'Djokovic vs Alcaraz - Over 3.5 sets', cuota: 1.75, stake: 4000, resultado: 'PERDIDA', tipster_alias: 'Raqueta Oro', ganancia_neta: -4000 },
-        ];
-        
-        const picksMock: PickRecomendado[] = [
-          { id: 101, tipster_alias: 'Pro Master', tipster_yield: 12.5, apuesta: 'Man City vs Arsenal - BTTS Sí', cuota: 1.72, tipo_mercado: 'BTTS', fecha: '2026-01-31' },
-          { id: 102, tipster_alias: 'Golden Picks', tipster_yield: 8.3, apuesta: 'PSG vs Bayern - Over 2.5', cuota: 1.65, tipo_mercado: 'Over/Under', fecha: '2026-01-31' },
-        ];
-
-        setApuestas(apuestasMock);
-        setPicksDelDia(picksMock);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setIsLoading(false);
+  const fetchData = async () => {
+    try {
+      // Obtener estado de banca
+      const bancaRes = await fetch(`${API_URL}/api/banca/estado`, {
+        headers: getAuthHeaders()
+      });
+      if (bancaRes.ok) {
+        const bancaData = await bancaRes.json();
+        setBanca(bancaData.banca_actual || 100000);
+        setBancaInicial(bancaData.banca_inicial || 100000);
       }
-    };
 
+      // Obtener estadísticas
+      const statsRes = await fetch(`${API_URL}/api/banca/estadisticas`, {
+        headers: getAuthHeaders()
+      });
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats({
+          banca_actual: statsData.banca_actual || 0,
+          total_apostado: statsData.total_apostado || 0,
+          ganancia_neta: statsData.profit_total || 0,
+          roi: statsData.roi || 0,
+          yield: statsData.yield_total || 0,
+          total_apuestas: statsData.total_apuestas || 0,
+          ganadas: statsData.ganadas || 0,
+          perdidas: statsData.perdidas || 0,
+          pendientes: statsData.pendientes || 0,
+          mejor_racha: statsData.mejor_racha || 0
+        });
+      }
+
+      // Obtener apuestas del usuario
+      const apuestasRes = await fetch(`${API_URL}/api/mis-apuestas`, {
+        headers: getAuthHeaders()
+      });
+      if (apuestasRes.ok) {
+        const apuestasData = await apuestasRes.json();
+        setApuestas(apuestasData.apuestas || []);
+      }
+
+      // Obtener picks del día para recomendar
+      const picksRes = await fetch(`${API_URL}/api/apuestas/hoy`, {
+        headers: getAuthHeaders()
+      });
+      if (picksRes.ok) {
+        const picksData = await picksRes.json();
+        const picksPendientes = (picksData.apuestas || [])
+          .filter((p: any) => p.resultado === 'PENDIENTE')
+          .map((p: any) => ({
+            id: p.id,
+            tipster_alias: p.tipster_alias,
+            tipster_yield: 0,
+            apuesta: p.apuesta,
+            cuota: p.cuota,
+            tipo_mercado: p.tipo_mercado || 'General',
+            fecha: p.fecha
+          }));
+        setPicksDelDia(picksPendientes);
+      }
+    } catch (error) {
+      console.error('Error cargando datos:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
   // Guardar banca
-  const handleSaveBanca = (nuevaBanca: number) => {
-    setBanca(nuevaBanca);
-    // Aquí guardarías en la API
+  const handleSaveBanca = async (nuevaBanca: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/banca/actualizar`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ banca_actual: nuevaBanca })
+      });
+      if (res.ok) {
+        setBanca(nuevaBanca);
+      }
+    } catch (error) {
+      console.error('Error guardando banca:', error);
+    }
   };
 
   // Registrar apuesta
-  const handleRegistrarApuesta = (nuevaApuesta: Omit<ApuestaUsuario, 'id' | 'resultado' | 'ganancia_neta'>) => {
-    const apuesta: ApuestaUsuario = {
-      ...nuevaApuesta,
-      id: Date.now(),
-      resultado: 'PENDIENTE'
-    };
-    setApuestas([apuesta, ...apuestas]);
-    // Aquí guardarías en la API
+  const handleRegistrarApuesta = async (nuevaApuesta: any) => {
+    try {
+      const res = await fetch(`${API_URL}/api/mis-apuestas`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(nuevaApuesta)
+      });
+      if (res.ok) {
+        fetchData(); // Recargar todos los datos
+      }
+    } catch (error) {
+      console.error('Error registrando apuesta:', error);
+    }
   };
 
   // Marcar resultado
-  const handleMarcarResultado = (id: number, resultado: 'GANADA' | 'PERDIDA') => {
-    setApuestas(apuestas.map(a => {
-      if (a.id === id) {
-        const ganancia = resultado === 'GANADA' 
-          ? Math.round(a.stake * (a.cuota - 1))
-          : -a.stake;
-        return { ...a, resultado, ganancia_neta: ganancia };
+  const handleMarcarResultado = async (id: number, resultado: 'GANADA' | 'PERDIDA') => {
+    try {
+      const res = await fetch(`${API_URL}/api/mis-apuestas/${id}/resultado`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ resultado })
+      });
+      if (res.ok) {
+        fetchData(); // Recargar todos los datos
       }
-      return a;
-    }));
-    // Aquí actualizarías en la API
+    } catch (error) {
+      console.error('Error marcando resultado:', error);
+    }
   };
 
-  // Calcular estadísticas
-  const calcularStats = (): EstadisticasUsuario => {
-    const ganadas = apuestas.filter(a => a.resultado === 'GANADA');
-    const perdidas = apuestas.filter(a => a.resultado === 'PERDIDA');
-    const pendientes = apuestas.filter(a => a.resultado === 'PENDIENTE');
-    
-    const gananciaTotal = ganadas.reduce((acc, a) => acc + (a.ganancia_neta || 0), 0);
-    const perdidaTotal = Math.abs(perdidas.reduce((acc, a) => acc + (a.ganancia_neta || 0), 0));
-    const gananciaNeta = gananciaTotal - perdidaTotal;
-    
-    const totalApostado = apuestas
-      .filter(a => a.resultado !== 'PENDIENTE')
-      .reduce((acc, a) => acc + a.stake, 0);
-    
-    const resueltas = ganadas.length + perdidas.length;
-    const yield_ = resueltas > 0 ? (gananciaNeta / resueltas / (totalApostado / resueltas || 1)) * 100 : 0;
-    const roi = totalApostado > 0 ? (gananciaNeta / totalApostado) * 100 : 0;
-
-    return {
-      banca_actual: banca + gananciaNeta,
-      total_apostado: totalApostado,
-      ganancia_neta: gananciaNeta,
-      roi,
-      yield: yield_,
-      total_apuestas: apuestas.length,
-      ganadas: ganadas.length,
-      perdidas: perdidas.length,
-      pendientes: pendientes.length,
-      mejor_racha: 5 // Esto se calcularía del historial
-    };
+  // Eliminar apuesta
+  const handleEliminar = async (id: number) => {
+    if (!confirm('¿Eliminar esta apuesta?')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/mis-apuestas/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error eliminando apuesta:', error);
+    }
   };
-
-  const stats = calcularStats();
 
   // Filtrar apuestas
   const apuestasFiltradas = apuestas.filter(a => 
@@ -627,7 +715,7 @@ export default function MiBancaPage() {
         <div className="rounded-2xl p-4 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
           <h3 className="text-white font-bold flex items-center gap-2 mb-3">
             <Flame className="h-5 w-5 text-[#FFDD57]" />
-            Picks Recomendados Hoy
+            Picks del Día
           </h3>
           <div className="space-y-2">
             {picksDelDia.slice(0, 3).map((pick) => (
@@ -635,20 +723,11 @@ export default function MiBancaPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[#00D1B2] text-sm font-medium">{pick.tipster_alias}</span>
-                    <span className="text-xs text-[#64748B]">+{pick.tipster_yield.toFixed(1)}% yield</span>
                   </div>
                   <p className="text-white text-sm">{pick.apuesta}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-white font-mono font-bold">@{pick.cuota.toFixed(2)}</p>
-                  <button
-                    onClick={() => {
-                      setModalOpen(true);
-                    }}
-                    className="text-xs text-[#00D1B2] hover:underline"
-                  >
-                    Agregar →
-                  </button>
+                  <p className="text-white font-mono font-bold">@{Number(pick.cuota || 0).toFixed(2)}</p>
                 </div>
               </div>
             ))}
@@ -693,6 +772,7 @@ export default function MiBancaPage() {
                 key={apuesta.id} 
                 apuesta={apuesta} 
                 onMarcarResultado={handleMarcarResultado}
+                onEliminar={handleEliminar}
               />
             ))
           )}
