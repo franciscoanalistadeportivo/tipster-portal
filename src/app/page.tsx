@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 const LOGO_URL = "/logo.png";
+const LOGO_ICON = "/logo-icon.png";
 
 // Contador animado
 const AnimatedCounter = ({ value, suffix = "" }: { value: number; suffix?: string }) => {
@@ -68,25 +69,23 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#050505]">
       {/* ========== HEADER MOBILE-FIRST ========== */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#050505]/95 backdrop-blur-md border-b border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#000000] border-b border-white/5">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14 sm:h-16">
+          <div className="flex items-center justify-between h-14 md:h-16">
             
-            {/* LOGO - Contenedor fijo para evitar desborde */}
+            {/* LOGO + TEXTO */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-[#0A0A0A] border border-[#00FF88]/30 flex-shrink-0">
-                <img 
-                  src={LOGO_URL}
-                  alt="NeuroTips"
-                  className="w-full h-full object-cover object-top scale-150"
-                />
-              </div>
-              <span className="font-bold text-sm sm:text-lg text-white">
+              <img 
+                src={LOGO_ICON}
+                alt="NeuroTips"
+                className="h-9 w-9 md:h-10 md:w-10 rounded-lg"
+              />
+              <span className="font-bold text-base md:text-lg text-white whitespace-nowrap">
                 Neuro<span className="text-[#00FF88]">Tips</span>
               </span>
             </Link>
 
-            {/* DESKTOP NAV - Oculto en móvil */}
+            {/* DESKTOP NAV - Solo visible en md+ */}
             <div className="hidden md:flex items-center gap-4">
               <Link href="/login" className="text-[#94A3B8] hover:text-white transition text-sm px-3 py-2">
                 Iniciar Sesión
@@ -469,10 +468,10 @@ export default function LandingPage() {
       {/* ========== FINAL CTA ========== */}
       <section className="py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto text-center">
-          {/* Logo pequeño y limpio */}
+          {/* Logo limpio */}
           <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#00FF88]/30 p-2 shadow-lg shadow-[#00FF88]/20">
             <img 
-              src={LOGO_URL} 
+              src={LOGO_ICON} 
               alt="NeuroTips" 
               className="w-full h-full object-contain"
             />
