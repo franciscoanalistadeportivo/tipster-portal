@@ -493,34 +493,29 @@ export default function ApuestasPage() {
           icono={<Activity className="h-4 w-4 text-[#FFBB00]" />}
         />
         
-        {/* Balance - card especial */}
+        {/* Win Rate - card especial */}
         <div className="rounded-2xl p-4 col-span-2 lg:col-span-1" style={{
-          background: stats.gananciaTotal >= 0 
+          background: winRate >= 50 
             ? 'linear-gradient(135deg, rgba(0, 209, 178, 0.1), rgba(30, 41, 59, 0.7))'
             : 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(30, 41, 59, 0.7))',
-          border: `1px solid ${stats.gananciaTotal >= 0 ? 'rgba(0, 209, 178, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
+          border: `1px solid ${winRate >= 50 ? 'rgba(0, 209, 178, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
         }}>
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 rounded-lg" style={{ 
-              background: stats.gananciaTotal >= 0 ? 'rgba(0, 209, 178, 0.15)' : 'rgba(239, 68, 68, 0.15)' 
+              background: winRate >= 50 ? 'rgba(0, 209, 178, 0.15)' : 'rgba(239, 68, 68, 0.15)' 
             }}>
-              {stats.gananciaTotal >= 0 
-                ? <TrendingUp className="h-4 w-4 text-[#00D1B2]" />
-                : <TrendingDown className="h-4 w-4 text-[#EF4444]" />
-              }
+              <Target className="h-4 w-4" style={{ color: winRate >= 50 ? '#00D1B2' : '#EF4444' }} />
             </div>
-            {winRate > 0 && (
-              <span className="text-xs font-mono" style={{ color: winRate >= 50 ? '#00D1B2' : '#EF4444' }}>
-                WR {winRate}%
-              </span>
-            )}
+            <span className="text-xs font-mono text-[#94A3B8]">
+              {stats.ganadas}W / {stats.perdidas}L
+            </span>
           </div>
           <p className={`text-2xl font-bold font-mono ${
-            stats.gananciaTotal >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'
+            winRate >= 50 ? 'text-[#00D1B2]' : 'text-[#EF4444]'
           }`}>
-            {stats.gananciaTotal >= 0 ? '+' : ''}${stats.gananciaTotal.toLocaleString()}
+            {winRate}%
           </p>
-          <p className="text-xs text-[#94A3B8] mt-0.5">Balance del Día</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5">Win Rate Hoy</p>
         </div>
       </div>
 
@@ -635,32 +630,6 @@ export default function ApuestasPage() {
           )}
         </div>
       )}
-
-      {/* BARRA FLOTANTE MOBILE */}
-      <div className="fixed bottom-16 left-4 right-4 lg:hidden z-30">
-        <div className="rounded-xl p-3 flex items-center justify-between"
-          style={{
-            background: stats.gananciaTotal >= 0 
-              ? 'rgba(0, 209, 178, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-            border: `1px solid ${stats.gananciaTotal >= 0 
-              ? 'rgba(0, 209, 178, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          <div className="flex items-center gap-2">
-            {stats.gananciaTotal >= 0 
-              ? <TrendingUp className="h-4 w-4 text-[#00D1B2]" />
-              : <TrendingDown className="h-4 w-4 text-[#EF4444]" />
-            }
-            <span className="text-white text-sm font-medium">Balance Hoy</span>
-          </div>
-          <span className={`text-xl font-bold font-mono ${
-            stats.gananciaTotal >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'
-          }`}>
-            {stats.gananciaTotal >= 0 ? '+' : ''}${stats.gananciaTotal.toLocaleString()}
-          </span>
-        </div>
-      </div>
 
       {/* CSS */}
       <style jsx>{`
