@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 
 // URL del logo oficial de NeuroTips
-const LOGO_URL = "// DESPUÉS
 const LOGO_URL = "/logo.png";
 
 // Contador animado
