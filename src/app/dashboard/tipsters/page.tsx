@@ -14,6 +14,7 @@ interface Tipster {
   perdidas: number;
   porcentaje_acierto: number;
   ganancia_total: number;
+  yield?: number;
   racha_actual?: number;
   tipo_racha?: string;
   tipo_estrategia?: string;
@@ -191,11 +192,9 @@ const Sparkline = ({ positive, animated = true }: { positive: boolean; animated?
 
 // Componente Card del Tipster
 const TipsterCard = ({ tipster, rank }: { tipster: Tipster; rank: number }) => {
-  const isRentable = tipster.ganancia_total > 0;
+  const yieldValue = tipster.yield || 0;
+  const isRentable = yieldValue > 0;
   const isHot = (tipster.racha_actual || 0) >= 3 && tipster.tipo_racha === 'W';
-  const roi = tipster.total_apuestas > 0 
-    ? ((tipster.ganancia_total / (tipster.total_apuestas * 10000)) * 100)
-    : 0;
 
   const getRankDisplay = () => {
     if (rank === 1) return <span className="text-2xl">🥇</span>;
@@ -276,14 +275,14 @@ const TipsterCard = ({ tipster, rank }: { tipster: Tipster; rank: number }) => {
 
           {/* Métricas */}
           <div className="flex-1 space-y-3">
-            {/* Profit */}
+            {/* Yield */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-[#94A3B8]">Profit</span>
+              <span className="text-sm text-[#94A3B8]">Yield</span>
               <span className={`text-xl font-bold font-mono flex items-center gap-1 ${
                 isRentable ? 'text-[#00D1B2]' : 'text-[#EF4444]'
               }`}>
                 {isRentable ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                {isRentable ? '+' : ''}${Math.abs(tipster.ganancia_total).toLocaleString()}
+                {yieldValue >= 0 ? '+' : ''}{yieldValue.toFixed(1)}%
               </span>
             </div>
 
@@ -297,11 +296,11 @@ const TipsterCard = ({ tipster, rank }: { tipster: Tipster; rank: number }) => {
               </span>
             </div>
 
-            {/* ROI */}
+            {/* Apuestas */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-[#94A3B8]">ROI</span>
-              <span className={`text-lg font-bold font-mono ${roi >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-                {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
+              <span className="text-sm text-[#94A3B8]">Apuestas</span>
+              <span className="text-lg font-bold font-mono text-white">
+                {tipster.total_apuestas}
               </span>
             </div>
           </div>
@@ -310,16 +309,9 @@ const TipsterCard = ({ tipster, rank }: { tipster: Tipster; rank: number }) => {
         {/* Sparkline */}
         <div className="relative mt-4 flex items-center justify-between">
           <Sparkline positive={isRentable} />
-          <span className="text-sm text-[#64748B]">{tipster.total_apuestas} apuestas</span>
-        </div>
-
-        {/* Footer - Estrategia */}
-        <div className="relative mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-[#94A3B8]">📊</span>
-            <span className="text-sm font-medium text-white">
-              {tipster.tipo_estrategia || 'RACHAS'}
-            </span>
+            <span className="text-xs text-[#64748B]">📊</span>
+            <span className="text-sm font-medium text-[#94A3B8]">RACHAS</span>
           </div>
         </div>
       </div>
@@ -331,7 +323,7 @@ export default function TipstersPage() {
   const [tipsters, setTipsters] = useState<Tipster[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'ganancia' | 'winrate' | 'apuestas'>('ganancia');
+  const [sortBy, setSortBy] = useState<'yield' | 'winrate' | 'apuestas'>('yield');
 
   useEffect(() => {
     const fetchTipsters = async () => {
@@ -369,6 +361,7 @@ export default function TipstersPage() {
             perdidas: Math.max(0, Number(t.perdidas) || 0),
             porcentaje_acierto: Math.min(100, Math.max(0, Number(t.porcentaje_acierto) || 0)),
             ganancia_total: Number(t.ganancia_total) || 0,
+            yield: Number(t.yield) || 0,
             racha_actual: Number(t.racha_actual) || 0,
             tipo_racha: String(t.tipo_racha || '').slice(0, 1),
             tipo_estrategia: String(t.tipo_estrategia || 'RACHAS').slice(0, 20),
@@ -395,7 +388,7 @@ export default function TipstersPage() {
   const filteredTipsters = tipsters
     .filter(t => t.alias && t.alias.toLowerCase().includes(sanitizeInput(searchTerm).toLowerCase()))
     .sort((a, b) => {
-      if (sortBy === 'ganancia') return (b.ganancia_total || 0) - (a.ganancia_total || 0);
+      if (sortBy === 'yield') return (b.yield || 0) - (a.yield || 0);
       if (sortBy === 'winrate') return (b.porcentaje_acierto || 0) - (a.porcentaje_acierto || 0);
       return (b.total_apuestas || 0) - (a.total_apuestas || 0);
     });
@@ -406,7 +399,8 @@ export default function TipstersPage() {
   const winRatePromedio = tipsters.length > 0 
     ? (tipsters.reduce((acc, t) => acc + (Number(t.porcentaje_acierto) || 0), 0) / tipsters.length)
     : 0;
-  const profitTotal = tipsters.reduce((acc, t) => acc + (Number(t.ganancia_total) || 0), 0);
+  const tipstersRentables = tipsters.filter(t => (t.yield || 0) > 0).length;
+  const porcentajeRentables = tipsters.length > 0 ? (tipstersRentables / tipsters.length * 100) : 0;
 
   if (isLoading) {
     return (
@@ -447,7 +441,7 @@ export default function TipstersPage() {
         </div>
         <div className="flex gap-2">
           {[
-            { key: 'ganancia', label: 'Ganancia' },
+            { key: 'yield', label: 'Yield' },
             { key: 'winrate', label: 'Win Rate' },
             { key: 'apuestas', label: 'Volumen' },
           ].map((filter) => (
@@ -477,7 +471,7 @@ export default function TipstersPage() {
           { label: 'Tipsters', value: tipsters.length, color: 'white' },
           { label: 'Ganadas/Perdidas', value: `${totalGanadas}/${totalPerdidas}`, color: '#00D1B2' },
           { label: 'Win Rate Prom', value: `${winRatePromedio.toFixed(1)}%`, color: 'white' },
-          { label: 'Profit Total', value: `${profitTotal >= 0 ? '+' : ''}$${profitTotal.toLocaleString()}`, color: profitTotal >= 0 ? '#00D1B2' : '#EF4444' },
+          { label: 'Rentables', value: `${porcentajeRentables.toFixed(0)}% (${tipstersRentables}/${tipsters.length})`, color: '#00D1B2' },
         ].map((stat, i) => (
           <div 
             key={i}
