@@ -314,14 +314,6 @@ const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) =
             <p className="text-[10px] text-[#64748B] uppercase">Cuota</p>
             <p className="text-xl font-bold text-white font-mono">@{Number(apuesta.cuota || 0).toFixed(2)}</p>
           </div>
-          {apuesta.stake_grok > 0 && (
-            <div className="text-center">
-              <p className="text-[10px] text-[#64748B] uppercase">Stake</p>
-              <p className="text-lg font-bold text-[#94A3B8] font-mono">
-                ${Number(apuesta.stake_grok).toLocaleString()}
-              </p>
-            </div>
-          )}
           <div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{
               background: `${color}10`, border: `1px solid ${color}20`
@@ -333,16 +325,6 @@ const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) =
               <span className="text-sm font-bold" style={{ color }}>{apuesta.resultado}</span>
             </div>
           </div>
-          {apuesta.resultado !== 'PENDIENTE' && (
-            <div className="text-right">
-              <p className="text-[10px] text-[#64748B] uppercase">P/L</p>
-              <p className={`text-lg font-bold font-mono ${
-                (apuesta.ganancia_neta || 0) >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'
-              }`}>
-                {(apuesta.ganancia_neta || 0) >= 0 ? '+' : ''}{(apuesta.ganancia_neta || 0).toLocaleString()}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
