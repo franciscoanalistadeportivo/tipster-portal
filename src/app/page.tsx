@@ -467,8 +467,13 @@ export default function LandingPage() {
       {/* ========== FINAL CTA ========== */}
       <section className="py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-5 sm:mb-6 rounded-2xl overflow-hidden shadow-lg shadow-[#00FF88]/30">
-            <img src={LOGO_URL} alt="NeuroTips" className="w-full h-full object-contain" />
+          {/* Logo más grande, recortando el texto inferior */}
+          <div className="w-20 h-16 sm:w-24 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#00FF88]/30 shadow-lg shadow-[#00FF88]/30">
+            <img 
+              src={LOGO_URL} 
+              alt="NeuroTips" 
+              className="w-full h-auto object-cover object-top scale-125 -translate-y-1"
+            />
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">
             ¿Listo para tu ventaja injusta?
@@ -487,7 +492,10 @@ export default function LandingPage() {
       <footer className="py-8 sm:py-10 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <img src={LOGO_URL} alt="NeuroTips" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" />
+            {/* Ícono simple en vez del logo con texto */}
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00FF88]/20 to-[#FFD700]/20 border border-[#00FF88]/30 flex items-center justify-center">
+              <span className="text-[#00FF88] font-bold">N</span>
+            </div>
             <span className="font-bold text-white text-sm sm:text-base">
               Neuro<span className="text-[#00FF88]">Tips</span>
             </span>
