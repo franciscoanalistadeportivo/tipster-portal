@@ -72,13 +72,15 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between h-14 sm:h-16">
             
-            {/* LOGO - Compacto en móvil */}
+            {/* LOGO - Contenedor fijo para evitar desborde */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-              <img 
-                src={LOGO_URL}
-                alt="NeuroTips"
-                className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-contain"
-              />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-[#0A0A0A] border border-[#00FF88]/30 flex-shrink-0">
+                <img 
+                  src={LOGO_URL}
+                  alt="NeuroTips"
+                  className="w-full h-full object-cover object-top scale-150"
+                />
+              </div>
               <span className="font-bold text-sm sm:text-lg text-white">
                 Neuro<span className="text-[#00FF88]">Tips</span>
               </span>
