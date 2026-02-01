@@ -41,7 +41,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center">
             <Image
-              src="/logo.png"
+              src="/logo_principal.png"
               alt="NeuroTips"
               width={180}
               height={180}
