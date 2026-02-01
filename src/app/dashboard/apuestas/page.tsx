@@ -228,18 +228,13 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
           {apuesta.apuesta}
         </p>
 
-        {/* Footer: Hora + Stake */}
+        {/* Footer: Hora del partido */}
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
             {/* Hora del partido con estado */}
             <span className="flex items-center gap-1 font-mono font-bold" style={{ color: estadoPartido.color }}>
               {estadoPartido.texto}
             </span>
-            {apuesta.stake_grok > 0 && (
-              <span className="font-mono text-[#94A3B8]">
-                Stake: ${Number(apuesta.stake_grok).toLocaleString()}
-              </span>
-            )}
           </div>
           {!isLive && (
             <span className="flex items-center gap-1 text-[#94A3B8]">
