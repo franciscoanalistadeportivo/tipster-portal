@@ -466,80 +466,192 @@ const GraficoEvolucion = ({ historial }: { historial: Apuesta[] }) => {
 };
 
 // ============================================================================
-// COMPONENTE: Historial CARDS (móvil) - APUESTA PRIMERO
+// COMPONENTE: Historial CARDS - PENDIENTES DESTACADAS CON BADGE PULSANTE
 // ============================================================================
 const HistorialCards = ({ historial }: { historial: Apuesta[] }) => {
   const [filtro, setFiltro] = useState<'TODAS' | 'GANADA' | 'PERDIDA' | 'PENDIENTE'>('TODAS');
   const [mostrarTodas, setMostrarTodas] = useState(false);
 
-  const filtradas = historial.filter(a => {
-    return filtro === 'TODAS' || a.resultado === filtro;
-  });
+  const pendientes = historial.filter(a => a.resultado === 'PENDIENTE');
+  const filtradas = historial.filter(a => filtro === 'TODAS' || a.resultado === filtro);
 
-  const mostradas = mostrarTodas ? filtradas : filtradas.slice(0, 8);
+  // Ordenar: PENDIENTES primero cuando filtro es TODAS
+  const ordenadas = filtro === 'TODAS' 
+    ? [...filtradas].sort((a, b) => {
+        if (a.resultado === 'PENDIENTE' && b.resultado !== 'PENDIENTE') return -1;
+        if (a.resultado !== 'PENDIENTE' && b.resultado === 'PENDIENTE') return 1;
+        return 0;
+      })
+    : filtradas;
+
+  const mostradas = mostrarTodas ? ordenadas : ordenadas.slice(0, 8);
 
   return (
     <div className="rounded-2xl p-4 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-bold flex items-center gap-2">
           <Calendar className="h-5 w-5 text-[#00D1B2]" /> Historial
+          {pendientes.length > 0 && (
+            <span style={{
+              background: 'linear-gradient(135deg, #F59E0B, #FFBB00)',
+              color: '#000',
+              fontSize: '10px',
+              fontWeight: 800,
+              padding: '2px 8px',
+              borderRadius: '10px',
+            }}>
+              {pendientes.length} en juego
+            </span>
+          )}
         </h3>
         <div className="flex gap-1">
-          {(['TODAS', 'GANADA', 'PERDIDA', 'PENDIENTE'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFiltro(f)}
-              className={`px-2 py-1 rounded-lg text-xs font-medium transition-all ${
-                filtro === f 
-                  ? f === 'GANADA' ? 'bg-[#00D1B2] text-white' 
-                  : f === 'PERDIDA' ? 'bg-[#EF4444] text-white'
-                  : f === 'PENDIENTE' ? 'bg-[#F59E0B] text-white'
-                  : 'bg-[#00D1B2] text-white'
-                  : 'bg-[#334155] text-[#94A3B8]'
-              }`}
-            >
-              {f === 'TODAS' ? 'Todas' : f === 'GANADA' ? '✓' : f === 'PERDIDA' ? '✗' : '○'}
-            </button>
-          ))}
+          {(['TODAS', 'GANADA', 'PERDIDA', 'PENDIENTE'] as const).map((f) => {
+            const isActive = filtro === f;
+            const count = f === 'PENDIENTE' ? pendientes.length : 0;
+            return (
+              <button
+                key={f}
+                onClick={() => setFiltro(f)}
+                className={`px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+                  isActive 
+                    ? f === 'GANADA' ? 'bg-[#00D1B2] text-white' 
+                    : f === 'PERDIDA' ? 'bg-[#EF4444] text-white'
+                    : f === 'PENDIENTE' ? 'bg-[#F59E0B] text-white'
+                    : 'bg-[#00D1B2] text-white'
+                    : 'bg-[#334155] text-[#94A3B8]'
+                }`}
+                style={f === 'PENDIENTE' && !isActive && count > 0 ? {
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  color: '#F59E0B'
+                } : {}}
+              >
+                {f === 'TODAS' ? 'Todas' : f === 'GANADA' ? '✓' : f === 'PERDIDA' ? '✗' : `⏳${count > 0 ? count : ''}`}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Cards */}
       <div className="space-y-3">
-        {mostradas.map((a, i) => (
-          <div 
-            key={a.id || i}
-            className={`rounded-xl p-3 border ${
-              a.resultado === 'GANADA' ? 'border-[#00D1B2]/30 bg-[#00D1B2]/5' :
-              a.resultado === 'PERDIDA' ? 'border-[#EF4444]/30 bg-[#EF4444]/5' :
-              'border-[#F59E0B]/30 bg-[#F59E0B]/5'
-            }`}
-          >
-            {/* Apuesta (lo importante, primero) */}
-            <p className="text-white font-medium text-sm mb-2 leading-tight">
-              {a.apuesta}
-            </p>
-            
-            {/* Detalles secundarios */}
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-[#94A3B8]">
-                <span>{a.fecha}</span>
-                <span>•</span>
-                <span className="bg-[#334155] px-2 py-0.5 rounded">{a.tipo_mercado || 'N/A'}</span>
+        {mostradas.map((a, i) => {
+          const isPendiente = a.resultado === 'PENDIENTE';
+
+          if (isPendiente) {
+            // =============================================
+            // CARD PENDIENTE - BADGE PULSANTE (Opción A)
+            // =============================================
+            return (
+              <div 
+                key={a.id || i}
+                className="rounded-xl p-4 relative overflow-hidden pendiente-card"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 187, 0, 0.1) 0%, rgba(255, 221, 87, 0.03) 100%)',
+                  border: '1.5px solid rgba(255, 187, 0, 0.35)',
+                  animation: 'pendientePulse 3s ease-in-out infinite',
+                }}
+              >
+                {/* Borde izquierdo dorado */}
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px',
+                  background: 'linear-gradient(180deg, #F59E0B, #FFDD57)',
+                  borderRadius: '4px 0 0 4px',
+                }} />
+
+                {/* Badge PENDIENTE */}
+                <div className="flex items-center justify-between mb-2">
+                  <span style={{
+                    background: 'linear-gradient(135deg, #F59E0B, #FFBB00)',
+                    color: '#000',
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    padding: '3px 10px',
+                    borderRadius: '6px',
+                    letterSpacing: '0.5px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}>
+                    ⏳ PENDIENTE
+                  </span>
+                  <span className="font-mono font-bold" style={{ color: '#FFBB00' }}>
+                    @{Number(a.cuota || 0).toFixed(2)}
+                  </span>
+                </div>
+                
+                {/* Apuesta */}
+                <p className="text-white font-medium text-sm mb-2 leading-tight pl-2">
+                  {a.apuesta}
+                </p>
+                
+                {/* Detalles */}
+                <div className="flex items-center justify-between text-xs pl-2">
+                  <div className="flex items-center gap-2 text-[#94A3B8]">
+                    <span>{a.fecha}</span>
+                    <span>•</span>
+                    <span style={{
+                      background: 'rgba(255, 187, 0, 0.15)',
+                      color: '#FFBB00',
+                      padding: '1px 8px',
+                      borderRadius: '4px',
+                      fontWeight: 600,
+                    }}>
+                      {a.tipo_mercado || 'N/A'}
+                    </span>
+                  </div>
+                  <span className="text-[#94A3B8] flex items-center gap-1" style={{ fontSize: '11px' }}>
+                    Esperando resultado...
+                  </span>
+                </div>
+
+                {/* Barra de progreso animada */}
+                <div style={{ 
+                  width: '100%', height: '3px', borderRadius: '2px',
+                  background: 'rgba(255, 187, 0, 0.1)', overflow: 'hidden',
+                  marginTop: '10px',
+                }}>
+                  <div className="pendiente-progress" style={{
+                    height: '100%', borderRadius: '2px',
+                    background: 'linear-gradient(90deg, #F59E0B, #FFDD57)',
+                  }} />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-white">@{Number(a.cuota || 0).toFixed(2)}</span>
-                <span className={`w-6 h-6 rounded flex items-center justify-center font-bold ${
-                  a.resultado === 'GANADA' ? 'bg-[#00D1B2]/20 text-[#00D1B2]' :
-                  a.resultado === 'PERDIDA' ? 'bg-[#EF4444]/20 text-[#EF4444]' :
-                  'bg-[#F59E0B]/20 text-[#F59E0B]'
-                }`}>
-                  {a.resultado === 'GANADA' ? '✓' : a.resultado === 'PERDIDA' ? '✗' : '○'}
-                </span>
+            );
+          }
+
+          // =============================================
+          // CARD NORMAL (GANADA / PERDIDA)
+          // =============================================
+          return (
+            <div 
+              key={a.id || i}
+              className={`rounded-xl p-3 border ${
+                a.resultado === 'GANADA' ? 'border-[#00D1B2]/30 bg-[#00D1B2]/5' :
+                'border-[#EF4444]/30 bg-[#EF4444]/5'
+              }`}
+            >
+              <p className="text-white font-medium text-sm mb-2 leading-tight">
+                {a.apuesta}
+              </p>
+              
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 text-[#94A3B8]">
+                  <span>{a.fecha}</span>
+                  <span>•</span>
+                  <span className="bg-[#334155] px-2 py-0.5 rounded">{a.tipo_mercado || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-white">@{Number(a.cuota || 0).toFixed(2)}</span>
+                  <span className={`w-6 h-6 rounded flex items-center justify-center font-bold ${
+                    a.resultado === 'GANADA' ? 'bg-[#00D1B2]/20 text-[#00D1B2]' : 'bg-[#EF4444]/20 text-[#EF4444]'
+                  }`}>
+                    {a.resultado === 'GANADA' ? '✓' : '✗'}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {filtradas.length > 8 && !mostrarTodas && (
@@ -554,6 +666,22 @@ const HistorialCards = ({ historial }: { historial: Apuesta[] }) => {
       {filtradas.length === 0 && (
         <p className="text-center text-[#64748B] py-4">No hay apuestas</p>
       )}
+
+      {/* Animaciones CSS */}
+      <style jsx>{`
+        @keyframes pendientePulse {
+          0%, 100% { border-color: rgba(255, 187, 0, 0.25); box-shadow: 0 0 0 rgba(255, 187, 0, 0); }
+          50% { border-color: rgba(255, 187, 0, 0.55); box-shadow: 0 0 20px rgba(255, 187, 0, 0.08); }
+        }
+        .pendiente-progress {
+          animation: progressSlide 2.5s ease-in-out infinite alternate;
+        }
+        @keyframes progressSlide {
+          0% { width: 20%; opacity: 0.4; }
+          50% { width: 65%; opacity: 1; }
+          100% { width: 20%; opacity: 0.4; }
+        }
+      `}</style>
     </div>
   );
 };
