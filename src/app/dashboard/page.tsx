@@ -223,8 +223,16 @@ export default function DashboardPage() {
 
   const diasRestantes = getDiasRestantes();
   const insights = generarInsights(data);
-  const pendientes = data.apuestasRecientes.filter(a => a.resultado === 'PENDIENTE');
-  const resueltas = data.apuestasRecientes.filter(a => a.resultado !== 'PENDIENTE');
+  
+  // Normalizar resultado: null/undefined/vacío = PENDIENTE
+  const apuestasNormalizadas = data.apuestasRecientes.map(a => ({
+    ...a,
+    resultado: (a.resultado && a.resultado !== '' && a.resultado !== 'NULA') 
+      ? a.resultado 
+      : 'PENDIENTE'
+  }));
+  const pendientes = apuestasNormalizadas.filter(a => a.resultado === 'PENDIENTE');
+  const resueltas = apuestasNormalizadas.filter(a => a.resultado === 'GANADA' || a.resultado === 'PERDIDA');
 
   return (
     <div className="space-y-5 animate-fadeIn pb-20 lg:pb-6">
@@ -302,10 +310,8 @@ export default function DashboardPage() {
 
         {/* APUESTAS HOY - BORDE DORADO PULSANTE */}
         <div 
-          className="animate-fadeInUp stagger-2 rounded-2xl p-5"
+          className="stat-card animate-fadeInUp stagger-2"
           style={{
-            background: 'rgba(30, 41, 59, 0.7)',
-            backdropFilter: 'blur(12px)',
             border: '2px solid rgba(255, 187, 0, 0.5)',
             boxShadow: '0 0 20px rgba(255, 187, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
             animation: 'goldPulse 2s ease-in-out infinite'
@@ -423,7 +429,7 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {data.apuestasRecientes.length > 0 ? (
+        {apuestasNormalizadas.length > 0 ? (
           <div className="space-y-3">
             {/* PENDIENTES PRIMERO - DESTACADAS */}
             {pendientes.map((apuesta: any, idx: number) => (
@@ -514,7 +520,7 @@ export default function DashboardPage() {
             ))}
 
             {/* Si no hay apuestas */}
-            {data.apuestasRecientes.length === 0 && (
+            {apuestasNormalizadas.length === 0 && (
               <p className="text-[#94A3B8] text-sm text-center py-6">
                 No hay apuestas hoy. Las apuestas aparecerán aquí cuando se registren.
               </p>
