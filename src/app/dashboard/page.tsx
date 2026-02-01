@@ -310,11 +310,10 @@ export default function DashboardPage() {
 
         {/* APUESTAS HOY - BORDE DORADO PULSANTE */}
         <div 
-          className="stat-card animate-fadeInUp stagger-2"
+          className="stat-card animate-fadeInUp stagger-2 apuestas-hoy-card"
           style={{
             border: '2px solid rgba(255, 187, 0, 0.5)',
             boxShadow: '0 0 20px rgba(255, 187, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-            animation: 'goldPulse 2s ease-in-out infinite'
           }}
         >
           <div className="flex items-start justify-between mb-3">
@@ -743,6 +742,9 @@ export default function DashboardPage() {
       {/* CSS ANIMATIONS                                                */}
       {/* ============================================================ */}
       <style jsx>{`
+        .apuestas-hoy-card {
+          animation: goldPulse 2s ease-in-out infinite !important;
+        }
         @keyframes goldPulse {
           0%, 100% { box-shadow: 0 0 15px rgba(255, 187, 0, 0.1), inset 0 1px 0 rgba(255,255,255,0.05); border-color: rgba(255, 187, 0, 0.4); }
           50% { box-shadow: 0 0 25px rgba(255, 187, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.05); border-color: rgba(255, 187, 0, 0.7); }
