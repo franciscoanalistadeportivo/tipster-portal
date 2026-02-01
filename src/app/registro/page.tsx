@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Trophy, Mail, Lock, User, AlertCircle, Loader2, CheckCircle, ArrowLeft, Gift } from 'lucide-react';
+import { Mail, Lock, User, Phone, AlertCircle, Loader2, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { authAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 
@@ -13,27 +14,42 @@ export default function RegistroPage() {
   
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
+  const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
 
-  // Validación de contraseña en tiempo real
-  const passwordChecks = {
-    length: password.length >= 8,
-    letter: /[A-Za-z]/.test(password),
-    number: /\d/.test(password),
-    match: password === confirmPassword && password.length > 0,
+  const formatTelefono = (value: string) => {
+    // Solo permitir números y +
+    const cleaned = value.replace(/[^\d+]/g, '');
+    return cleaned.slice(0, 15);
   };
-
-  const isPasswordValid = passwordChecks.length && passwordChecks.letter && passwordChecks.number;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!isPasswordValid) {
-      setError('La contraseña no cumple los requisitos');
+    // Validaciones
+    if (!nombre.trim()) {
+      setError('El nombre es requerido');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
+    if (!/[A-Za-z]/.test(password)) {
+      setError('La contraseña debe contener al menos una letra');
+      return;
+    }
+
+    if (!/\d/.test(password)) {
+      setError('La contraseña debe contener al menos un número');
       return;
     }
 
@@ -42,14 +58,19 @@ export default function RegistroPage() {
       return;
     }
 
+    if (!aceptaTerminos) {
+      setError('Debes aceptar los términos y condiciones');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const response = await authAPI.register(email, password, nombre);
+      const response = await authAPI.register(email, password, nombre, telefono);
       setUser(response.user);
       router.push('/dashboard');
     } catch (err: any) {
-      const message = err.response?.data?.error || 'Error al registrarse';
+      const message = err.response?.data?.error || 'Error al crear la cuenta';
       setError(message);
     } finally {
       setIsLoading(false);
@@ -57,54 +78,59 @@ export default function RegistroPage() {
   };
 
   return (
-    <div className="min-h-screen bg-hero-gradient noise-overlay flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#0F172A] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Logo */}
+        {/* Logo NeuroTips */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2.5 rounded-xl">
-              <Trophy className="h-7 w-7 text-white" />
-            </div>
-            <span className="text-2xl font-display font-bold text-white">
-              Tipster<span className="text-emerald-400">Portal</span>
-            </span>
+          <Link href="/" className="inline-flex items-center justify-center">
+            <Image
+              src="https://raw.githubusercontent.com/franciscoanalistadeportivo/logo/main/Gemini_Generated_Image_7h3boy7h3boy7h3b.png"
+              alt="NeuroTips"
+              width={180}
+              height={60}
+              className="h-16 w-auto"
+              priority
+            />
           </Link>
         </div>
 
         {/* Card de Registro */}
-        <div className="card-light animate-fadeInUp">
-          {/* Badge 5 días gratis */}
-          <div className="flex items-center justify-center gap-2 bg-gradient-to-r from-gold-500/10 to-gold-600/10 border border-gold-500/30 rounded-xl px-4 py-3 mb-6">
-            <Gift className="h-5 w-5 text-gold-500" />
-            <span className="text-gold-600 font-semibold">5 días de prueba gratis</span>
-          </div>
-
-          <h1 className="text-2xl font-display font-bold text-navy-900 text-center mb-2">
-            Crear Cuenta
+        <div className="bg-[#1E293B] rounded-2xl p-8 border border-white/10 shadow-xl">
+          <h1 className="text-2xl font-bold text-white text-center mb-2">
+            Crear cuenta
           </h1>
-          <p className="text-navy-500 text-center mb-8">
-            Comienza tu período de prueba gratuito
+          <p className="text-[#94A3B8] text-center mb-6">
+            Únete a NeuroTips y mejora tus apuestas
           </p>
 
+          {/* Badge Trial */}
+          <div className="bg-[#00D1B2]/10 border border-[#00D1B2]/30 rounded-xl p-3 mb-6 flex items-center gap-3">
+            <CheckCircle className="h-5 w-5 text-[#00D1B2] flex-shrink-0" />
+            <p className="text-sm text-[#00D1B2]">
+              <span className="font-semibold">3 días gratis</span> - Sin tarjeta de crédito
+            </p>
+          </div>
+
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center gap-3">
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 flex items-center gap-3">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />
               <span className="text-sm">{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Nombre */}
             <div>
-              <label className="block text-sm font-medium text-navy-700 mb-2">
-                Nombre
+              <label className="block text-sm font-medium text-[#94A3B8] mb-2">
+                Nombre completo
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-400" />
+                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#64748B]" />
                 <input
                   type="text"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 bg-navy-50 border border-navy-200 rounded-xl text-navy-900 placeholder-navy-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 pl-12 bg-[#0F172A] border border-white/10 rounded-xl text-white placeholder-[#64748B] focus:ring-2 focus:ring-[#00D1B2] focus:border-transparent outline-none transition-all"
                   placeholder="Tu nombre"
                   required
                   disabled={isLoading}
@@ -112,17 +138,18 @@ export default function RegistroPage() {
               </div>
             </div>
 
+            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-navy-700 mb-2">
+              <label className="block text-sm font-medium text-[#94A3B8] mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-400" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#64748B]" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 bg-navy-50 border border-navy-200 rounded-xl text-navy-900 placeholder-navy-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 pl-12 bg-[#0F172A] border border-white/10 rounded-xl text-white placeholder-[#64748B] focus:ring-2 focus:ring-[#00D1B2] focus:border-transparent outline-none transition-all"
                   placeholder="tu@email.com"
                   required
                   disabled={isLoading}
@@ -130,70 +157,98 @@ export default function RegistroPage() {
               </div>
             </div>
 
+            {/* Teléfono */}
             <div>
-              <label className="block text-sm font-medium text-navy-700 mb-2">
+              <label className="block text-sm font-medium text-[#94A3B8] mb-2">
+                Teléfono <span className="text-[#64748B]">(opcional)</span>
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#64748B]" />
+                <input
+                  type="tel"
+                  value={telefono}
+                  onChange={(e) => setTelefono(formatTelefono(e.target.value))}
+                  className="w-full px-4 py-3 pl-12 bg-[#0F172A] border border-white/10 rounded-xl text-white placeholder-[#64748B] focus:ring-2 focus:ring-[#00D1B2] focus:border-transparent outline-none transition-all"
+                  placeholder="+56 9 1234 5678"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Contraseña */}
+            <div>
+              <label className="block text-sm font-medium text-[#94A3B8] mb-2">
                 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-400" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#64748B]" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 bg-navy-50 border border-navy-200 rounded-xl text-navy-900 placeholder-navy-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 pl-12 pr-12 bg-[#0F172A] border border-white/10 rounded-xl text-white placeholder-[#64748B] focus:ring-2 focus:ring-[#00D1B2] focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                   required
                   disabled={isLoading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#64748B] hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
-              
-              {/* Indicadores de contraseña */}
-              {password.length > 0 && (
-                <div className="mt-3 space-y-2 bg-navy-50 rounded-xl p-3">
-                  <div className={`flex items-center gap-2 text-sm ${passwordChecks.length ? 'text-emerald-600' : 'text-navy-400'}`}>
-                    <CheckCircle className={`h-4 w-4 ${passwordChecks.length ? 'text-emerald-500' : 'text-navy-300'}`} />
-                    <span>Mínimo 8 caracteres</span>
-                  </div>
-                  <div className={`flex items-center gap-2 text-sm ${passwordChecks.letter ? 'text-emerald-600' : 'text-navy-400'}`}>
-                    <CheckCircle className={`h-4 w-4 ${passwordChecks.letter ? 'text-emerald-500' : 'text-navy-300'}`} />
-                    <span>Al menos una letra</span>
-                  </div>
-                  <div className={`flex items-center gap-2 text-sm ${passwordChecks.number ? 'text-emerald-600' : 'text-navy-400'}`}>
-                    <CheckCircle className={`h-4 w-4 ${passwordChecks.number ? 'text-emerald-500' : 'text-navy-300'}`} />
-                    <span>Al menos un número</span>
-                  </div>
-                </div>
-              )}
+              <p className="text-xs text-[#64748B] mt-1">
+                Mínimo 8 caracteres, al menos una letra y un número
+              </p>
             </div>
 
+            {/* Confirmar Contraseña */}
             <div>
-              <label className="block text-sm font-medium text-navy-700 mb-2">
-                Confirmar Contraseña
+              <label className="block text-sm font-medium text-[#94A3B8] mb-2">
+                Confirmar contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-400" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#64748B]" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 bg-navy-50 border border-navy-200 rounded-xl text-navy-900 placeholder-navy-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 pl-12 bg-[#0F172A] border border-white/10 rounded-xl text-white placeholder-[#64748B] focus:ring-2 focus:ring-[#00D1B2] focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                   required
                   disabled={isLoading}
                 />
               </div>
-              {confirmPassword.length > 0 && (
-                <div className={`flex items-center gap-2 text-sm mt-2 ${passwordChecks.match ? 'text-emerald-600' : 'text-red-500'}`}>
-                  <CheckCircle className={`h-4 w-4 ${passwordChecks.match ? 'text-emerald-500' : 'text-red-400'}`} />
-                  <span>{passwordChecks.match ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden'}</span>
-                </div>
-              )}
+            </div>
+
+            {/* Términos */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="terminos"
+                checked={aceptaTerminos}
+                onChange={(e) => setAceptaTerminos(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-white/10 bg-[#0F172A] text-[#00D1B2] focus:ring-[#00D1B2] focus:ring-offset-0"
+                disabled={isLoading}
+              />
+              <label htmlFor="terminos" className="text-sm text-[#94A3B8]">
+                Acepto los{' '}
+                <Link href="/terminos" className="text-[#00D1B2] hover:underline">
+                  términos y condiciones
+                </Link>{' '}
+                y la{' '}
+                <Link href="/privacidad" className="text-[#00D1B2] hover:underline">
+                  política de privacidad
+                </Link>
+              </label>
             </div>
 
             <button
               type="submit"
-              className="btn-primary w-full py-4 flex items-center justify-center gap-2"
-              disabled={isLoading || !isPasswordValid || !passwordChecks.match}
+              className="w-full py-4 bg-[#00D1B2] hover:bg-[#00B89F] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled={isLoading || !aceptaTerminos}
             >
               {isLoading ? (
                 <>
@@ -201,19 +256,15 @@ export default function RegistroPage() {
                   Creando cuenta...
                 </>
               ) : (
-                'Crear Cuenta Gratis'
+                'Crear cuenta gratis'
               )}
             </button>
           </form>
 
-          <p className="text-xs text-navy-400 text-center mt-4">
-            Al registrarte aceptas nuestros términos de servicio y política de privacidad
-          </p>
-
-          <div className="mt-6 pt-6 border-t border-navy-100 text-center">
-            <p className="text-navy-600">
+          <div className="mt-6 pt-6 border-t border-white/10 text-center">
+            <p className="text-[#94A3B8]">
               ¿Ya tienes cuenta?{' '}
-              <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+              <Link href="/login" className="text-[#00D1B2] hover:text-[#00B89F] font-semibold transition-colors">
                 Inicia sesión
               </Link>
             </p>
@@ -222,7 +273,7 @@ export default function RegistroPage() {
 
         {/* Volver */}
         <div className="text-center mt-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-navy-400 hover:text-white transition-colors">
+          <Link href="/" className="inline-flex items-center gap-2 text-[#64748B] hover:text-white transition-colors">
             <ArrowLeft className="h-4 w-4" />
             <span>Volver al inicio</span>
           </Link>
