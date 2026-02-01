@@ -237,6 +237,9 @@ const AnalisisIA = () => (
 // COMPONENTE: Comparación vs Inversiones
 // ============================================================================
 const ComparacionInversiones = ({ yield_ }: { yield_: number }) => {
+  // No mostrar si yield es menor a 3%
+  if (yield_ < 3) return null;
+  
   const comparaciones = [
     { nombre: 'Depósito a plazo', valor: 0.4, color: '#64748B' },
     { nombre: 'Fondos mutuos', valor: 1.2, color: '#94A3B8' },
