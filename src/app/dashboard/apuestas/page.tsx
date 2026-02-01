@@ -39,14 +39,64 @@ const getMercadoLabel = (tipo: string | undefined) => {
   if (!tipo) return null;
   const map: Record<string, { label: string; color: string }> = {
     'GANADOR': { label: '1X2', color: '#3B82F6' },
-    'OVER GOLES': { label: 'OVER', color: '#00D1B2' },
-    'UNDER GOLES': { label: 'UNDER', color: '#F59E0B' },
+    'DOBLE OPORTUNIDAD': { label: 'DO', color: '#6366F1' },
+    'OVER GOLES': { label: 'OV GOL', color: '#00D1B2' },
+    'UNDER GOLES': { label: 'UN GOL', color: '#F59E0B' },
+    'GOLES EXACTOS': { label: 'GOL EX', color: '#10B981' },
     'AMBOS MARCAN': { label: 'BTTS', color: '#A855F7' },
+    'AMBOS NO MARCAN': { label: 'NO BTTS', color: '#8B5CF6' },
     'HANDICAP': { label: 'HC', color: '#EC4899' },
-    'COMBINADA': { label: 'COMBI', color: '#F97316' },
-    'CORNERS': { label: 'CRN', color: '#06B6D4' },
+    'HANDICAP ASIATICO': { label: 'HC AS', color: '#F472B6' },
+    'OVER TARJETAS': { label: 'OV TAR', color: '#EAB308' },
+    'UNDER TARJETAS': { label: 'UN TAR', color: '#CA8A04' },
+    'OVER CORNERS': { label: 'OV CRN', color: '#06B6D4' },
+    'UNDER CORNERS': { label: 'UN CRN', color: '#0891B2' },
+    'OVER PUNTOS': { label: 'OV PTS', color: '#F97316' },
+    'UNDER PUNTOS': { label: 'UN PTS', color: '#EA580C' },
+    'PRIMERA MITAD': { label: '1T', color: '#14B8A6' },
+    'SEGUNDA MITAD': { label: '2T', color: '#0D9488' },
+    'SCORER': { label: 'SCORER', color: '#E11D48' },
+    'RESULTADO EXACTO': { label: 'RES EX', color: '#BE123C' },
+    'TENIS': { label: 'TENIS', color: '#84CC16' },
+    'NBA': { label: 'NBA', color: '#F97316' },
+    'COMBINADAS': { label: 'COMBI', color: '#EF4444' },
+    'OTRO': { label: 'OTRO', color: '#64748B' },
   };
   return map[tipo] || { label: tipo.slice(0, 6), color: '#64748B' };
+};
+
+/**
+ * Determina si un partido está LIVE, pendiente, o sin hora.
+ * - LIVE: hora_partido ya pasó (se está jugando o jugó hoy)
+ * - PRÓXIMO: hora_partido está en el futuro hoy
+ * - null: no tiene hora_partido
+ */
+const getEstadoPartido = (hora_partido?: string): { estado: 'LIVE' | 'PROXIMO' | 'SIN_HORA'; texto: string; color: string } => {
+  if (!hora_partido) {
+    return { estado: 'SIN_HORA', texto: 'Sin hora', color: '#94A3B8' };
+  }
+
+  try {
+    const [h, m] = hora_partido.split(':').map(Number);
+    const ahora = new Date();
+    const horaPartidoMinutos = h * 60 + m;
+    const ahoraMinutos = ahora.getHours() * 60 + ahora.getMinutes();
+    
+    // Si la hora del partido ya pasó (con margen de ~2h para duración del partido)
+    if (ahoraMinutos >= horaPartidoMinutos) {
+      return { estado: 'LIVE', texto: `🔴 EN VIVO · ${hora_partido}`, color: '#EF4444' };
+    }
+    
+    // Si falta menos de 30 min
+    if (horaPartidoMinutos - ahoraMinutos <= 30) {
+      return { estado: 'PROXIMO', texto: `⚡ POR INICIAR · ${hora_partido}`, color: '#FFBB00' };
+    }
+    
+    // Futuro
+    return { estado: 'PROXIMO', texto: `🕐 ${hora_partido} CL`, color: '#FFBB00' };
+  } catch {
+    return { estado: 'SIN_HORA', texto: hora_partido, color: '#94A3B8' };
+  }
 };
 
 // ============================================================================
@@ -96,20 +146,28 @@ const KPICard = ({
 // ============================================================================
 const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) => {
   const mercado = getMercadoLabel(apuesta.tipo_mercado);
+  const estadoPartido = getEstadoPartido(apuesta.hora_partido);
+  const isLive = estadoPartido.estado === 'LIVE';
   
   return (
     <div 
       className="rounded-xl p-4 relative overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, rgba(255, 187, 0, 0.08) 0%, rgba(255, 221, 87, 0.02) 100%)',
-        border: '1.5px solid rgba(255, 187, 0, 0.3)',
+        background: isLive
+          ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(255, 50, 50, 0.03) 100%)'
+          : 'linear-gradient(135deg, rgba(255, 187, 0, 0.08) 0%, rgba(255, 221, 87, 0.02) 100%)',
+        border: isLive
+          ? '1.5px solid rgba(239, 68, 68, 0.4)'
+          : '1.5px solid rgba(255, 187, 0, 0.3)',
         animationDelay: `${index * 0.05}s`,
       }}
     >
-      {/* Borde izquierdo dorado */}
+      {/* Borde izquierdo */}
       <div style={{
         position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px',
-        background: 'linear-gradient(180deg, #F59E0B, #FFDD57)',
+        background: isLive
+          ? 'linear-gradient(180deg, #EF4444, #F97316)'
+          : 'linear-gradient(180deg, #F59E0B, #FFDD57)',
         borderRadius: '4px 0 0 4px',
       }} />
 
@@ -117,14 +175,31 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
         {/* Header: Badge + Tipster + Cuota */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span style={{
-              background: 'linear-gradient(135deg, #F59E0B, #FFBB00)',
-              color: '#000', fontSize: '10px', fontWeight: 800,
-              padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px',
-              display: 'flex', alignItems: 'center', gap: '4px',
-            }}>
-              ⏳ EN JUEGO
-            </span>
+            {/* Badge LIVE o EN JUEGO */}
+            {isLive ? (
+              <span className="live-badge" style={{
+                background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                color: '#FFF', fontSize: '10px', fontWeight: 800,
+                padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px',
+                display: 'flex', alignItems: 'center', gap: '4px',
+                boxShadow: '0 0 12px rgba(239, 68, 68, 0.4)',
+              }}>
+                <span className="live-dot" style={{
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  background: '#FFF', display: 'inline-block',
+                }} />
+                EN VIVO
+              </span>
+            ) : (
+              <span style={{
+                background: 'linear-gradient(135deg, #F59E0B, #FFBB00)',
+                color: '#000', fontSize: '10px', fontWeight: 800,
+                padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px',
+                display: 'flex', alignItems: 'center', gap: '4px',
+              }}>
+                ⏳ PENDIENTE
+              </span>
+            )}
             <span className="text-sm font-medium text-[#00D1B2]">
               {getDeporteIcon(apuesta.deporte)} {apuesta.tipster_alias}
             </span>
@@ -143,7 +218,7 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
               </span>
             )}
           </div>
-          <span className="font-mono font-bold text-lg" style={{ color: '#FFBB00' }}>
+          <span className="font-mono font-bold text-lg" style={{ color: isLive ? '#EF4444' : '#FFBB00' }}>
             @{Number(apuesta.cuota || 0).toFixed(2)}
           </span>
         </div>
@@ -155,31 +230,40 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
 
         {/* Footer: Hora + Stake */}
         <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-3 text-[#94A3B8]">
-            {apuesta.hora_partido && (
-              <span className="flex items-center gap-1 font-mono" style={{ color: '#FFBB00' }}>
-                <Clock className="h-3 w-3" /> {apuesta.hora_partido} CL
-              </span>
-            )}
+          <div className="flex items-center gap-3">
+            {/* Hora del partido con estado */}
+            <span className="flex items-center gap-1 font-mono font-bold" style={{ color: estadoPartido.color }}>
+              {estadoPartido.texto}
+            </span>
             {apuesta.stake_grok > 0 && (
-              <span className="font-mono">
+              <span className="font-mono text-[#94A3B8]">
                 Stake: ${Number(apuesta.stake_grok).toLocaleString()}
               </span>
             )}
           </div>
-          <span className="flex items-center gap-1 text-[#94A3B8]">
-            <Eye className="h-3 w-3" /> Esperando resultado...
-          </span>
+          {!isLive && (
+            <span className="flex items-center gap-1 text-[#94A3B8]">
+              <Eye className="h-3 w-3" /> Esperando...
+            </span>
+          )}
+          {isLive && (
+            <span className="flex items-center gap-1 text-[#EF4444] font-bold">
+              <Activity className="h-3 w-3" /> Jugándose ahora
+            </span>
+          )}
         </div>
 
         {/* Barra progreso animada */}
         <div style={{ 
           width: '100%', height: '3px', borderRadius: '2px',
-          background: 'rgba(255, 187, 0, 0.1)', overflow: 'hidden', marginTop: '10px',
+          background: isLive ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 187, 0, 0.1)',
+          overflow: 'hidden', marginTop: '10px',
         }}>
           <div className="pendiente-bar" style={{
             height: '100%', borderRadius: '2px',
-            background: 'linear-gradient(90deg, #F59E0B, #FFDD57)',
+            background: isLive
+              ? 'linear-gradient(90deg, #EF4444, #F97316)'
+              : 'linear-gradient(90deg, #F59E0B, #FFDD57)',
           }} />
         </div>
       </div>
@@ -489,10 +573,30 @@ export default function ApuestasPage() {
             <div>
               {(filter === 'todas') && (
                 <div className="flex items-center gap-2 mb-3">
+                  {pendientes.some(a => getEstadoPartido(a.hora_partido).estado === 'LIVE') && (
+                    <span className="live-dot-anim" style={{
+                      width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444',
+                    }} />
+                  )}
                   <Activity className="h-4 w-4 text-[#FFBB00]" />
                   <span className="text-sm font-bold text-[#FFBB00]">
-                    En Juego ({pendientes.length})
+                    Pendientes ({pendientes.length})
+                    {(() => {
+                      const liveCount = pendientes.filter(a => getEstadoPartido(a.hora_partido).estado === 'LIVE').length;
+                      return liveCount > 0 ? ` · ` : '';
+                    })()}
                   </span>
+                  {(() => {
+                    const liveCount = pendientes.filter(a => getEstadoPartido(a.hora_partido).estado === 'LIVE').length;
+                    return liveCount > 0 ? (
+                      <span style={{
+                        background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444',
+                        fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '10px',
+                      }}>
+                        🔴 {liveCount} EN VIVO
+                      </span>
+                    ) : null;
+                  })()}
                   <div style={{
                     flex: 1, height: '1px',
                     background: 'linear-gradient(90deg, rgba(255, 187, 0, 0.3), transparent)',
@@ -500,7 +604,12 @@ export default function ApuestasPage() {
                 </div>
               )}
               <div className="space-y-3">
-                {pendientes.map((a, i) => (
+                {/* LIVE primero, luego pendientes */}
+                {[...pendientes].sort((a, b) => {
+                  const aLive = getEstadoPartido(a.hora_partido).estado === 'LIVE' ? 0 : 1;
+                  const bLive = getEstadoPartido(b.hora_partido).estado === 'LIVE' ? 0 : 1;
+                  return aLive - bLive;
+                }).map((a, i) => (
                   <CardPendiente key={a.id} apuesta={a} index={i} />
                 ))}
               </div>
@@ -567,6 +676,23 @@ export default function ApuestasPage() {
           0% { width: 20%; opacity: 0.4; }
           50% { width: 65%; opacity: 1; }
           100% { width: 20%; opacity: 0.4; }
+        }
+        .live-dot {
+          animation: livePulse 1s ease-in-out infinite;
+        }
+        .live-dot-anim {
+          animation: livePulse 1s ease-in-out infinite;
+        }
+        .live-badge {
+          animation: liveGlow 2s ease-in-out infinite;
+        }
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.3; transform: scale(0.7); }
+        }
+        @keyframes liveGlow {
+          0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
+          50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.7); }
         }
       `}</style>
     </div>
