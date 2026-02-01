@@ -72,13 +72,22 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-[#0F172A]">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 bg-[#1E293B] border-r border-[#334155]">
-        {/* Logo */}
+        {/* Logo NeuroTips */}
         <div className="p-6 border-b border-[#334155]">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00D1B2] to-[#00D1B2]/70 flex items-center justify-center">
-              <Zap className="h-5 w-5 text-white" />
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <img 
+              src="/logo-icon.png" 
+              alt="NeuroTips" 
+              style={{ width: '40px', height: '40px', borderRadius: '10px' }}
+            />
+            <div>
+              <span className="text-xl font-bold text-white">
+                Neuro<span style={{ color: '#00D1B2' }}>Tips</span>
+              </span>
+              <p style={{ fontSize: '10px', color: '#64748B', marginTop: '-2px', letterSpacing: '0.5px' }}>
+                Análisis con IA
+              </p>
             </div>
-            <span className="text-xl font-bold text-white">TipsterPortal</span>
           </Link>
         </div>
 
@@ -133,10 +142,14 @@ export default function DashboardLayout({
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#1E293B] border-b border-[#334155] z-40 px-4 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00D1B2] to-[#00D1B2]/70 flex items-center justify-center">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-bold text-white">TipsterPortal</span>
+          <img 
+            src="/logo-icon.png" 
+            alt="NeuroTips" 
+            style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+          />
+          <span className="text-lg font-bold text-white">
+            Neuro<span style={{ color: '#00D1B2' }}>Tips</span>
+          </span>
         </Link>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
