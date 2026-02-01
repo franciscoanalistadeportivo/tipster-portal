@@ -206,8 +206,9 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* Mobile Bottom Nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1E293B] border-t border-[#334155] z-40 flex items-center justify-around px-2">
+      {/* Mobile Bottom Nav - PRO */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1E293B]/95 border-t border-[#334155] z-40 flex items-center justify-around px-2"
+        style={{ backdropFilter: 'blur(16px)' }}>
         {NAV_ITEMS.slice(0, 5).map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || 
@@ -217,12 +218,24 @@ export default function DashboardLayout({
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all ${
-                isActive ? 'text-[#00D1B2]' : 'text-[#64748B]'
-              }`}
+              className="flex flex-col items-center justify-center p-2 rounded-lg transition-all relative"
+              style={isActive ? {
+                color: '#00D1B2',
+                filter: 'drop-shadow(0 0 6px rgba(0, 209, 178, 0.4))',
+              } : {
+                color: '#64748B',
+              }}
             >
               <Icon className="h-5 w-5" />
-              <span className="text-[10px] mt-1">{item.label}</span>
+              <span className={`text-[10px] mt-1 ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
+              {isActive && (
+                <span style={{
+                  position: 'absolute', bottom: '2px',
+                  width: '4px', height: '4px', borderRadius: '50%',
+                  background: '#00D1B2',
+                  boxShadow: '0 0 6px rgba(0, 209, 178, 0.6)',
+                }} />
+              )}
             </Link>
           );
         })}
