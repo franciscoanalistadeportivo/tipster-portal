@@ -41,11 +41,11 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center">
             <Image
-              src="https://raw.githubusercontent.com/franciscoanalistadeportivo/logo/main/Gemini_Generated_Image_7h3boy7h3boy7h3b.png"
+              src="/logo.png"
               alt="NeuroTips"
               width={180}
-              height={60}
-              className="h-16 w-auto"
+              height={180}
+              className="h-24 w-auto"
               priority
             />
           </Link>
