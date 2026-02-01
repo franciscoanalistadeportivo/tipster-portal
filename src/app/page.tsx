@@ -78,9 +78,10 @@ export default function LandingPage() {
               <img 
                 src={LOGO_ICON}
                 alt="NeuroTips"
-                className="h-9 w-9 md:h-10 md:w-10 rounded-lg"
+                style={{ width: '36px', height: '36px', maxWidth: '36px', maxHeight: '36px' }}
+                className="rounded-lg flex-shrink-0"
               />
-              <span className="font-bold text-base md:text-lg text-white whitespace-nowrap">
+              <span className="font-bold text-white whitespace-nowrap" style={{ fontSize: '16px' }}>
                 Neuro<span className="text-[#00FF88]">Tips</span>
               </span>
             </Link>
