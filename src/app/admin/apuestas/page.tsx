@@ -18,6 +18,7 @@ interface Apuesta {
   tipo_mercado: string;
   ganancia_neta: number;
   racha_actual: number;
+  hora_partido: string;
 }
 
 const TIPOS_MERCADO = [
@@ -351,6 +352,7 @@ export default function ApuestasAdminPage() {
               <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Cuota</th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Stake</th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Tipo</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Hora</th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Resultado</th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Racha</th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400">Acciones</th>
@@ -395,6 +397,28 @@ export default function ApuestasAdminPage() {
                   >
                     {TIPOS_MERCADO.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
+                </td>
+                {/* HORA PARTIDO - Siempre editable */}
+                <td className="px-3 py-2">
+                  <input 
+                    type="text"
+                    placeholder="HH:MM"
+                    value={a.hora_partido || ''} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Permitir escribir y validar al salir
+                      setApuestas(prev => prev.map(ap => ap.id === a.id ? {...ap, hora_partido: val} : ap));
+                    }}
+                    onBlur={(e) => {
+                      const val = e.target.value.trim();
+                      if (val === '') {
+                        updateField(a.id, 'hora_partido', '');
+                      } else if (/^\d{1,2}:\d{2}$/.test(val)) {
+                        updateField(a.id, 'hora_partido', val);
+                      }
+                    }}
+                    className="px-2 py-1 bg-slate-800 border border-slate-600 rounded text-white text-xs w-16 text-center font-mono hover:bg-slate-700 focus:border-teal-500 focus:outline-none"
+                  />
                 </td>
                 {/* RESULTADO - Siempre editable */}
                 <td className="px-3 py-2">
