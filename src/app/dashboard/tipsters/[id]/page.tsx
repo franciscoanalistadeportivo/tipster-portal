@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
   ChevronLeft, Flame, Snowflake, AlertTriangle,
   Search, Calendar, BarChart3, TrendingUp, Brain,
-  Shield, Target, Zap, Star, Award, Info
+  Shield, Target, Zap, Star, Award, Info, Lightbulb
 } from 'lucide-react';
 import { tipstersAPI } from '@/lib/api';
 
@@ -54,6 +54,12 @@ const getDeporteIcon = (deporte: string) => {
     'Voleibol': '🏐', 'Mixto': '🎯', 'eSports': '🎮'
   };
   return icons[deporte] || '🎯';
+};
+
+// Truncar nombre largo
+const truncarNombre = (nombre: string, maxLength: number = 20): string => {
+  if (nombre.length <= maxLength) return nombre;
+  return nombre.slice(0, maxLength) + '...';
 };
 
 // Calcular Yield real del historial
@@ -144,6 +150,81 @@ const calcularNivelConfianza = (winRate: number, yield_: number, totalApuestas: 
   return { nivel: 'EN OBSERVACIÓN', estrellas: 1, color: '#EF4444' };
 };
 
+// Generar consejo IA
+const generarConsejoIA = (winRate: number, yield_: number, racha: { racha: number; tipo: 'W' | 'L' }, totalApuestas: number): { mensaje: string; tipo: 'positivo' | 'neutral' | 'precaucion' } => {
+  // Racha muy positiva
+  if (racha.tipo === 'W' && racha.racha >= 5) {
+    return { mensaje: '🔥 En racha caliente. Buen momento para seguir sus picks.', tipo: 'positivo' };
+  }
+  
+  // Racha muy negativa
+  if (racha.tipo === 'L' && racha.racha >= 4) {
+    return { mensaje: '❄️ Atraviesa mala racha. Considera esperar a que se recupere.', tipo: 'precaucion' };
+  }
+  
+  // Yield muy alto
+  if (yield_ >= 15 && totalApuestas >= 30) {
+    return { mensaje: '⭐ Rendimiento excepcional. Uno de los mejores tipsters.', tipo: 'positivo' };
+  }
+  
+  // Yield positivo bueno
+  if (yield_ >= 8 && winRate >= 60) {
+    return { mensaje: '✅ Buen balance entre efectividad y rentabilidad.', tipo: 'positivo' };
+  }
+  
+  // Yield positivo pero bajo
+  if (yield_ > 0 && yield_ < 5) {
+    return { mensaje: '📊 Rentable pero conservador. Ideal para stakes pequeños.', tipo: 'neutral' };
+  }
+  
+  // Yield negativo
+  if (yield_ < 0) {
+    return { mensaje: '⚠️ Yield negativo. Analiza bien antes de seguir.', tipo: 'precaucion' };
+  }
+  
+  // Pocas apuestas
+  if (totalApuestas < 20) {
+    return { mensaje: '📈 Muestra pequeña. Espera más apuestas para evaluar.', tipo: 'neutral' };
+  }
+  
+  // Win rate alto pero yield bajo
+  if (winRate >= 65 && yield_ < 5) {
+    return { mensaje: '🎯 Alta efectividad en cuotas bajas. Consistente pero lento.', tipo: 'neutral' };
+  }
+  
+  // Default
+  return { mensaje: '📊 Rendimiento dentro del promedio esperado.', tipo: 'neutral' };
+};
+
+// ============================================================================
+// COMPONENTE: Consejo IA
+// ============================================================================
+const ConsejoIA = ({ winRate, yield_, racha, totalApuestas }: { winRate: number; yield_: number; racha: { racha: number; tipo: 'W' | 'L' }; totalApuestas: number }) => {
+  const consejo = generarConsejoIA(winRate, yield_, racha, totalApuestas);
+  
+  const bgColor = consejo.tipo === 'positivo' 
+    ? 'from-[#00D1B2]/10 to-transparent border-[#00D1B2]/30' 
+    : consejo.tipo === 'precaucion'
+    ? 'from-[#F59E0B]/10 to-transparent border-[#F59E0B]/30'
+    : 'from-[#3B82F6]/10 to-transparent border-[#3B82F6]/30';
+  
+  const iconColor = consejo.tipo === 'positivo' ? '#00D1B2' : consejo.tipo === 'precaucion' ? '#F59E0B' : '#3B82F6';
+
+  return (
+    <div className={`rounded-2xl p-4 border bg-gradient-to-r ${bgColor}`}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${iconColor}20` }}>
+          <Lightbulb className="h-5 w-5" style={{ color: iconColor }} />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-[#94A3B8]">Consejo IA</p>
+          <p className="text-white font-medium">{consejo.mensaje}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ============================================================================
 // COMPONENTE: Alerta de Racha
 // ============================================================================
@@ -154,79 +235,63 @@ const AlertaRacha = ({ racha, tipo }: { racha: number; tipo: 'W' | 'L' }) => {
   
   const getMensaje = () => {
     if (isPositive) {
-      if (racha >= 5) return { titulo: '🔥 ¡En fuego!', mensaje: `${racha} victorias seguidas`, recomendacion: 'Momento ideal para seguirlo' };
-      if (racha >= 4) return { titulo: '¡Excelente racha!', mensaje: '4 victorias seguidas', recomendacion: 'Está en muy buena forma' };
-      return { titulo: '¡Buena racha!', mensaje: '3 victorias seguidas', recomendacion: 'Buen momento para seguir sus picks' };
+      if (racha >= 5) return { titulo: '🔥 ¡En fuego!', mensaje: `${racha} victorias seguidas` };
+      if (racha >= 4) return { titulo: '¡Excelente racha!', mensaje: '4 victorias seguidas' };
+      return { titulo: '¡Buena racha!', mensaje: '3 victorias seguidas' };
     } else {
-      if (racha >= 5) return { titulo: '❄️ Precaución', mensaje: `${racha} pérdidas seguidas`, recomendacion: 'Mejor esperar a que se recupere' };
-      if (racha >= 4) return { titulo: 'Racha muy fría', mensaje: '4 pérdidas seguidas', recomendacion: 'Recomendamos esperar' };
-      return { titulo: 'Racha fría', mensaje: '3 pérdidas seguidas', recomendacion: 'Considera esperar a que recupere forma' };
+      if (racha >= 5) return { titulo: '❄️ Precaución', mensaje: `${racha} pérdidas seguidas` };
+      if (racha >= 4) return { titulo: 'Racha fría', mensaje: '4 pérdidas seguidas' };
+      return { titulo: 'Racha fría', mensaje: '3 pérdidas seguidas' };
     }
   };
   
   const config = getMensaje();
   
   return (
-    <div className={`rounded-2xl p-4 border ${
+    <div className={`rounded-xl p-3 border ${
       isPositive 
         ? 'bg-gradient-to-r from-[#00D1B2]/10 to-transparent border-[#00D1B2]/30' 
         : 'bg-gradient-to-r from-[#EF4444]/10 to-transparent border-[#EF4444]/30'
     }`}>
-      <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-          isPositive ? 'bg-[#00D1B2]/20' : 'bg-[#EF4444]/20'
-        }`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           {isPositive ? (
             <Flame className="h-5 w-5 text-[#FFDD57]" />
           ) : (
             <Snowflake className="h-5 w-5 text-[#3B82F6]" />
           )}
+          <span className={`font-bold ${isPositive ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+            {config.titulo}
+          </span>
         </div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <h4 className={`font-bold ${isPositive ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-              {config.titulo}
-            </h4>
-            <span className={`font-mono font-bold text-lg ${isPositive ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-              {isPositive ? '+' : '-'}{racha}
-            </span>
-          </div>
-          <p className="text-white text-sm mt-1">{config.mensaje}</p>
-          <p className="text-[#94A3B8] text-sm mt-2 flex items-center gap-2">
-            <Info className="h-4 w-4" />
-            {config.recomendacion}
-          </p>
-        </div>
+        <span className={`font-mono font-bold text-lg ${isPositive ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+          {isPositive ? '+' : '-'}{racha}
+        </span>
       </div>
+      <p className="text-[#94A3B8] text-sm mt-1">{config.mensaje}</p>
     </div>
   );
 };
 
 // ============================================================================
-// COMPONENTE: Análisis con IA
+// COMPONENTE: Análisis con IA (compacto)
 // ============================================================================
 const AnalisisIA = () => (
-  <div className="rounded-2xl p-6 border border-[#00D1B2]/30 bg-gradient-to-br from-[#00D1B2]/10 to-transparent">
-    <div className="flex items-center gap-3 mb-4">
-      <div className="w-10 h-10 rounded-xl bg-[#00D1B2]/20 flex items-center justify-center">
-        <Brain className="h-5 w-5 text-[#00D1B2]" />
-      </div>
-      <div>
-        <h3 className="text-white font-bold">Analizado por Inteligencia Artificial</h3>
-        <p className="text-[#94A3B8] text-sm">Cada pick pasa por nuestro sistema de análisis</p>
-      </div>
+  <div className="rounded-2xl p-4 border border-[#00D1B2]/30 bg-gradient-to-br from-[#00D1B2]/10 to-transparent">
+    <div className="flex items-center gap-3 mb-3">
+      <Brain className="h-5 w-5 text-[#00D1B2]" />
+      <span className="text-white font-bold text-sm">Analizado por IA</span>
     </div>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-4 gap-2">
       {[
-        { icon: Target, label: 'EV Positivo', desc: 'Valor esperado' },
-        { icon: BarChart3, label: 'Kelly Criterion', desc: 'Gestión de riesgo' },
-        { icon: Shield, label: 'Filtro Anti-Malo', desc: 'Rechaza picks malos' },
-        { icon: Zap, label: 'Rachas Dinámicas', desc: 'Ajuste automático' },
+        { icon: Target, label: 'EV+' },
+        { icon: BarChart3, label: 'Kelly' },
+        { icon: Shield, label: 'Filtro' },
+        { icon: Zap, label: 'Rachas' },
       ].map((item, i) => (
-        <div key={i} className="bg-[#0F172A]/50 rounded-xl p-3 text-center">
-          <item.icon className="h-5 w-5 text-[#00D1B2] mx-auto mb-2" />
-          <p className="text-white text-sm font-medium">{item.label}</p>
-          <p className="text-[#64748B] text-xs">{item.desc}</p>
+        <div key={i} className="bg-[#0F172A]/50 rounded-lg p-2 text-center">
+          <item.icon className="h-4 w-4 text-[#00D1B2] mx-auto mb-1" />
+          <p className="text-[#94A3B8] text-xs">{item.label}</p>
         </div>
       ))}
     </div>
@@ -234,130 +299,82 @@ const AnalisisIA = () => (
 );
 
 // ============================================================================
-// COMPONENTE: Comparación vs Inversiones
+// COMPONENTE: Comparación vs Inversiones (compacto)
 // ============================================================================
 const ComparacionInversiones = ({ yield_ }: { yield_: number }) => {
-  // No mostrar si yield es menor a 3%
   if (yield_ < 3) return null;
   
-  const comparaciones = [
-    { nombre: 'Depósito a plazo', valor: 0.4, color: '#64748B' },
-    { nombre: 'Fondos mutuos', valor: 1.2, color: '#94A3B8' },
-    { nombre: 'Acciones (promedio)', valor: 2.5, color: '#3B82F6' },
-    { nombre: 'Este tipster', valor: yield_, color: '#00D1B2', destacado: true },
-  ];
-  const maxValor = Math.max(...comparaciones.map(c => c.valor), 1);
-
   return (
-    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
-      <h3 className="text-white font-bold flex items-center gap-2 mb-4">
-        <TrendingUp className="h-5 w-5 text-[#00D1B2]" />
-        Rentabilidad vs Inversiones Tradicionales
+    <div className="rounded-2xl p-4 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+      <h3 className="text-white font-bold text-sm flex items-center gap-2 mb-3">
+        <TrendingUp className="h-4 w-4 text-[#00D1B2]" />
+        vs Inversiones
       </h3>
-      <div className="space-y-3">
-        {comparaciones.map((item, i) => (
-          <div key={i} className={item.destacado ? 'bg-[#00D1B2]/10 rounded-xl p-3 -mx-3' : ''}>
-            <div className="flex items-center justify-between mb-1">
-              <span className={`text-sm ${item.destacado ? 'text-[#00D1B2] font-bold' : 'text-[#94A3B8]'}`}>
-                {item.destacado && '🔥 '}{item.nombre}
-              </span>
-              <span className={`font-mono font-bold ${item.destacado ? 'text-[#00D1B2] text-lg' : 'text-white'}`}>
-                {Number(item.valor || 0) > 0 ? '+' : ''}{Number(item.valor || 0).toFixed(1)}%
-                {item.destacado && <span className="text-xs font-normal text-[#94A3B8]"> /mes</span>}
-              </span>
-            </div>
-            <div className="h-2 bg-[#1E293B] rounded-full overflow-hidden">
-              <div 
-                className="h-full rounded-full transition-all duration-1000"
-                style={{ 
-                  width: `${Math.min((Number(item.valor || 0) / maxValor) * 100, 100)}%`,
-                  backgroundColor: item.color,
-                  boxShadow: item.destacado ? `0 0 10px ${item.color}` : 'none'
-                }}
-              />
-            </div>
+      <div className="space-y-2">
+        {[
+          { nombre: 'Banco', valor: 0.4 },
+          { nombre: 'Fondos', valor: 1.2 },
+          { nombre: 'Acciones', valor: 2.5 },
+        ].map((item, i) => (
+          <div key={i} className="flex items-center justify-between text-sm">
+            <span className="text-[#94A3B8]">{item.nombre}</span>
+            <span className="text-white font-mono">+{item.valor}%</span>
           </div>
         ))}
-      </div>
-      {yield_ > 2.5 && (
-        <div className="mt-4 pt-4 border-t border-white/10 text-center">
-          <p className="text-[#00D1B2] font-bold text-lg">
-            {Math.round(yield_ / 0.4)}x mejor que el banco 🏦
-          </p>
+        <div className="flex items-center justify-between text-sm pt-2 border-t border-white/10">
+          <span className="text-[#00D1B2] font-bold">🔥 Este tipster</span>
+          <span className="text-[#00D1B2] font-bold font-mono">+{yield_.toFixed(1)}%</span>
         </div>
-      )}
+      </div>
+      <p className="text-center text-[#00D1B2] font-bold text-sm mt-3">
+        {Math.round(yield_ / 0.4)}x mejor que el banco 🏦
+      </p>
     </div>
   );
 };
 
 // ============================================================================
-// COMPONENTE: Indicadores de Confianza
+// COMPONENTE: Indicadores de Confianza (compacto)
 // ============================================================================
 const IndicadoresConfianza = ({ winRate, yield_, totalApuestas, mejorRacha }: { winRate: number; yield_: number; totalApuestas: number; mejorRacha: number }) => {
   const confianza = calcularNivelConfianza(winRate, yield_, totalApuestas);
 
   return (
-    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-white font-bold flex items-center gap-2">
-          <Award className="h-5 w-5 text-[#FFDD57]" />
+    <div className="rounded-2xl p-4 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-white font-bold text-sm flex items-center gap-2">
+          <Award className="h-4 w-4 text-[#FFDD57]" />
           Nivel de Confianza
         </h3>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {[...Array(5)].map((_, i) => (
-            <Star key={i} className={`h-5 w-5 ${i < confianza.estrellas ? 'text-[#FFDD57] fill-[#FFDD57]' : 'text-[#334155]'}`} />
+            <Star key={i} className={`h-4 w-4 ${i < confianza.estrellas ? 'text-[#FFDD57] fill-[#FFDD57]' : 'text-[#334155]'}`} />
           ))}
         </div>
       </div>
-      <div className="text-center mb-4">
-        <span className="text-2xl font-bold px-4 py-2 rounded-xl" style={{ color: confianza.color, backgroundColor: `${confianza.color}20` }}>
+      <div className="text-center mb-3">
+        <span className="text-lg font-bold px-3 py-1 rounded-lg" style={{ color: confianza.color, backgroundColor: `${confianza.color}20` }}>
           {confianza.nivel}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-[#0F172A]/50 rounded-xl p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#94A3B8] text-sm">Efectividad</span>
-            <span className={`text-sm font-bold ${winRate >= 60 ? 'text-[#00D1B2]' : winRate >= 50 ? 'text-[#FFDD57]' : 'text-[#EF4444]'}`}>
-              {winRate >= 60 ? '✅ Excelente' : winRate >= 50 ? '⚠️ Bueno' : '❌ Bajo'}
-            </span>
-          </div>
-          <div className="h-2 bg-[#1E293B] rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-[#00D1B2]" style={{ width: `${Math.min(winRate, 100)}%` }} />
-          </div>
-          <p className="text-white font-bold text-right mt-1">{Number(winRate || 0).toFixed(1)}%</p>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="bg-[#0F172A]/50 rounded-lg p-2 text-center">
+          <p className="text-white font-bold">{Number(winRate || 0).toFixed(1)}%</p>
+          <p className="text-[#64748B] text-xs">Efectividad</p>
         </div>
-        <div className="bg-[#0F172A]/50 rounded-xl p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#94A3B8] text-sm">Yield</span>
-            <span className={`text-sm font-bold ${yield_ >= 10 ? 'text-[#00D1B2]' : yield_ >= 0 ? 'text-[#FFDD57]' : 'text-[#EF4444]'}`}>
-              {yield_ >= 10 ? '✅ Muy rentable' : yield_ >= 0 ? '⚠️ Positivo' : '❌ Negativo'}
-            </span>
-          </div>
-          <div className="h-2 bg-[#1E293B] rounded-full overflow-hidden">
-            <div className="h-full rounded-full" style={{ width: `${Math.min(Math.max(yield_ + 20, 0), 100)}%`, backgroundColor: yield_ >= 0 ? '#00D1B2' : '#EF4444' }} />
-          </div>
-          <p className={`font-bold text-right mt-1 ${yield_ >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {Number(yield_ || 0) >= 0 ? '+' : ''}{Number(yield_ || 0).toFixed(1)}%
+        <div className="bg-[#0F172A]/50 rounded-lg p-2 text-center">
+          <p className={`font-bold ${yield_ >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+            {yield_ >= 0 ? '+' : ''}{Number(yield_ || 0).toFixed(1)}%
           </p>
+          <p className="text-[#64748B] text-xs">Yield</p>
         </div>
-        <div className="bg-[#0F172A]/50 rounded-xl p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#94A3B8] text-sm">Muestra</span>
-            <span className={`text-sm font-bold ${totalApuestas >= 30 ? 'text-[#00D1B2]' : 'text-[#FFDD57]'}`}>
-              {totalApuestas >= 30 ? '✅ Sólida' : '⚠️ En desarrollo'}
-            </span>
-          </div>
-          <p className="text-white font-bold text-2xl text-center">{totalApuestas}</p>
-          <p className="text-[#64748B] text-xs text-center">apuestas verificadas</p>
+        <div className="bg-[#0F172A]/50 rounded-lg p-2 text-center">
+          <p className="text-white font-bold">{totalApuestas}</p>
+          <p className="text-[#64748B] text-xs">Apuestas</p>
         </div>
-        <div className="bg-[#0F172A]/50 rounded-xl p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#94A3B8] text-sm">Mejor Racha</span>
-            <span className="text-[#FFDD57] text-sm font-bold">🏆 Récord</span>
-          </div>
-          <p className="text-[#FFDD57] font-bold text-2xl text-center">+{mejorRacha}</p>
-          <p className="text-[#64748B] text-xs text-center">victorias seguidas</p>
+        <div className="bg-[#0F172A]/50 rounded-lg p-2 text-center">
+          <p className="text-[#FFDD57] font-bold">+{mejorRacha}</p>
+          <p className="text-[#64748B] text-xs">Mejor racha</p>
         </div>
       </div>
     </div>
@@ -365,14 +382,13 @@ const IndicadoresConfianza = ({ winRate, yield_, totalApuestas, mejorRacha }: { 
 };
 
 // ============================================================================
-// COMPONENTE: Gráfico de Evolución (Estilo Trading)
+// COMPONENTE: Gráfico de Evolución (compacto)
 // ============================================================================
 const GraficoEvolucion = ({ historial }: { historial: Apuesta[] }) => {
   const apuestasResueltas = historial.filter(a => a.resultado === 'GANADA' || a.resultado === 'PERDIDA').reverse();
   
   if (apuestasResueltas.length < 2) return null;
 
-  // Calcular puntos de evolución en unidades
   let acumulado = 0;
   const puntos = apuestasResueltas.map((a) => {
     if (a.resultado === 'GANADA') {
@@ -388,8 +404,8 @@ const GraficoEvolucion = ({ historial }: { historial: Apuesta[] }) => {
   const rangeY = maxY - minY || 1;
 
   const width = 100;
-  const height = 50;
-  const padding = 5;
+  const height = 40;
+  const padding = 2;
 
   const pathPoints = puntos.map((y, i) => {
     const x = padding + (i / (puntos.length - 1)) * (width - 2 * padding);
@@ -399,196 +415,145 @@ const GraficoEvolucion = ({ historial }: { historial: Apuesta[] }) => {
 
   const areaPath = pathPoints + ` L ${width - padding} ${height} L ${padding} ${height} Z`;
   const isPositive = acumulado >= 0;
-  const yield_ = calcularYield(historial);
-  const cuotaPromedio = calcularCuotaPromedio(historial);
 
   return (
-    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-white font-bold flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-[#00D1B2]" />
-          Evolución de Rendimiento
+    <div className="rounded-2xl p-4 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-white font-bold text-sm flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-[#00D1B2]" />
+          Evolución
         </h3>
-        <span className={`font-mono font-bold text-lg ${isPositive ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+        <span className={`font-mono font-bold ${isPositive ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
           {isPositive ? '+' : ''}{acumulado.toFixed(2)}u
         </span>
       </div>
 
-      {/* Gráfico SVG */}
-      <div className="h-32 mb-4">
+      <div className="h-20 mb-3">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
           <defs>
-            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor={isPositive ? '#00D1B2' : '#EF4444'} stopOpacity="0.4" />
               <stop offset="100%" stopColor={isPositive ? '#00D1B2' : '#EF4444'} stopOpacity="0.05" />
             </linearGradient>
           </defs>
-          {/* Línea de cero */}
-          <line 
-            x1={padding} 
-            y1={height - padding - ((0 - minY) / rangeY) * (height - 2 * padding)} 
-            x2={width - padding} 
-            y2={height - padding - ((0 - minY) / rangeY) * (height - 2 * padding)} 
-            stroke="#334155" 
-            strokeDasharray="4,4" 
-            strokeWidth="0.5"
-          />
-          {/* Área */}
-          <path d={areaPath} fill="url(#areaGradient)" />
-          {/* Línea */}
+          <path d={areaPath} fill="url(#areaGrad)" />
           <path 
             d={pathPoints} 
             fill="none" 
             stroke={isPositive ? '#00D1B2' : '#EF4444'} 
             strokeWidth="2"
             strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ filter: `drop-shadow(0 0 6px ${isPositive ? '#00D1B2' : '#EF4444'})` }}
           />
         </svg>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10">
-        <div className="text-center">
-          <p className={`text-xl font-bold font-mono ${yield_ >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
-            {yield_ >= 0 ? '+' : ''}{Number(yield_ || 0).toFixed(1)}%
-          </p>
-          <p className="text-xs text-[#64748B]">Yield</p>
-        </div>
-        <div className="text-center">
-          <p className="text-xl font-bold font-mono text-white">@{Number(cuotaPromedio || 0).toFixed(2)}</p>
-          <p className="text-xs text-[#64748B]">Cuota Promedio</p>
-        </div>
-        <div className="text-center">
-          <p className="text-xl font-bold font-mono text-white">{apuestasResueltas.length}</p>
-          <p className="text-xs text-[#64748B]">Apuestas</p>
-        </div>
-      </div>
-
-      {/* Últimas apuestas */}
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <p className="text-[#94A3B8] text-sm mb-2">Últimos resultados:</p>
-        <div className="flex gap-1 flex-wrap">
-          {historial.slice(0, 15).map((a, i) => (
-            <span 
-              key={i} 
-              className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
-                a.resultado === 'GANADA' ? 'bg-[#00D1B2]/20 text-[#00D1B2]' : 
-                a.resultado === 'PERDIDA' ? 'bg-[#EF4444]/20 text-[#EF4444]' : 
-                'bg-[#F59E0B]/20 text-[#F59E0B]'
-              }`}
-            >
-              {a.resultado === 'GANADA' ? '✓' : a.resultado === 'PERDIDA' ? '✗' : '○'}
-            </span>
-          ))}
-        </div>
+      <div className="flex gap-1 flex-wrap">
+        {historial.slice(0, 12).map((a, i) => (
+          <span 
+            key={i} 
+            className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${
+              a.resultado === 'GANADA' ? 'bg-[#00D1B2]/20 text-[#00D1B2]' : 
+              a.resultado === 'PERDIDA' ? 'bg-[#EF4444]/20 text-[#EF4444]' : 
+              'bg-[#F59E0B]/20 text-[#F59E0B]'
+            }`}
+          >
+            {a.resultado === 'GANADA' ? '✓' : a.resultado === 'PERDIDA' ? '✗' : '○'}
+          </span>
+        ))}
       </div>
     </div>
   );
 };
 
 // ============================================================================
-// COMPONENTE: Historial de Apuestas (SIN COLUMNA GANANCIA)
+// COMPONENTE: Historial CARDS (móvil) - APUESTA PRIMERO
 // ============================================================================
-const HistorialApuestas = ({ historial }: { historial: Apuesta[] }) => {
+const HistorialCards = ({ historial }: { historial: Apuesta[] }) => {
   const [filtro, setFiltro] = useState<'TODAS' | 'GANADA' | 'PERDIDA' | 'PENDIENTE'>('TODAS');
-  const [busqueda, setBusqueda] = useState('');
   const [mostrarTodas, setMostrarTodas] = useState(false);
 
   const filtradas = historial.filter(a => {
-    const matchFiltro = filtro === 'TODAS' || a.resultado === filtro;
-    const matchBusqueda = !busqueda || a.apuesta.toLowerCase().includes(busqueda.toLowerCase());
-    return matchFiltro && matchBusqueda;
+    return filtro === 'TODAS' || a.resultado === filtro;
   });
 
-  const mostradas = mostrarTodas ? filtradas : filtradas.slice(0, 10);
-
-  const estilos: Record<string, { icon: string; bg: string }> = {
-    'GANADA': { icon: '✓', bg: 'bg-[#00D1B2]/20 text-[#00D1B2]' },
-    'PERDIDA': { icon: '✗', bg: 'bg-[#EF4444]/20 text-[#EF4444]' },
-    'PENDIENTE': { icon: '○', bg: 'bg-[#F59E0B]/20 text-[#F59E0B]' },
-    'NULA': { icon: '—', bg: 'bg-[#64748B]/20 text-[#64748B]' }
-  };
+  const mostradas = mostrarTodas ? filtradas : filtradas.slice(0, 8);
 
   return (
-    <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="rounded-2xl p-4 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-bold flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-[#00D1B2]" /> Historial de Apuestas
+          <Calendar className="h-5 w-5 text-[#00D1B2]" /> Historial
         </h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-1">
           {(['TODAS', 'GANADA', 'PERDIDA', 'PENDIENTE'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFiltro(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-2 py-1 rounded-lg text-xs font-medium transition-all ${
                 filtro === f 
                   ? f === 'GANADA' ? 'bg-[#00D1B2] text-white' 
                   : f === 'PERDIDA' ? 'bg-[#EF4444] text-white'
                   : f === 'PENDIENTE' ? 'bg-[#F59E0B] text-white'
                   : 'bg-[#00D1B2] text-white'
-                  : 'bg-[#334155] text-[#94A3B8] hover:bg-[#475569]'
+                  : 'bg-[#334155] text-[#94A3B8]'
               }`}
             >
               {f === 'TODAS' ? 'Todas' : f === 'GANADA' ? '✓' : f === 'PERDIDA' ? '✗' : '○'}
             </button>
           ))}
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#64748B]" />
-            <input
-              type="text"
-              placeholder="Buscar..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="pl-7 pr-3 py-1.5 rounded-lg bg-[#334155] text-white text-xs placeholder-[#64748B] focus:outline-none focus:ring-1 focus:ring-[#00D1B2] w-24"
-            />
-          </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-xs text-[#64748B] border-b border-white/10">
-              <th className="pb-3 pr-4">Fecha</th>
-              <th className="pb-3 pr-4">Apuesta</th>
-              <th className="pb-3 pr-4">Tipo</th>
-              <th className="pb-3 pr-4 text-center">Cuota</th>
-              <th className="pb-3 text-center">Resultado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mostradas.map((a, i) => {
-              const e = estilos[a.resultado] || estilos.NULA;
-              return (
-                <tr key={a.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="py-3 pr-4 text-sm text-[#94A3B8]">{a.fecha}</td>
-                  <td className="py-3 pr-4 text-sm text-white max-w-[250px] truncate">{a.apuesta}</td>
-                  <td className="py-3 pr-4">
-                    <span className="text-xs px-2 py-1 rounded-lg bg-[#334155] text-[#94A3B8]">
-                      {a.tipo_mercado || 'N/A'}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4 text-center text-sm font-mono text-white">@{Number(a.cuota || 0).toFixed(2)}</td>
-                  <td className="py-3 text-center">
-                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg font-bold ${e.bg}`}>
-                      {e.icon}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Cards */}
+      <div className="space-y-3">
+        {mostradas.map((a, i) => (
+          <div 
+            key={a.id || i}
+            className={`rounded-xl p-3 border ${
+              a.resultado === 'GANADA' ? 'border-[#00D1B2]/30 bg-[#00D1B2]/5' :
+              a.resultado === 'PERDIDA' ? 'border-[#EF4444]/30 bg-[#EF4444]/5' :
+              'border-[#F59E0B]/30 bg-[#F59E0B]/5'
+            }`}
+          >
+            {/* Apuesta (lo importante, primero) */}
+            <p className="text-white font-medium text-sm mb-2 leading-tight">
+              {a.apuesta}
+            </p>
+            
+            {/* Detalles secundarios */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-[#94A3B8]">
+                <span>{a.fecha}</span>
+                <span>•</span>
+                <span className="bg-[#334155] px-2 py-0.5 rounded">{a.tipo_mercado || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-white">@{Number(a.cuota || 0).toFixed(2)}</span>
+                <span className={`w-6 h-6 rounded flex items-center justify-center font-bold ${
+                  a.resultado === 'GANADA' ? 'bg-[#00D1B2]/20 text-[#00D1B2]' :
+                  a.resultado === 'PERDIDA' ? 'bg-[#EF4444]/20 text-[#EF4444]' :
+                  'bg-[#F59E0B]/20 text-[#F59E0B]'
+                }`}>
+                  {a.resultado === 'GANADA' ? '✓' : a.resultado === 'PERDIDA' ? '✗' : '○'}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {filtradas.length > 10 && !mostrarTodas && (
-        <button onClick={() => setMostrarTodas(true)} className="w-full mt-4 py-3 text-center text-[#00D1B2] text-sm font-medium hover:underline">
-          Ver todas las apuestas ({filtradas.length})
+      {filtradas.length > 8 && !mostrarTodas && (
+        <button 
+          onClick={() => setMostrarTodas(true)} 
+          className="w-full mt-4 py-2 text-center text-[#00D1B2] text-sm font-medium hover:underline"
+        >
+          Ver todas ({filtradas.length})
         </button>
       )}
-      {filtradas.length === 0 && <p className="text-center text-[#64748B] py-8">No hay apuestas con este filtro</p>}
+      
+      {filtradas.length === 0 && (
+        <p className="text-center text-[#64748B] py-4">No hay apuestas</p>
+      )}
     </div>
   );
 };
@@ -665,69 +630,74 @@ export default function TipsterDetallePage() {
   const isRentable = yield_ > 0;
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-20 lg:pb-6">
+    <div className="space-y-4 animate-fadeIn pb-20 lg:pb-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <Link href="/dashboard/tipsters" className="p-2 rounded-xl hover:bg-white/10 transition-all">
           <ChevronLeft className="h-6 w-6 text-[#94A3B8]" />
         </Link>
-        <h1 className="text-2xl font-bold text-white">Detalle del Tipster</h1>
+        <h1 className="text-xl font-bold text-white">Detalle del Tipster</h1>
       </div>
 
-      {/* Alerta de Racha */}
-      <AlertaRacha racha={rachaInfo.racha} tipo={rachaInfo.tipo} />
-
-      {/* Info Tipster */}
-      <div className="rounded-2xl p-6 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" 
+      {/* Info Tipster + Stats */}
+      <div className="rounded-2xl p-4 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" 
               style={{ background: 'linear-gradient(135deg,#1E293B,#334155)', border: '2px solid rgba(255,255,255,0.1)' }}>
               {getDeporteIcon(tipster.deporte)}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">{tipster.alias}</h2>
-              <p className="text-[#94A3B8]">{tipster.deporte}</p>
+              <h2 className="text-xl font-bold text-white" title={tipster.alias}>
+                {truncarNombre(tipster.alias, 22)}
+              </h2>
+              <p className="text-sm text-[#94A3B8]">{tipster.deporte}</p>
             </div>
           </div>
           {isRentable && (
-            <span className="px-4 py-2 rounded-xl text-sm font-bold bg-[#00D1B2]/20 text-[#00D1B2] border border-[#00D1B2]/30">
+            <span className="px-3 py-1 rounded-lg text-xs font-bold bg-[#00D1B2]/20 text-[#00D1B2] border border-[#00D1B2]/30">
               Rentable
             </span>
           )}
         </div>
 
         {/* Stats: Efectividad, Ganadas/Perdidas, Yield */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
-            <p className={`text-3xl font-bold font-mono ${winRate >= 60 ? 'text-[#00D1B2]' : winRate >= 50 ? 'text-[#FFDD57]' : 'text-[#EF4444]'}`}>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="text-center p-3 rounded-xl bg-[#0F172A]/50">
+            <p className={`text-2xl font-bold font-mono ${winRate >= 60 ? 'text-[#00D1B2]' : winRate >= 50 ? 'text-[#FFDD57]' : 'text-[#EF4444]'}`}>
               {Number(winRate || 0).toFixed(1)}%
             </p>
-            <p className="text-xs text-[#64748B] mt-1">Efectividad</p>
+            <p className="text-xs text-[#64748B]">Efectividad</p>
           </div>
-          <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
-            <p className="text-3xl font-bold font-mono">
+          <div className="text-center p-3 rounded-xl bg-[#0F172A]/50">
+            <p className="text-xl font-bold font-mono">
               <span className="text-[#00D1B2]">{estadisticas.ganadas || 0}</span>
-              <span className="text-[#64748B]"> ✅ </span>
+              <span className="text-[#64748B]">✅</span>
               <span className="text-[#EF4444]">{estadisticas.perdidas || 0}</span>
-              <span className="text-[#64748B]"> ❌</span>
+              <span className="text-[#64748B]">❌</span>
             </p>
-            <p className="text-xs text-[#64748B] mt-1">Resultados</p>
+            <p className="text-xs text-[#64748B]">Resultados</p>
           </div>
-          <div className="text-center p-4 rounded-xl bg-[#0F172A]/50">
-            <p className={`text-3xl font-bold font-mono ${yield_ >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
+          <div className="text-center p-3 rounded-xl bg-[#0F172A]/50">
+            <p className={`text-2xl font-bold font-mono ${yield_ >= 0 ? 'text-[#00D1B2]' : 'text-[#EF4444]'}`}>
               {yield_ >= 0 ? '+' : ''}{Number(yield_ || 0).toFixed(1)}%
             </p>
-            <p className="text-xs text-[#64748B] mt-1">Yield</p>
+            <p className="text-xs text-[#64748B]">Yield</p>
           </div>
         </div>
       </div>
 
+      {/* Alerta de Racha */}
+      <AlertaRacha racha={rachaInfo.racha} tipo={rachaInfo.tipo} />
+
+      {/* Consejo IA */}
+      <ConsejoIA winRate={winRate} yield_={yield_} racha={rachaInfo} totalApuestas={totalApuestasResueltas} />
+
       {/* Análisis IA */}
       <AnalisisIA />
 
-      {/* Comparación + Confianza */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      {/* Grid: Comparación + Confianza */}
+      <div className="grid md:grid-cols-2 gap-4">
         <ComparacionInversiones yield_={yield_} />
         <IndicadoresConfianza winRate={winRate} yield_={yield_} totalApuestas={totalApuestasResueltas} mejorRacha={mejorRacha} />
       </div>
@@ -735,8 +705,8 @@ export default function TipsterDetallePage() {
       {/* Gráfico */}
       <GraficoEvolucion historial={historial} />
 
-      {/* Historial */}
-      <HistorialApuestas historial={historial} />
+      {/* Historial CARDS */}
+      <HistorialCards historial={historial} />
     </div>
   );
 }
