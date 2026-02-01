@@ -308,10 +308,12 @@ export default function DashboardPage() {
           <p className="text-[#94A3B8] text-sm mt-1">Tipsters Activos</p>
         </div>
 
-        {/* APUESTAS HOY - BORDE DORADO PULSANTE */}
+        {/* APUESTAS HOY - BORDE DORADO PULSANTE (no usa stat-card para evitar conflicto animación) */}
         <div 
-          className="stat-card animate-fadeInUp stagger-2 apuestas-hoy-card"
+          className="rounded-2xl p-5"
           style={{
+            background: 'rgba(30, 41, 59, 0.7)',
+            backdropFilter: 'blur(12px)',
             border: '2px solid rgba(255, 187, 0, 0.5)',
             boxShadow: '0 0 20px rgba(255, 187, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
           }}
@@ -351,7 +353,7 @@ export default function DashboardPage() {
         <div className="stat-card animate-fadeInUp stagger-3" style={{ borderColor: 'rgba(255, 221, 87, 0.25)' }}>
           <div className="flex items-start justify-between mb-3">
             <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255, 221, 87, 0.1)' }}>
-              <Trophy className="h-5 w-5 text-[#FFDD57]" />
+              <span style={{ fontSize: '20px' }}>👑</span>
             </div>
             <MiniSparkline positive={true} />
           </div>
@@ -742,9 +744,6 @@ export default function DashboardPage() {
       {/* CSS ANIMATIONS                                                */}
       {/* ============================================================ */}
       <style jsx>{`
-        .apuestas-hoy-card {
-          animation: goldPulse 2s ease-in-out infinite !important;
-        }
         @keyframes goldPulse {
           0%, 100% { box-shadow: 0 0 15px rgba(255, 187, 0, 0.1), inset 0 1px 0 rgba(255,255,255,0.05); border-color: rgba(255, 187, 0, 0.4); }
           50% { box-shadow: 0 0 25px rgba(255, 187, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.05); border-color: rgba(255, 187, 0, 0.7); }
