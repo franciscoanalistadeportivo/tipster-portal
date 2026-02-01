@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'TipsterPortal - Club de Tipsters Premium',
-  description: 'Accede a picks de alta confianza analizados por IA. Estadísticas en tiempo real. Resultados comprobables.',
-  keywords: 'tipsters, apuestas deportivas, betting, picks, pronósticos, IA',
+  title: 'NeuroTips - Análisis de Tipsters con IA',
+  description: 'Hacemos lo que el ojo humano no ve. Nuestro algoritmo detecta patrones de éxito y señales de riesgo antes de que coloques tu dinero.',
+  keywords: 'tipsters, apuestas deportivas, betting, picks, pronósticos, IA, análisis, neurotips',
 };
 
 export default function RootLayout({

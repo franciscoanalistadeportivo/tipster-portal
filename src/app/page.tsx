@@ -467,12 +467,12 @@ export default function LandingPage() {
       {/* ========== FINAL CTA ========== */}
       <section className="py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto text-center">
-          {/* Logo más grande, recortando el texto inferior */}
-          <div className="w-20 h-16 sm:w-24 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#00FF88]/30 shadow-lg shadow-[#00FF88]/30">
+          {/* Logo pequeño y limpio */}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#00FF88]/30 p-2 shadow-lg shadow-[#00FF88]/20">
             <img 
               src={LOGO_URL} 
               alt="NeuroTips" 
-              className="w-full h-auto object-cover object-top scale-125 -translate-y-1"
+              className="w-full h-full object-contain"
             />
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">
