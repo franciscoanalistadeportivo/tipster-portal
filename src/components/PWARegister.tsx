@@ -2,9 +2,19 @@
 
 import { useEffect, useState } from 'react';
 
+// Capturar el evento GLOBALMENTE antes de que React monte
+let deferredPrompt: any = null;
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+}
+
 export default function PWARegister() {
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     // Registrar Service Worker
@@ -16,14 +26,39 @@ export default function PWARegister() {
       });
     }
 
-    // Capturar prompt de instalación
+    // Verificar si ya está instalada
+    const standalone = window.matchMedia('(display-mode: standalone)').matches
+      || (navigator as any).standalone === true;
+    setIsStandalone(standalone);
+
+    if (standalone) return;
+
+    // No mostrar si ya se cerró en esta sesión
+    try {
+      if (sessionStorage.getItem('pwa-dismissed') === '1') return;
+    } catch {}
+
+    // Detectar iOS (iPhone, iPad, iPod)
+    const userAgent = navigator.userAgent || navigator.vendor || '';
+    const ios = /iP(hone|od|ad)/.test(userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(ios);
+
+    if (ios) {
+      // En iOS mostrar banner con instrucciones después de 3s
+      setTimeout(() => setShowBanner(true), 3000);
+      return;
+    }
+
+    // Android/Desktop: usar beforeinstallprompt
+    if (deferredPrompt) {
+      setTimeout(() => setShowBanner(true), 3000);
+    }
+
     const handler = (e: Event) => {
       e.preventDefault();
-      setInstallPrompt(e);
-      // Solo mostrar banner si no está instalada
-      if (!window.matchMedia('(display-mode: standalone)').matches) {
-        setTimeout(() => setShowBanner(true), 3000); // Mostrar después de 3s
-      }
+      deferredPrompt = e;
+      setTimeout(() => setShowBanner(true), 3000);
     };
     window.addEventListener('beforeinstallprompt', handler);
 
@@ -31,16 +66,18 @@ export default function PWARegister() {
   }, []);
 
   const handleInstall = async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
     console.log('[PWA] Install:', outcome);
-    setInstallPrompt(null);
+    deferredPrompt = null;
     setShowBanner(false);
   };
 
-  const isStandalone = typeof window !== 'undefined' && 
-    window.matchMedia('(display-mode: standalone)').matches;
+  const handleDismiss = () => {
+    setShowBanner(false);
+    try { sessionStorage.setItem('pwa-dismissed', '1'); } catch {}
+  };
 
   if (isStandalone || !showBanner) return null;
 
@@ -67,37 +104,65 @@ export default function PWARegister() {
       }}>
         <div style={{ fontSize: '32px', flexShrink: 0 }}>🧠</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ 
-            color: '#F1F5F9', 
-            fontWeight: 700, 
+          <div style={{
+            color: '#F1F5F9',
+            fontWeight: 700,
             fontSize: '14px',
             marginBottom: '2px',
           }}>
             Instalar NeuroTips
           </div>
-          <div style={{ color: '#94A3B8', fontSize: '12px' }}>
-            Accede rápido desde tu pantalla de inicio
-          </div>
+          {isIOS ? (
+            <div style={{ color: '#94A3B8', fontSize: '12px', lineHeight: '1.4' }}>
+              Toca{' '}
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(0, 209, 178, 0.15)',
+                border: '1px solid rgba(0, 209, 178, 0.3)',
+                borderRadius: '6px',
+                padding: '1px 6px',
+                fontSize: '14px',
+                verticalAlign: 'middle',
+              }}>
+                ⬆️
+              </span>
+              {' '}y luego{' '}
+              <span style={{
+                color: '#00D1B2',
+                fontWeight: 600,
+              }}>
+                &quot;Agregar a inicio&quot;
+              </span>
+            </div>
+          ) : (
+            <div style={{ color: '#94A3B8', fontSize: '12px' }}>
+              Accede rápido desde tu pantalla de inicio
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+          {!isIOS && (
+            <button
+              onClick={handleInstall}
+              style={{
+                background: 'linear-gradient(135deg, #00D1B2, #00B89C)',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Instalar
+            </button>
+          )}
           <button
-            onClick={handleInstall}
-            style={{
-              background: 'linear-gradient(135deg, #00D1B2, #00B89C)',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '10px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Instalar
-          </button>
-          <button
-            onClick={() => setShowBanner(false)}
+            onClick={handleDismiss}
             style={{
               background: 'rgba(255,255,255,0.1)',
               color: '#94A3B8',
