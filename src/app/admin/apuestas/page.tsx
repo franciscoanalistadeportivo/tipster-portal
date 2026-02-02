@@ -107,7 +107,8 @@ export default function ApuestasAdminPage() {
       resultado: apuesta.resultado || 'PENDIENTE',
       cuota: apuesta.cuota || 0,
       stake_ia: apuesta.stake_ia || 0,
-      tipo_mercado: apuesta.tipo_mercado || 'OTRO'
+      tipo_mercado: apuesta.tipo_mercado || 'OTRO',
+      apuesta: apuesta.apuesta || ''
     });
   };
 
@@ -420,7 +421,18 @@ export default function ApuestasAdminPage() {
                   )}
                 </td>
                 <td className="px-3 py-2 text-sm text-teal-400">{a.tipster_alias}</td>
-                <td className="px-3 py-2 text-sm text-white max-w-[200px] truncate" title={a.apuesta}>{a.apuesta}</td>
+                <td className="px-3 py-2 text-sm text-white max-w-[300px]">
+                  {editingId === a.id ? (
+                    <textarea
+                      value={editData.apuesta || ''}
+                      onChange={(e) => setEditData({...editData, apuesta: e.target.value})}
+                      rows={3}
+                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs w-full min-w-[250px] resize-y focus:border-teal-500 focus:outline-none"
+                    />
+                  ) : (
+                    <span className="truncate block cursor-help" title={a.apuesta}>{a.apuesta}</span>
+                  )}
+                </td>
                 <td className="px-3 py-2">
                   {editingId === a.id ? (
                     <input type="number" step="0.01" value={editData.cuota || ''} onChange={(e) => setEditData({...editData, cuota: parseFloat(e.target.value)})}
