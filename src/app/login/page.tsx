@@ -66,8 +66,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem('token', data.token);
+      if (res.ok && data.access_token) {
+        localStorage.setItem('token', data.access_token);
         if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
         router.push('/dashboard');
       } else {
