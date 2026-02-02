@@ -491,7 +491,7 @@ export default function LandingPage() {
                   Picks exclusivos de tipsters internacionales
                 </h3>
                 <p className="text-[#94A3B8] text-sm mb-4">
-                  Accede a pronósticos premium de $20-50 USD, verificados por nuestra IA. 
+                  Accede a pronósticos premium verificados por nuestra IA. 
                   Máximo 5 al mes para mantener la exclusividad.
                 </p>
                 <Link href="/registro" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition" style={{
