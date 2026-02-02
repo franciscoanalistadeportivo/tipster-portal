@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   LayoutDashboard, Users, Calendar, Zap, Wallet,
-  LogOut, Menu, X, ChevronRight, Crown, Flame, GraduationCap
+  LogOut, Menu, X, ChevronRight, Crown, Flame, GraduationCap, KeyRound
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { authAPI, loadTokens, isAuthenticated } from '@/lib/api';
@@ -153,6 +153,13 @@ export default function DashboardLayout({
               <p className="text-xs text-[#64748B] truncate">{user?.email}</p>
             </div>
           </div>
+          <Link
+            href="/dashboard/cambiar-password"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[#94A3B8] hover:bg-[#334155] hover:text-white transition-all mb-1"
+          >
+            <KeyRound className="h-4 w-4" />
+            <span className="text-sm">Cambiar contraseña</span>
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[#94A3B8] hover:bg-[#334155] hover:text-white transition-all"
@@ -233,6 +240,14 @@ export default function DashboardLayout({
               </Link>
             </nav>
             <div className="mt-4 pt-4 border-t border-[#334155]">
+              <Link
+                href="/dashboard/cambiar-password"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[#94A3B8] hover:bg-[#334155] hover:text-white transition-all mb-1"
+              >
+                <KeyRound className="h-4 w-4" />
+                <span>Cambiar contraseña</span>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[#EF4444] hover:bg-[#EF4444]/10 transition-all"
