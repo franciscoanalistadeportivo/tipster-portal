@@ -5,8 +5,13 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   LayoutDashboard, FileText, Users, Trophy, Settings,
-  Shield, LogOut, Menu, X, Lock, Target
+  Shield, LogOut, Menu, X, Lock, Target, KeyRound
 } from 'lucide-react';
+
+// ============================================
+// PIN DE ACCESO SECRETO
+// ============================================
+const ADMIN_PIN = 'NT2026x';  // ← Cámbialo por el que quieras
 
 // ============================================
 // TIPOS Y CONTEXTO AUTH
@@ -55,6 +60,93 @@ export async function adminFetch(
   }
   
   return fetch(`${API_URL}${endpoint}`, { ...options, headers });
+}
+
+// ============================================
+// PIN GATE COMPONENT
+// ============================================
+function PinGate({ onSuccess }: { onSuccess: () => void }) {
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [locked, setLocked] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (locked) return;
+
+    if (pin === ADMIN_PIN) {
+      sessionStorage.setItem('admin_pin_verified', 'true');
+      onSuccess();
+    } else {
+      setError(true);
+      setPin('');
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      if (newAttempts >= 5) {
+        setLocked(true);
+      }
+    }
+  };
+
+  if (locked) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+        <div className="text-center">
+          <Shield className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-white mb-2">Acceso bloqueado</h1>
+          <p className="text-slate-400 text-sm">Demasiados intentos. Recarga la página.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+      <div className="w-full max-w-xs">
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto mb-4">
+            <KeyRound className="w-7 h-7 text-slate-500" />
+          </div>
+          <p className="text-slate-500 text-sm">Acceso restringido</p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={pin}
+            onChange={(e) => { setPin(e.target.value); setError(false); }}
+            placeholder="Código de acceso"
+            className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white text-center text-lg tracking-widest placeholder-slate-600 focus:outline-none transition ${
+              error ? 'border-red-500 shake' : 'border-slate-700 focus:border-slate-500'
+            }`}
+            autoFocus
+            autoComplete="off"
+          />
+          {error && (
+            <p className="text-red-400 text-xs text-center mt-2">
+              Código incorrecto ({5 - attempts} intentos restantes)
+            </p>
+          )}
+          <button type="submit"
+            className="w-full mt-3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg transition text-sm">
+            Entrar
+          </button>
+        </form>
+      </div>
+
+      <style jsx>{`
+        .shake {
+          animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-8px); }
+          75% { transform: translateX(8px); }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 // ============================================
@@ -110,6 +202,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('admin_access_token');
     localStorage.removeItem('admin_refresh_token');
     localStorage.removeItem('admin_user');
+    sessionStorage.removeItem('admin_pin_verified');
     router.push('/admin/login');
   };
 
@@ -121,7 +214,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 // ============================================
-// NAVIGATION (ACTUALIZADO CON APUESTAS)
+// NAVIGATION
 // ============================================
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -235,9 +328,32 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
 }
 
 // ============================================
-// MAIN LAYOUT EXPORT
+// MAIN LAYOUT EXPORT WITH PIN GATE
 // ============================================
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const [pinVerified, setPinVerified] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const verified = sessionStorage.getItem('admin_pin_verified');
+    if (verified === 'true') {
+      setPinVerified(true);
+    }
+    setChecking(false);
+  }, []);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-slate-600"></div>
+      </div>
+    );
+  }
+
+  if (!pinVerified) {
+    return <PinGate onSuccess={() => setPinVerified(true)} />;
+  }
+
   return (
     <AuthProvider>
       <AdminLayoutContent>{children}</AdminLayoutContent>
