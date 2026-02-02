@@ -515,21 +515,26 @@ export default function DashboardPage() {
                 </p>
                 
                 {/* Imagen si existe */}
-                {apuesta.imagen_url && (
-                  <div className="mb-2 group relative">
-                    <div className="flex items-center gap-1 text-xs text-[#818CF8] cursor-pointer">
-                      <span>📷</span>
-                      <span className="underline">Ver capture</span>
+                {apuesta.imagen_url && (() => {
+                  const imgUrl = `${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`;
+                  return (
+                    <div className="mb-1">
+                      <button 
+                        onClick={() => {
+                          const el = document.getElementById(`img-${apuesta.id}`);
+                          if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                        }}
+                        className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded text-[#818CF8]"
+                      >
+                        📷 <span className="underline">Ver capture</span>
+                      </button>
+                      <div id={`img-${apuesta.id}`} style={{display: 'none'}} className="mt-1 rounded-lg overflow-hidden border border-slate-600/50 p-1">
+                        <img src={imgUrl} alt="Capture" className="rounded-lg w-full max-w-[280px]" 
+                          onClick={() => window.open(imgUrl, '_blank')} style={{cursor: 'zoom-in'}} />
+                      </div>
                     </div>
-                    <div className="hidden group-hover:block absolute z-50 left-0 top-6 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-2 max-w-[280px]">
-                      <img 
-                        src={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`}
-                        alt="Capture" 
-                        className="rounded-lg max-h-[350px] w-auto"
-                      />
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
                 
                 {/* Footer: Hora + Stake */}
                 <div className="flex items-center justify-between text-xs">
