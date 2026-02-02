@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  LayoutDashboard, Users, Calendar, Zap, Wallet, Settings,
-  LogOut, Menu, X, Trophy, ChevronRight, Crown
+  LayoutDashboard, Users, Calendar, Zap, Wallet,
+  LogOut, Menu, X, ChevronRight, Crown, Flame, GraduationCap
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { authAPI, loadTokens, isAuthenticated } from '@/lib/api';
@@ -16,8 +16,8 @@ const NAV_ITEMS = [
   { href: '/dashboard/apuestas', label: 'Apuestas', icon: Calendar },
   { href: '/dashboard/recomendaciones', label: 'IA Picks', icon: Zap },
   { href: '/dashboard/mi-banca', label: 'Mi Banca', icon: Wallet },
-  { href: '/dashboard/logros', label: 'Logros', icon: Trophy },
-  { href: '/dashboard/configuracion', label: 'Config', icon: Settings },
+  { href: '/dashboard/sala-vip', label: 'Sala VIP', icon: Flame },
+  { href: '/dashboard/academia', label: 'Academia', icon: GraduationCap },
 ];
 
 export default function DashboardLayout({
@@ -60,7 +60,7 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
-  const isSuscripcionActive = pathname.startsWith('/dashboard/suscripcion') || pathname.startsWith('/dashboard/sala-vip');
+  const isSuscripcionActive = pathname.startsWith('/dashboard/suscripcion');
 
   if (isLoading) {
     return (
@@ -99,6 +99,7 @@ export default function DashboardLayout({
             const Icon = item.icon;
             const isActive = pathname === item.href || 
               (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const isVip = item.href === '/dashboard/sala-vip';
             
             return (
               <Link
@@ -106,12 +107,13 @@ export default function DashboardLayout({
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   isActive
-                    ? 'bg-[#00D1B2]/10 text-[#00D1B2]'
-                    : 'text-[#94A3B8] hover:bg-[#334155] hover:text-white'
+                    ? isVip ? 'text-[#FFBB00]' : 'bg-[#00D1B2]/10 text-[#00D1B2]'
+                    : isVip ? 'text-[#FFBB00]/70 hover:text-[#FFBB00] hover:bg-[#FFBB00]/5' : 'text-[#94A3B8] hover:bg-[#334155] hover:text-white'
                 }`}
+                style={isVip && isActive ? { background: 'rgba(255,187,0,0.1)' } : undefined}
               >
                 <Icon className="h-5 w-5" />
-                <span className="font-medium">{item.label}</span>
+                <span className={`font-medium ${isVip ? 'font-bold' : ''}`}>{item.label}</span>
                 {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
               </Link>
             );
@@ -122,9 +124,7 @@ export default function DashboardLayout({
             <Link
               href="/dashboard/suscripcion"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                isSuscripcionActive
-                  ? 'text-[#FFBB00]'
-                  : 'text-[#FFBB00] hover:text-[#FFD700]'
+                isSuscripcionActive ? 'text-[#FFBB00]' : 'text-[#FFBB00] hover:text-[#FFD700]'
               }`}
               style={{
                 background: isSuscripcionActive
@@ -199,6 +199,7 @@ export default function DashboardLayout({
                 const Icon = item.icon;
                 const isActive = pathname === item.href || 
                   (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                const isVip = item.href === '/dashboard/sala-vip';
                 
                 return (
                   <Link
@@ -207,12 +208,12 @@ export default function DashboardLayout({
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                       isActive
-                        ? 'bg-[#00D1B2]/10 text-[#00D1B2]'
-                        : 'text-[#94A3B8] hover:bg-[#334155]'
+                        ? isVip ? 'bg-[#FFBB00]/10 text-[#FFBB00]' : 'bg-[#00D1B2]/10 text-[#00D1B2]'
+                        : isVip ? 'text-[#FFBB00]/70' : 'text-[#94A3B8] hover:bg-[#334155]'
                     }`}
                   >
                     <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
+                    <span className={isVip ? 'font-bold' : ''}>{item.label}</span>
                   </Link>
                 );
               })}
@@ -244,13 +245,19 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Nav - 5 items */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1E293B]/95 border-t border-[#334155] z-40 flex items-center justify-around px-2"
         style={{ backdropFilter: 'blur(16px)' }}>
-        {[...NAV_ITEMS.slice(0, 4), { href: '/dashboard/suscripcion', label: 'Premium', icon: Crown }].map((item) => {
+        {[
+          { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
+          { href: '/dashboard/apuestas', label: 'Apuestas', icon: Calendar },
+          { href: '/dashboard/sala-vip', label: 'VIP', icon: Flame },
+          { href: '/dashboard/academia', label: 'Academia', icon: GraduationCap },
+          { href: '/dashboard/suscripcion', label: 'Premium', icon: Crown },
+        ].map((item) => {
           const Icon = item.icon;
-          const isPremiumBtn = item.href === '/dashboard/suscripcion';
-          const isActive = isPremiumBtn
+          const isVipOrPremium = item.href === '/dashboard/sala-vip' || item.href === '/dashboard/suscripcion';
+          const isActive = item.href === '/dashboard/suscripcion'
             ? isSuscripcionActive
             : pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           
@@ -260,10 +267,10 @@ export default function DashboardLayout({
               href={item.href}
               className="flex flex-col items-center justify-center p-2 rounded-lg transition-all relative"
               style={isActive ? {
-                color: isPremiumBtn ? '#FFBB00' : '#00D1B2',
-                filter: `drop-shadow(0 0 6px ${isPremiumBtn ? 'rgba(255,187,0,0.4)' : 'rgba(0,209,178,0.4)'})`,
+                color: isVipOrPremium ? '#FFBB00' : '#00D1B2',
+                filter: `drop-shadow(0 0 6px ${isVipOrPremium ? 'rgba(255,187,0,0.4)' : 'rgba(0,209,178,0.4)'})`,
               } : {
-                color: isPremiumBtn ? '#FFBB00' : '#64748B',
+                color: isVipOrPremium ? '#FFBB00' : '#64748B',
               }}
             >
               <Icon className="h-5 w-5" />
@@ -272,8 +279,8 @@ export default function DashboardLayout({
                 <span style={{
                   position: 'absolute', bottom: '2px',
                   width: '4px', height: '4px', borderRadius: '50%',
-                  background: isPremiumBtn ? '#FFBB00' : '#00D1B2',
-                  boxShadow: `0 0 6px ${isPremiumBtn ? 'rgba(255,187,0,0.6)' : 'rgba(0,209,178,0.6)'}`,
+                  background: isVipOrPremium ? '#FFBB00' : '#00D1B2',
+                  boxShadow: `0 0 6px ${isVipOrPremium ? 'rgba(255,187,0,0.6)' : 'rgba(0,209,178,0.6)'}`,
                 }} />
               )}
             </Link>
