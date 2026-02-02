@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Shield, Star, CheckCircle, ArrowRight, Zap, Target, 
-  Brain, Eye, Lock, BarChart3, Menu, X
+  Brain, Eye, Lock, BarChart3, Menu, X, Crown
 } from 'lucide-react';
 
 const LOGO_URL = "/logo.png";
@@ -86,7 +86,7 @@ export default function LandingPage() {
               </span>
             </Link>
 
-            {/* DESKTOP NAV - Solo visible en md+ */}
+            {/* DESKTOP NAV */}
             <div className="hidden md:flex items-center gap-4">
               <Link href="/login" className="text-[#94A3B8] hover:text-white transition text-sm px-3 py-2">
                 Iniciar Sesión
@@ -383,58 +383,132 @@ export default function LandingPage() {
 
       {/* ========== PRICING ========== */}
       <section className="py-16 sm:py-20 px-4 sm:px-6">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-3 sm:mb-4">
-            Un solo plan, acceso total
+            Elige tu plan
           </h2>
           <p className="text-[#94A3B8] text-center mb-8 sm:mb-10 text-sm sm:text-base">
-            Sin trucos. Sin niveles. Todo incluido.
+            Sin trucos. Acceso total. Cancela cuando quieras.
           </p>
           
-          <div className="bg-[#0A0A0A] border-2 border-[#00FF88] rounded-xl p-6 sm:p-8 relative">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#00FF88] text-[#050505] text-xs sm:text-sm font-bold px-4 py-1 rounded-full whitespace-nowrap">
-              ACCESO COMPLETO
-            </div>
-            
-            <div className="text-center pt-4 mb-6">
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl sm:text-5xl font-bold text-white">$15.000</span>
-                <span className="text-[#94A3B8]">/mes</span>
+          <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+            {/* MENSUAL */}
+            <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-5 sm:p-6">
+              <p className="text-white font-bold text-lg mb-1">Mensual</p>
+              <p className="text-[#64748B] text-xs mb-4">30 días</p>
+              <div className="mb-5">
+                <span className="text-3xl sm:text-4xl font-bold text-white font-mono">$15.000</span>
+                <span className="text-[#64748B] text-sm"> /mes</span>
+                <p className="text-[#64748B] text-xs mt-1">CLP · o $17 USDT</p>
               </div>
-              <p className="text-[#64748B] text-xs sm:text-sm mt-1">CLP • Cancela cuando quieras</p>
+              <ul className="space-y-2 mb-5">
+                {['Todos los tipsters', 'Picks con IA', 'Alertas Telegram'].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                    <CheckCircle className="h-3.5 w-3.5 text-[#00FF88] flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/registro" className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition border border-[#00FF88]/30 text-[#00FF88] hover:bg-[#00FF88]/10">
+                Comenzar Gratis
+              </Link>
             </div>
-            
-            <ul className="space-y-3 mb-6 sm:mb-8">
-              {[
-                "Acceso a los 24+ tipsters analizados",
-                "Historial completo verificado",
-                "Análisis IA de cada apuesta",
-                "Alertas de picks con EV+",
-                "Estrategias de stake óptimo",
-                "Filtro por racha y mercado",
-                "Soporte prioritario"
-              ].map((feature, i) => (
-                <li key={i} className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-[#00FF88] flex-shrink-0" />
-                  <span className="text-[#94A3B8] text-sm">{feature}</span>
-                </li>
-              ))}
-            </ul>
-            
-            <Link href="/registro" className="w-full bg-[#00FF88] hover:bg-[#00E07A] text-[#050505] font-bold py-3 sm:py-4 rounded-lg transition flex items-center justify-center gap-2">
-              Comenzar 5 Días Gratis
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-            
-            <p className="text-center text-[#64748B] text-xs mt-4">
-              Sin tarjeta de crédito • Cancela en cualquier momento
-            </p>
+
+            {/* TRIMESTRAL - POPULAR */}
+            <div className="bg-[#0A0A0A] border-2 border-[#00FF88] rounded-xl p-5 sm:p-6 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00FF88] text-[#050505] text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                ⭐ MÁS POPULAR
+              </div>
+              <p className="text-white font-bold text-lg mb-1 mt-2">Trimestral</p>
+              <p className="text-[#64748B] text-xs mb-4">90 días</p>
+              <div className="mb-2">
+                <span className="text-3xl sm:text-4xl font-bold text-white font-mono">$39.000</span>
+                <p className="text-[#64748B] text-xs mt-1">CLP · o $43 USDT</p>
+              </div>
+              <span className="inline-block mb-4 px-2 py-0.5 rounded text-[10px] font-bold bg-[#00FF88]/15 text-[#00FF88] border border-[#00FF88]/30">
+                Ahorra 13%
+              </span>
+              <ul className="space-y-2 mb-5">
+                {['Todo lo del plan Mensual', 'Soporte prioritario', 'Estadísticas avanzadas'].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                    <CheckCircle className="h-3.5 w-3.5 text-[#00FF88] flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/registro" className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition bg-[#00FF88] hover:bg-[#00E07A] text-[#050505]">
+                Comenzar Gratis
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* ANUAL */}
+            <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-5 sm:p-6">
+              <p className="text-white font-bold text-lg mb-1">Anual</p>
+              <p className="text-[#64748B] text-xs mb-4">365 días</p>
+              <div className="mb-2">
+                <span className="text-3xl sm:text-4xl font-bold text-white font-mono">$120.000</span>
+                <p className="text-[#64748B] text-xs mt-1">CLP · o $130 USDT</p>
+              </div>
+              <span className="inline-block mb-4 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFD700]/15 text-[#FFD700] border border-[#FFD700]/30">
+                Ahorra 33%
+              </span>
+              <ul className="space-y-2 mb-5">
+                {['Acceso completo', 'Academia incluida', 'Mejor precio por mes'].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                    <CheckCircle className="h-3.5 w-3.5 text-[#00FF88] flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/registro" className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition border border-[#00FF88]/30 text-[#00FF88] hover:bg-[#00FF88]/10">
+                Comenzar Gratis
+              </Link>
+            </div>
+          </div>
+          
+          <p className="text-center text-[#64748B] text-xs mt-6">
+            5 días gratis · Sin tarjeta de crédito · Transferencia bancaria o crypto
+          </p>
+        </div>
+      </section>
+
+      {/* ========== SALA VIP TEASER ========== */}
+      <section className="py-12 sm:py-16 px-4 sm:px-6 bg-[#0A0A0A]">
+        <div className="max-w-3xl mx-auto">
+          <div className="rounded-2xl p-6 sm:p-10 relative overflow-hidden" style={{
+            background: 'linear-gradient(135deg, rgba(255,187,0,0.08), rgba(249,115,22,0.05), rgba(10,10,10,0.9))',
+            border: '1px solid rgba(255,187,0,0.25)',
+          }}>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="text-5xl sm:text-6xl">🔥</div>
+              <div className="text-center sm:text-left flex-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3" style={{
+                  background: 'rgba(255,187,0,0.15)',
+                  border: '1px solid rgba(255,187,0,0.3)',
+                }}>
+                  <Crown className="w-3.5 h-3.5 text-[#FFD700]" />
+                  <span className="text-[#FFD700] text-xs font-bold">SALA VIP</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                  Picks exclusivos de tipsters internacionales
+                </h3>
+                <p className="text-[#94A3B8] text-sm mb-4">
+                  Accede a pronósticos premium de $20-50 USD, verificados por nuestra IA. 
+                  Máximo 5 al mes para mantener la exclusividad.
+                </p>
+                <Link href="/registro" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition" style={{
+                  background: 'linear-gradient(135deg, #FFBB00, #F97316)',
+                  color: '#000',
+                }}>
+                  Desbloquear Sala VIP
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ========== TESTIMONIALS ========== */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-[#0A0A0A]">
+      <section className="py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8 sm:mb-12">
             Lo que dicen nuestros miembros
@@ -446,7 +520,7 @@ export default function LandingPage() {
               { name: "María P.", gain: "+$89,200", text: "El filtro de EV+ cambió mi forma de apostar. Solo entro cuando los números tienen sentido.", color: "bg-blue-500" },
               { name: "Roberto S.", gain: "+$156,800", text: "La función de rachas es brutal. Sé exactamente cuándo un tipster está en su mejor momento.", color: "bg-amber-500" },
             ].map((testimonial, i) => (
-              <div key={i} className="bg-[#050505] border border-white/5 rounded-xl p-5 sm:p-6">
+              <div key={i} className="bg-[#0A0A0A] border border-white/5 rounded-xl p-5 sm:p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-9 h-9 sm:w-10 sm:h-10 ${testimonial.color} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
                     {testimonial.name[0]}
@@ -467,10 +541,10 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FINAL CTA ========== */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6">
+      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-[#0A0A0A]">
         <div className="max-w-2xl mx-auto text-center">
           {/* Logo limpio */}
-          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl overflow-hidden bg-[#0A0A0A] border border-[#00FF88]/30 p-2 shadow-lg shadow-[#00FF88]/20">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl overflow-hidden bg-[#050505] border border-[#00FF88]/30 p-2 shadow-lg shadow-[#00FF88]/20">
             <img 
               src={LOGO_ICON} 
               alt="NeuroTips" 
@@ -483,10 +557,20 @@ export default function LandingPage() {
           <p className="text-[#94A3B8] mb-6 sm:mb-8 text-sm sm:text-base">
             Únete a los 12,450+ apostadores que ya dejaron de apostar a ciegas.
           </p>
-          <Link href="/registro" className="w-full sm:w-auto bg-[#00FF88] hover:bg-[#00E07A] text-[#050505] font-bold py-4 px-8 rounded-lg transition inline-flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(0,255,136,0.3)]">
-            Comenzar Gratis Ahora
-            <ArrowRight className="h-5 w-5" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/registro" className="w-full sm:w-auto bg-[#00FF88] hover:bg-[#00E07A] text-[#050505] font-bold py-4 px-8 rounded-lg transition inline-flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(0,255,136,0.3)]">
+              Comenzar Gratis Ahora
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Link href="/dashboard/suscripcion" className="w-full sm:w-auto font-bold py-4 px-8 rounded-lg transition inline-flex items-center justify-center gap-2" style={{
+              background: 'linear-gradient(135deg, rgba(255,187,0,0.15), rgba(249,115,22,0.1))',
+              border: '1px solid rgba(255,187,0,0.4)',
+              color: '#FFBB00',
+            }}>
+              <Crown className="h-5 w-5" />
+              Ya tengo cuenta
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -494,7 +578,6 @@ export default function LandingPage() {
       <footer className="py-8 sm:py-10 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            {/* Ícono simple en vez del logo con texto */}
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00FF88]/20 to-[#FFD700]/20 border border-[#00FF88]/30 flex items-center justify-center">
               <span className="text-[#00FF88] font-bold">N</span>
             </div>
