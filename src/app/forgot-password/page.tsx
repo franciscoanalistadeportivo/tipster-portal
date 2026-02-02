@@ -2,144 +2,137 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Mail, AlertCircle, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, Loader2, AlertCircle, Shield } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
 
-export default function ForgotPasswordPage() {
+export default function RecuperarPage() {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) {
+      setError('Ingresa tu email');
+      return;
+    }
+    setLoading(true);
     setError('');
-    setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
       });
+      const data = await res.json();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess(true);
+      if (res.ok) {
+        setSent(true);
       } else {
-        setError(data.error || 'Error al procesar la solicitud');
+        setError(data.error || 'Error al enviar el correo');
       }
-    } catch (err) {
+    } catch {
       setError('Error de conexión. Intenta de nuevo.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo NeuroTips */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center">
-            <Image
-              src="https://raw.githubusercontent.com/franciscoanalistadeportivo/logo/main/Gemini_Generated_Image_7h3boy7h3boy7h3b.png"
-              alt="NeuroTips"
-              width={180}
-              height={60}
-              className="h-16 w-auto"
-              priority
-            />
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 py-12">
+      <div className="absolute inset-0 opacity-[0.02]" style={{
+        backgroundImage: `linear-gradient(#00FF88 1px, transparent 1px), linear-gradient(90deg, #00FF88 1px, transparent 1px)`,
+        backgroundSize: '60px 60px'
+      }} />
+
+      <div className="w-full max-w-md relative">
+        {/* Logo */}
+        <div className="text-center mb-6">
+          <Link href="/" className="inline-block">
+            <div className="w-24 h-24 mx-auto mb-3 rounded-2xl overflow-hidden bg-[#0A0A0A] border-2 border-[#00FF88]/30 p-3 shadow-lg shadow-[#00FF88]/10">
+              <img src="/logo.png" alt="NeuroTips" className="w-full h-full object-contain" />
+            </div>
           </Link>
         </div>
 
         {/* Card */}
-        <div className="bg-[#1E293B] rounded-2xl p-8 border border-white/10 shadow-xl">
-          {success ? (
-            // Mensaje de éxito
+        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6 sm:p-8">
+          {sent ? (
+            /* Success state */
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#00D1B2]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-8 w-8 text-[#00D1B2]" />
+              <div className="w-16 h-16 bg-[#00FF88]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-[#00FF88]" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">
-                ¡Revisa tu correo!
-              </h1>
-              <p className="text-[#94A3B8] mb-6">
-                Si el email existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña.
+              <h1 className="text-2xl font-bold text-white mb-2">¡Correo enviado!</h1>
+              <p className="text-[#94A3B8] text-sm mb-6">
+                Si el email <span className="text-white font-medium">{email}</span> está registrado, 
+                recibirás un enlace para restablecer tu contraseña.
               </p>
-              <p className="text-[#64748B] text-sm mb-6">
-                No olvides revisar tu carpeta de spam.
+              <p className="text-[#64748B] text-xs mb-6">
+                Revisa tu bandeja de entrada y spam. El enlace expira en 1 hora.
               </p>
-              <Link 
-                href="/login"
-                className="inline-flex items-center gap-2 text-[#00D1B2] hover:text-[#00B89F] transition-colors"
-              >
+              <Link href="/login" 
+                className="inline-flex items-center gap-2 text-[#00FF88] hover:text-[#00E07A] transition text-sm font-semibold">
                 <ArrowLeft className="h-4 w-4" />
-                Volver al inicio de sesión
+                Volver al login
               </Link>
             </div>
           ) : (
-            // Formulario
+            /* Form */
             <>
-              <h1 className="text-2xl font-bold text-white text-center mb-2">
-                ¿Olvidaste tu contraseña?
-              </h1>
-              <p className="text-[#94A3B8] text-center mb-8">
-                Ingresa tu email y te enviaremos instrucciones para restablecerla.
-              </p>
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-[#00FF88]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-6 w-6 text-[#00FF88]" />
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-2">Recuperar contraseña</h1>
+                <p className="text-[#94A3B8] text-sm">
+                  Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
+                </p>
+              </div>
 
               {error && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 flex items-center gap-3">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                  <span className="text-sm">{error}</span>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 mb-5 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+                  <p className="text-red-400 text-sm">{error}</p>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#94A3B8] mb-2">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium text-[#94A3B8] mb-1.5">Email</label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#64748B]" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B]" />
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 pl-12 bg-[#0F172A] border border-white/10 rounded-xl text-white placeholder-[#64748B] focus:ring-2 focus:ring-[#00D1B2] focus:border-transparent outline-none transition-all"
+                      onChange={(e) => { setEmail(e.target.value); setError(''); }}
                       placeholder="tu@email.com"
+                      className="w-full pl-11 pr-4 py-3 bg-[#050505] border border-white/10 rounded-lg text-white placeholder-[#64748B] focus:border-[#00FF88] focus:outline-none transition text-sm"
                       required
-                      disabled={isLoading}
                     />
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-4 bg-[#00D1B2] hover:bg-[#00B89F] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
+                <button type="submit" disabled={loading}
+                  className="w-full bg-[#00FF88] hover:bg-[#00E07A] disabled:bg-[#00FF88]/50 text-[#050505] font-bold py-3.5 rounded-lg transition flex items-center justify-center gap-2">
+                  {loading ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
                       Enviando...
                     </>
                   ) : (
-                    'Enviar instrucciones'
+                    'Enviar enlace de recuperación'
                   )}
                 </button>
               </form>
 
-              <div className="mt-8 pt-6 border-t border-white/10 text-center">
-                <Link 
-                  href="/login" 
-                  className="inline-flex items-center gap-2 text-[#94A3B8] hover:text-white transition-colors"
-                >
+              <div className="mt-5 pt-5 border-t border-white/10 text-center">
+                <Link href="/login" className="inline-flex items-center gap-2 text-[#94A3B8] hover:text-white transition text-sm">
                   <ArrowLeft className="h-4 w-4" />
-                  Volver al inicio de sesión
+                  Volver al login
                 </Link>
               </div>
             </>
