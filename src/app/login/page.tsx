@@ -136,10 +136,8 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="flex items-center gap-3 mb-16"
             style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(-20px)', transition: 'all 0.8s ease' }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #00D1B2, #0EA5E9)', boxShadow: '0 0 30px rgba(0,209,178,0.3)' }}>
-              <Brain className="w-7 h-7 text-white" />
-            </div>
+            <img src="/logo.png" alt="NeuroTips" className="w-14 h-14 rounded-xl"
+              style={{ boxShadow: '0 0 30px rgba(0,209,178,0.3)' }} />
             <div>
               <h1 className="text-2xl font-black tracking-tight" style={{
                 background: 'linear-gradient(135deg, #00D1B2, #0EA5E9)',
@@ -259,10 +257,8 @@ export default function LoginPage() {
 
           {/* Mobile logo (hidden on desktop) */}
           <div className="lg:hidden flex items-center gap-3 justify-center mb-10">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #00D1B2, #0EA5E9)', boxShadow: '0 0 30px rgba(0,209,178,0.3)' }}>
-              <Brain className="w-7 h-7 text-white" />
-            </div>
+            <img src="/logo.png" alt="NeuroTips" className="w-14 h-14 rounded-xl"
+              style={{ boxShadow: '0 0 30px rgba(0,209,178,0.3)' }} />
             <div>
               <h1 className="text-2xl font-black" style={{
                 background: 'linear-gradient(135deg, #00D1B2, #0EA5E9)',
@@ -381,7 +377,7 @@ export default function LoginPage() {
               <MessageCircle className="w-4 h-4" />
               Telegram
             </a>
-            <a href="https://wa.me/56912345678?text=Hola%20NeuroTips%20quiero%20info" target="_blank" rel="noopener noreferrer"
+            <a href="https://wa.me/56978516119?text=Hola%20NeuroTips%20quiero%20info" target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all hover:scale-[1.02]"
               style={{
                 background: 'rgba(34, 197, 94, 0.1)',
@@ -412,7 +408,7 @@ export default function LoginPage() {
               }}>
               <span className="flex items-center justify-center gap-2">
                 <Crown className="w-4 h-4" />
-                Empieza con 7 días Premium gratis
+                Empieza con 5 días Premium gratis
                 <ArrowRight className="w-3 h-3" />
               </span>
             </Link>
