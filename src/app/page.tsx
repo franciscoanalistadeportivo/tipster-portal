@@ -555,7 +555,7 @@ export default function LandingPage() {
             ¿Listo para tu ventaja injusta?
           </h2>
           <p className="text-[#94A3B8] mb-6 sm:mb-8 text-sm sm:text-base">
-            Únete a los 12,450+ apostadores que ya dejaron de apostar a ciegas.
+            Únete a los 5000 + apostadores que ya dejaron de apostar a ciegas.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/registro" className="w-full sm:w-auto bg-[#00FF88] hover:bg-[#00E07A] text-[#050505] font-bold py-4 px-8 rounded-lg transition inline-flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(0,255,136,0.3)]">
