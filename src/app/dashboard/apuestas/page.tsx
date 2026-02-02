@@ -231,18 +231,7 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
 
         {/* Imagen capture si existe */}
         {apuesta.imagen_url && (
-          <div className="mb-2 group relative inline-block">
-            <span className="flex items-center gap-1 text-xs text-[#818CF8] cursor-pointer">
-              📷 <span className="underline">Ver capture</span>
-            </span>
-            <div className="hidden group-hover:block absolute z-50 left-0 top-6 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-2 max-w-[300px]">
-              <img 
-                src={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`}
-                alt="Capture" 
-                className="rounded-lg max-h-[400px] w-auto"
-              />
-            </div>
-          </div>
+          <ImageCapture url={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`} />
         )}
 
         {/* Footer: Hora del partido */}
@@ -324,18 +313,7 @@ const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) =
           </div>
           <p className="text-white font-medium">{apuesta.apuesta}</p>
           {apuesta.imagen_url && (
-            <div className="mt-1 group relative inline-block">
-              <span className="flex items-center gap-1 text-xs text-[#818CF8] cursor-pointer">
-                📷 <span className="underline">Ver capture</span>
-              </span>
-              <div className="hidden group-hover:block absolute z-50 left-0 top-6 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-2 max-w-[300px]">
-                <img 
-                  src={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`}
-                  alt="Capture" 
-                  className="rounded-lg max-h-[400px] w-auto"
-                />
-              </div>
-            </div>
+            <ImageCapture url={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`} />
           )}
         </div>
 
@@ -378,6 +356,38 @@ const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) =
         </div>
       )}
     </div>
+  );
+};
+
+// ============================================================================
+// COMPONENTE: Imagen Capture (click to expand)
+// ============================================================================
+const ImageCapture = ({ url }: { url: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button 
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 text-xs mt-1 mb-1 px-2 py-1 rounded-lg transition-all"
+        style={{
+          background: open ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+          color: '#818CF8',
+        }}
+      >
+        📷 <span className="underline">{open ? 'Ocultar capture' : 'Ver capture'}</span>
+      </button>
+      {open && (
+        <div className="mt-1 mb-2 rounded-xl overflow-hidden border border-slate-600/50 bg-slate-900/50 p-1.5">
+          <img 
+            src={url}
+            alt="Capture apuesta" 
+            className="rounded-lg w-full max-w-[350px]"
+            onClick={() => window.open(url, '_blank')}
+            style={{ cursor: 'zoom-in' }}
+          />
+        </div>
+      )}
+    </>
   );
 };
 
