@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, CheckCircle, Loader2, MessageCircle, Phone } from 'lucide-react';
 
 const LOGO_URL = "/logo.png";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
@@ -255,6 +255,22 @@ export default function RegistroPage() {
           </div>
         </div>
 
+        {/* Comunidad */}
+        <div className="flex items-center justify-center gap-3 mt-5">
+          <a href="https://t.me/IaNeuroTips" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition hover:bg-[#0EA5E9]/10"
+            style={{ color: '#0EA5E9', border: '1px solid rgba(14,165,233,0.25)' }}>
+            <MessageCircle className="h-3.5 w-3.5" />
+            Telegram
+          </a>
+          <a href="https://wa.me/56978516119?text=Hola%20NeuroTips%20quiero%20info" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition hover:bg-[#22C55E]/10"
+            style={{ color: '#22C55E', border: '1px solid rgba(34,197,94,0.25)' }}>
+            <Phone className="h-3.5 w-3.5" />
+            WhatsApp
+          </a>
+        </div>
+
         {/* Volver */}
         <div className="text-center mt-5">
           <Link href="/" className="text-[#64748B] hover:text-white transition text-sm">
@@ -262,6 +278,14 @@ export default function RegistroPage() {
           </Link>
         </div>
       </div>
+
+      {/* Floating WhatsApp */}
+      <a href="https://wa.me/56978516119?text=Hola%20NeuroTips%20quiero%20info" target="_blank" rel="noopener noreferrer"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+        style={{ background: '#22C55E', boxShadow: '0 4px 20px rgba(34,197,94,0.4)' }}
+        aria-label="WhatsApp">
+        <Phone className="h-6 w-6 text-white" />
+      </a>
     </div>
   );
 }
