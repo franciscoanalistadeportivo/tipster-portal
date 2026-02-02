@@ -1,10 +1,28 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import PWARegister from '@/components/PWARegister';
 
 export const metadata: Metadata = {
   title: 'NeuroTips - Análisis de Tipsters con IA',
   description: 'Hacemos lo que el ojo humano no ve. Nuestro algoritmo detecta patrones de éxito y señales de riesgo antes de que coloques tu dinero.',
   keywords: 'tipsters, apuestas deportivas, betting, picks, pronósticos, IA, análisis, neurotips',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'NeuroTips',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#00D1B2',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -14,7 +32,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className="antialiased">{children}</body>
+      <head>
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="NeuroTips" />
+      </head>
+      <body className="antialiased">
+        {children}
+        <PWARegister />
+      </body>
     </html>
   );
 }
