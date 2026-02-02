@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GraduationCap, BookOpen, TrendingUp, Shield, Brain, Target, ChevronRight, Play, Clock, Star, Lock, CheckCircle, BarChart3, Zap } from 'lucide-react';
+import { GraduationCap, BookOpen, ChevronRight, Play, Clock, Lock, CheckCircle, BarChart3, Zap } from 'lucide-react';
 
 interface Leccion {
   id: number;
@@ -11,10 +11,19 @@ interface Leccion {
   nivel: 'Básico' | 'Intermedio' | 'Avanzado';
   icono: string;
   premium: boolean;
-  completada?: boolean;
+  completada: boolean;
 }
 
-const MODULOS = [
+interface Modulo {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  icono: string;
+  color: string;
+  lecciones: Leccion[];
+}
+
+const MODULOS: Modulo[] = [
   {
     id: 1,
     titulo: 'Fundamentos del Betting',
@@ -22,10 +31,10 @@ const MODULOS = [
     icono: '📚',
     color: '#00D1B2',
     lecciones: [
-      { id: 1, titulo: '¿Qué son las cuotas y cómo leerlas?', descripcion: 'Decimales, fraccionales y americanas explicadas', duracion: '5 min', nivel: 'Básico' as const, icono: '📊', premium: false, completada: true },
-      { id: 2, titulo: 'Tipos de apuestas: 1X2, Hándicap, Over/Under', descripcion: 'Cada mercado explicado con ejemplos reales', duracion: '8 min', nivel: 'Básico' as const, icono: '🎯', premium: false, completada: true },
-      { id: 3, titulo: 'Cómo funciona el margen de la casa', descripcion: 'Por qué las casas siempre ganan (y cómo evitarlo)', duracion: '6 min', nivel: 'Básico' as const, icono: '🏦', premium: false },
-      { id: 4, titulo: 'Valor esperado (EV): La métrica más importante', descripcion: 'Si no entiendes EV, estás apostando a ciegas', duracion: '10 min', nivel: 'Básico' as const, icono: '💡', premium: false },
+      { id: 1, titulo: '¿Qué son las cuotas y cómo leerlas?', descripcion: 'Decimales, fraccionales y americanas explicadas', duracion: '5 min', nivel: 'Básico', icono: '📊', premium: false, completada: true },
+      { id: 2, titulo: 'Tipos de apuestas: 1X2, Hándicap, Over/Under', descripcion: 'Cada mercado explicado con ejemplos reales', duracion: '8 min', nivel: 'Básico', icono: '🎯', premium: false, completada: true },
+      { id: 3, titulo: 'Cómo funciona el margen de la casa', descripcion: 'Por qué las casas siempre ganan (y cómo evitarlo)', duracion: '6 min', nivel: 'Básico', icono: '🏦', premium: false, completada: false },
+      { id: 4, titulo: 'Valor esperado (EV): La métrica más importante', descripcion: 'Si no entiendes EV, estás apostando a ciegas', duracion: '10 min', nivel: 'Básico', icono: '💡', premium: false, completada: false },
     ],
   },
   {
@@ -35,10 +44,10 @@ const MODULOS = [
     icono: '💰',
     color: '#FFBB00',
     lecciones: [
-      { id: 5, titulo: 'Define tu banca: cuánto destinar a apuestas', descripcion: 'Reglas de oro para no arriesgar más de lo que puedes', duracion: '5 min', nivel: 'Básico' as const, icono: '🏛️', premium: false },
-      { id: 6, titulo: 'Método de stakes: fijo vs proporcional', descripcion: 'Cuándo usar cada estrategia según tu perfil', duracion: '7 min', nivel: 'Intermedio' as const, icono: '📐', premium: false },
-      { id: 7, titulo: 'Criterio de Kelly: stake óptimo matemático', descripcion: 'La fórmula que usan los profesionales', duracion: '12 min', nivel: 'Avanzado' as const, icono: '🧮', premium: true },
-      { id: 8, titulo: 'Cómo sobrevivir a las malas rachas', descripcion: 'Plan de contingencia cuando todo va mal', duracion: '8 min', nivel: 'Intermedio' as const, icono: '🛡️', premium: false },
+      { id: 5, titulo: 'Define tu banca: cuánto destinar a apuestas', descripcion: 'Reglas de oro para no arriesgar más de lo que puedes', duracion: '5 min', nivel: 'Básico', icono: '🏛️', premium: false, completada: false },
+      { id: 6, titulo: 'Método de stakes: fijo vs proporcional', descripcion: 'Cuándo usar cada estrategia según tu perfil', duracion: '7 min', nivel: 'Intermedio', icono: '📐', premium: false, completada: false },
+      { id: 7, titulo: 'Criterio de Kelly: stake óptimo matemático', descripcion: 'La fórmula que usan los profesionales', duracion: '12 min', nivel: 'Avanzado', icono: '🧮', premium: true, completada: false },
+      { id: 8, titulo: 'Cómo sobrevivir a las malas rachas', descripcion: 'Plan de contingencia cuando todo va mal', duracion: '8 min', nivel: 'Intermedio', icono: '🛡️', premium: false, completada: false },
     ],
   },
   {
@@ -48,10 +57,10 @@ const MODULOS = [
     icono: '🧠',
     color: '#3B82F6',
     lecciones: [
-      { id: 9, titulo: 'Cómo analizar un partido antes de apostar', descripcion: 'Check-list de 10 puntos que usamos en NeuroTips', duracion: '15 min', nivel: 'Intermedio' as const, icono: '📋', premium: true },
-      { id: 10, titulo: 'Leer líneas: cuándo se mueve una cuota', descripcion: 'El movimiento de líneas te dice más que cualquier tipster', duracion: '10 min', nivel: 'Avanzado' as const, icono: '📈', premium: true },
-      { id: 11, titulo: 'Apuestas en vivo: ventajas y trampas', descripcion: 'Cuándo el live betting tiene valor y cuándo es una trampa', duracion: '8 min', nivel: 'Intermedio' as const, icono: '⚡', premium: true },
-      { id: 12, titulo: 'Combinadas: por qué (casi) nunca valen la pena', descripcion: 'Las matemáticas detrás de los parlays', duracion: '7 min', nivel: 'Intermedio' as const, icono: '🔗', premium: false },
+      { id: 9, titulo: 'Cómo analizar un partido antes de apostar', descripcion: 'Check-list de 10 puntos que usamos en NeuroTips', duracion: '15 min', nivel: 'Intermedio', icono: '📋', premium: true, completada: false },
+      { id: 10, titulo: 'Leer líneas: cuándo se mueve una cuota', descripcion: 'El movimiento de líneas te dice más que cualquier tipster', duracion: '10 min', nivel: 'Avanzado', icono: '📈', premium: true, completada: false },
+      { id: 11, titulo: 'Apuestas en vivo: ventajas y trampas', descripcion: 'Cuándo el live betting tiene valor y cuándo es una trampa', duracion: '8 min', nivel: 'Intermedio', icono: '⚡', premium: true, completada: false },
+      { id: 12, titulo: 'Combinadas: por qué (casi) nunca valen la pena', descripcion: 'Las matemáticas detrás de los parlays', duracion: '7 min', nivel: 'Intermedio', icono: '🔗', premium: false, completada: false },
     ],
   },
   {
@@ -61,10 +70,10 @@ const MODULOS = [
     icono: '🧘',
     color: '#A855F7',
     lecciones: [
-      { id: 13, titulo: 'Los 7 sesgos que te hacen perder dinero', descripcion: 'Confirmation bias, gambler\'s fallacy y más', duracion: '10 min', nivel: 'Básico' as const, icono: '🪤', premium: false },
-      { id: 14, titulo: 'Tilt: cómo detectarlo y frenarlo', descripcion: 'Señales de que estás apostando con emociones', duracion: '6 min', nivel: 'Básico' as const, icono: '🔴', premium: false },
-      { id: 15, titulo: 'Disciplina: el hábito que separa ganadores de perdedores', descripcion: 'Rutinas y reglas de los apostadores profesionales', duracion: '8 min', nivel: 'Intermedio' as const, icono: '🎖️', premium: true },
-      { id: 16, titulo: 'Juego responsable: cuándo parar', descripcion: 'Señales de alerta y recursos de ayuda', duracion: '5 min', nivel: 'Básico' as const, icono: '🛑', premium: false },
+      { id: 13, titulo: 'Los 7 sesgos que te hacen perder dinero', descripcion: 'Confirmation bias, gambler\'s fallacy y más', duracion: '10 min', nivel: 'Básico', icono: '🪤', premium: false, completada: false },
+      { id: 14, titulo: 'Tilt: cómo detectarlo y frenarlo', descripcion: 'Señales de que estás apostando con emociones', duracion: '6 min', nivel: 'Básico', icono: '🔴', premium: false, completada: false },
+      { id: 15, titulo: 'Disciplina: el hábito que separa ganadores de perdedores', descripcion: 'Rutinas y reglas de los apostadores profesionales', duracion: '8 min', nivel: 'Intermedio', icono: '🎖️', premium: true, completada: false },
+      { id: 16, titulo: 'Juego responsable: cuándo parar', descripcion: 'Señales de alerta y recursos de ayuda', duracion: '5 min', nivel: 'Básico', icono: '🛑', premium: false, completada: false },
     ],
   },
 ];
@@ -238,8 +247,8 @@ export default function AcademiaPage() {
       {/* RESUMEN */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { valor: totalLecciones, label: 'Lecciones', icono: BookOpen, color: '#3B82F6' },
-          { valor: leccionesGratis, label: 'Gratis', icono: CheckCircle, color: '#00D1B2' },
+          { valor: String(totalLecciones), label: 'Lecciones', icono: BookOpen, color: '#3B82F6' },
+          { valor: String(leccionesGratis), label: 'Gratis', icono: CheckCircle, color: '#00D1B2' },
           { valor: '4', label: 'Módulos', icono: BarChart3, color: '#FFBB00' },
           { valor: '∞', label: 'Actualizaciones', icono: Zap, color: '#A855F7' },
         ].map((stat, i) => {
