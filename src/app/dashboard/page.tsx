@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { 
   TrendingUp, TrendingDown, Users, Calendar, Target, AlertTriangle, 
   ChevronRight, Zap, Trophy, Clock, Star, ArrowUpRight, Brain,
-  Flame, Shield, Eye, Activity, BarChart3, MessageCircle, Phone
+  Flame, Shield, Eye, Activity, BarChart3, MessageCircle, Phone,
+  Volume2, VolumeX, ChevronDown
 } from 'lucide-react';
 import { dashboardAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
@@ -17,6 +18,181 @@ interface DashboardData {
   alertas: { alias: string; racha: number }[];
   apuestasRecientes: any[];
 }
+
+// ============================================================================
+// SISTEMA DE SONIDOS (NOTIFICACIONES)
+// ============================================================================
+const useSoundNotifications = () => {
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  const getCtx = useCallback(() => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  const playTone = useCallback((freq: number, duration: number, type: OscillatorType = 'sine', vol = 0.15) => {
+    if (!soundEnabled) return;
+    try {
+      const ctx = getCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + duration);
+    } catch {}
+  }, [soundEnabled, getCtx]);
+
+  const playNewPick = useCallback(() => {
+    playTone(880, 0.15, 'sine', 0.12);
+    setTimeout(() => playTone(1100, 0.2, 'sine', 0.1), 150);
+  }, [playTone]);
+
+  const playWin = useCallback(() => {
+    playTone(523, 0.12, 'sine', 0.12);
+    setTimeout(() => playTone(659, 0.12, 'sine', 0.12), 120);
+    setTimeout(() => playTone(784, 0.2, 'sine', 0.12), 240);
+  }, [playTone]);
+
+  const playLoss = useCallback(() => {
+    playTone(350, 0.3, 'triangle', 0.08);
+  }, [playTone]);
+
+  return { soundEnabled, setSoundEnabled, playNewPick, playWin, playLoss };
+};
+
+// ============================================================================
+// WIDGET CUOTAS COMPARATIVAS
+// ============================================================================
+const OddsCompareWidget = ({ odds }: { odds: any }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!odds || !odds.bookmakers) return null;
+
+  // Obtener lista de casas ordenadas por mejor cuota (home win como referencia)
+  const casas = Object.entries(odds.bookmakers)
+    .map(([nombre, cuotas]: [string, any]) => {
+      const maxOdd = Math.max(...Object.values(cuotas).map((v: any) => Number(v)));
+      return { nombre, cuotas, maxOdd };
+    })
+    .sort((a, b) => b.maxOdd - a.maxOdd)
+    .slice(0, 8);
+
+  const mejorCasa = casas[0];
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg transition-all"
+        style={{
+          background: expanded ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)',
+          color: '#818CF8',
+          border: '1px solid rgba(99, 102, 241, 0.2)',
+        }}
+      >
+        📊 <span className="font-medium">Cuotas ({odds.total_casas} casas)</span>
+        <ChevronDown
+          className="h-3 w-3 transition-transform"
+          style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0)' }}
+        />
+      </button>
+
+      {expanded && (
+        <div
+          className="mt-2 rounded-lg overflow-hidden"
+          style={{
+            background: 'rgba(15, 23, 42, 0.8)',
+            border: '1px solid rgba(99, 102, 241, 0.15)',
+          }}
+        >
+          {/* Header */}
+          <div
+            className="px-3 py-2 flex items-center justify-between"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <span className="text-[10px] font-bold text-[#818CF8] uppercase tracking-wider">
+              Casa de Apuestas
+            </span>
+            <span className="text-[10px] font-bold text-[#818CF8] uppercase tracking-wider">
+              Cuotas
+            </span>
+          </div>
+
+          {/* Filas */}
+          {casas.map((casa, i) => {
+            const isBest = i === 0;
+            return (
+              <div
+                key={casa.nombre}
+                className="px-3 py-2 flex items-center justify-between"
+                style={{
+                  background: isBest ? 'rgba(0, 209, 178, 0.06)' : 'transparent',
+                  borderBottom: i < casas.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  {isBest && (
+                    <span style={{
+                      background: 'rgba(0, 209, 178, 0.2)',
+                      color: '#00D1B2',
+                      fontSize: '8px',
+                      fontWeight: 800,
+                      padding: '1px 5px',
+                      borderRadius: '3px',
+                    }}>
+                      ⭐ MEJOR
+                    </span>
+                  )}
+                  <span className={`text-xs ${isBest ? 'text-white font-semibold' : 'text-[#94A3B8]'}`}>
+                    {casa.nombre}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {Object.entries(casa.cuotas).map(([outcome, cuota]: [string, any]) => (
+                    <span
+                      key={outcome}
+                      className="font-mono text-xs px-1.5 py-0.5 rounded"
+                      style={{
+                        background: isBest ? 'rgba(0, 209, 178, 0.12)' : 'rgba(255,255,255,0.04)',
+                        color: isBest ? '#00D1B2' : '#CBD5E1',
+                        fontWeight: isBest ? 700 : 500,
+                        fontSize: '11px',
+                      }}
+                      title={outcome}
+                    >
+                      {Number(cuota).toFixed(2)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Footer */}
+          <div
+            className="px-3 py-1.5 text-center"
+            style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.04)' }}
+          >
+            <span className="text-[10px] text-[#64748B]">
+              Datos: The Odds API · {new Date(odds.timestamp).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ============================================================================
 // FRASES ROTATIVAS NEUROTIPS
@@ -185,17 +361,42 @@ export default function DashboardPage() {
     totalTipsters: 0, apuestasHoy: 0, topTipster: null, alertas: [], apuestasRecientes: []
   });
   const [isLoading, setIsLoading] = useState(true);
+  const prevApuestasRef = useRef<string>('');
+  const { soundEnabled, setSoundEnabled, playNewPick, playWin, playLoss } = useSoundNotifications();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const dashboardData = await dashboardAPI.getData();
+        const nuevasApuestas = (dashboardData.apuestas?.apuestas || []).slice(0, 5);
+        
+        // Detectar cambios para notificaciones sonoras
+        const newSignature = JSON.stringify(nuevasApuestas.map((a: any) => ({ id: a.id, resultado: a.resultado })));
+        if (prevApuestasRef.current && prevApuestasRef.current !== newSignature) {
+          const prevApuestas = JSON.parse(prevApuestasRef.current);
+          const prevIds = prevApuestas.map((a: any) => a.id);
+          
+          // Nuevo pick
+          const newPicks = nuevasApuestas.filter((a: any) => !prevIds.includes(a.id));
+          if (newPicks.length > 0) playNewPick();
+          
+          // Resultado nuevo
+          for (const apuesta of nuevasApuestas) {
+            const prev = prevApuestas.find((p: any) => p.id === apuesta.id);
+            if (prev && prev.resultado === 'PENDIENTE' && apuesta.resultado !== 'PENDIENTE') {
+              if (apuesta.resultado === 'GANADA') playWin();
+              else if (apuesta.resultado === 'PERDIDA') playLoss();
+            }
+          }
+        }
+        prevApuestasRef.current = newSignature;
+
         setData({
           totalTipsters: dashboardData.tipsters?.total || 0,
           apuestasHoy: dashboardData.apuestas?.total || 0,
           topTipster: dashboardData.topTipster || null,
           alertas: dashboardData.alertas || [],
-          apuestasRecientes: (dashboardData.apuestas?.apuestas || []).slice(0, 5)
+          apuestasRecientes: nuevasApuestas
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -204,7 +405,11 @@ export default function DashboardPage() {
       }
     };
     fetchData();
-  }, []);
+
+    // Polling cada 60s para detectar nuevos picks/resultados
+    const interval = setInterval(fetchData, 60000);
+    return () => clearInterval(interval);
+  }, [playNewPick, playWin, playLoss]);
 
   const getDiasRestantes = () => {
     if (!user?.suscripcion_hasta) return 5;
@@ -238,7 +443,7 @@ export default function DashboardPage() {
     <div className="space-y-5 animate-fadeIn pb-20 lg:pb-6">
 
       {/* ============================================================ */}
-      {/* HEADER: Logo + Saludo + Frase Rotativa                       */}
+      {/* HEADER: Logo + Saludo + Frase Rotativa + Sonido Toggle       */}
       {/* ============================================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -256,12 +461,28 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        {user?.plan === 'PREMIUM' && (
-          <div className="badge-gold flex items-center gap-1.5">
-            <Trophy className="h-4 w-4" />
-            Miembro Premium
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Toggle Sonido */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
+            style={{
+              background: soundEnabled ? 'rgba(0, 209, 178, 0.12)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${soundEnabled ? 'rgba(0, 209, 178, 0.3)' : 'rgba(255,255,255,0.1)'}`,
+              color: soundEnabled ? '#00D1B2' : '#64748B',
+            }}
+            title={soundEnabled ? 'Desactivar sonidos' : 'Activar sonidos'}
+          >
+            {soundEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            {soundEnabled ? 'ON' : 'OFF'}
+          </button>
+          {user?.plan === 'PREMIUM' && (
+            <div className="badge-gold flex items-center gap-1.5">
+              <Trophy className="h-4 w-4" />
+              Miembro Premium
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ============================================================ */}
@@ -308,7 +529,7 @@ export default function DashboardPage() {
           <p className="text-[#94A3B8] text-sm mt-1">Tipsters Activos</p>
         </div>
 
-        {/* APUESTAS HOY - BORDE DORADO PULSANTE (no usa stat-card para evitar conflicto animación) */}
+        {/* APUESTAS HOY */}
         <div 
           className="rounded-2xl p-5"
           style={{
@@ -434,7 +655,6 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {/* PENDIENTES PRIMERO - DESTACADAS */}
             {pendientes.map((apuesta: any, idx: number) => {
-              // Determinar estado hora
               const hora = apuesta.hora_partido;
               let horaLabel = '';
               let horaColor = '#94A3B8';
@@ -535,9 +755,14 @@ export default function DashboardPage() {
                     </div>
                   );
                 })()}
+
+                {/* ★ CUOTAS COMPARATIVAS */}
+                {apuesta.odds_comparacion && (
+                  <OddsCompareWidget odds={apuesta.odds_comparacion} />
+                )}
                 
                 {/* Footer: Hora + Stake */}
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-xs mt-2">
                   {horaLabel ? (
                     <span className="flex items-center gap-1 font-mono font-bold" style={{ color: horaColor }}>
                       {horaLabel}
@@ -591,6 +816,11 @@ export default function DashboardPage() {
                     @{Number(apuesta.cuota || 0).toFixed(2)}
                   </span>
                 </div>
+
+                {/* Cuotas en resueltas también */}
+                {apuesta.odds_comparacion && (
+                  <OddsCompareWidget odds={apuesta.odds_comparacion} />
+                )}
               </div>
             ))}
 
@@ -785,7 +1015,6 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        {/* Barra visual */}
         <div className="mt-4 p-3 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.03)' }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-[#94A3B8]">Efectividad del sistema</span>
