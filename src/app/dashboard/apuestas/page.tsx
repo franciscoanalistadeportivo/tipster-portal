@@ -22,6 +22,7 @@ interface Apuesta {
   analisis: string;
   tipo_mercado?: string;
   hora_partido?: string;
+  imagen_url?: string;
 }
 
 // ============================================================================
@@ -228,6 +229,22 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
           {apuesta.apuesta}
         </p>
 
+        {/* Imagen capture si existe */}
+        {apuesta.imagen_url && (
+          <div className="mb-2 group relative inline-block">
+            <span className="flex items-center gap-1 text-xs text-[#818CF8] cursor-pointer">
+              📷 <span className="underline">Ver capture</span>
+            </span>
+            <div className="hidden group-hover:block absolute z-50 left-0 top-6 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-2 max-w-[300px]">
+              <img 
+                src={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`}
+                alt="Capture" 
+                className="rounded-lg max-h-[400px] w-auto"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Footer: Hora del partido */}
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
@@ -306,6 +323,20 @@ const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) =
             )}
           </div>
           <p className="text-white font-medium">{apuesta.apuesta}</p>
+          {apuesta.imagen_url && (
+            <div className="mt-1 group relative inline-block">
+              <span className="flex items-center gap-1 text-xs text-[#818CF8] cursor-pointer">
+                📷 <span className="underline">Ver capture</span>
+              </span>
+              <div className="hidden group-hover:block absolute z-50 left-0 top-6 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-2 max-w-[300px]">
+                <img 
+                  src={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`}
+                  alt="Capture" 
+                  className="rounded-lg max-h-[400px] w-auto"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Datos numéricos */}
