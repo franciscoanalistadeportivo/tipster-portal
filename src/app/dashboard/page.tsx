@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   TrendingUp, TrendingDown, Users, Calendar, Target, AlertTriangle, 
   ChevronRight, Zap, Trophy, Clock, Star, ArrowUpRight, Brain,
-  Flame, Shield, Eye, Activity, BarChart3
+  Flame, Shield, Eye, Activity, BarChart3, MessageCircle, Phone
 } from 'lucide-react';
 import { dashboardAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
@@ -739,6 +739,44 @@ export default function DashboardPage() {
           Sistema Activo
         </span>
       </div>
+
+      {/* ============================================================ */}
+      {/* TELEGRAM + WHATSAPP                                           */}
+      {/* ============================================================ */}
+      <div className="grid sm:grid-cols-2 gap-3 mt-6">
+        <a href="https://t.me/IaNeuroTips" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.01]"
+          style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)' }}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(14,165,233,0.15)' }}>
+            <MessageCircle className="h-5 w-5 text-[#0EA5E9]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-bold">Canal Telegram</p>
+            <p className="text-[#0EA5E9] text-xs">1 pick gratis diario · @IaNeuroTips</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-[#0EA5E9] flex-shrink-0" />
+        </a>
+        <a href="https://wa.me/56978516119?text=Hola%20NeuroTips" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.01]"
+          style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)' }}>
+            <Phone className="h-5 w-5 text-[#22C55E]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-bold">WhatsApp Soporte</p>
+            <p className="text-[#22C55E] text-xs">Respuesta en menos de 5 min</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-[#22C55E] flex-shrink-0" />
+        </a>
+      </div>
+
+      {/* Floating WhatsApp */}
+      <a href="https://wa.me/56978516119?text=Hola%20NeuroTips" target="_blank" rel="noopener noreferrer"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+        style={{ background: '#22C55E', boxShadow: '0 4px 20px rgba(34,197,94,0.4)' }}
+        aria-label="WhatsApp">
+        <Phone className="h-6 w-6 text-white" />
+      </a>
 
       {/* ============================================================ */}
       {/* CSS ANIMATIONS                                                */}
