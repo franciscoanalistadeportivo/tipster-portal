@@ -514,6 +514,23 @@ export default function DashboardPage() {
                   {apuesta.apuesta}
                 </p>
                 
+                {/* Imagen si existe */}
+                {apuesta.imagen_url && (
+                  <div className="mb-2 group relative">
+                    <div className="flex items-center gap-1 text-xs text-[#818CF8] cursor-pointer">
+                      <span>📷</span>
+                      <span className="underline">Ver capture</span>
+                    </div>
+                    <div className="hidden group-hover:block absolute z-50 left-0 top-6 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-2 max-w-[280px]">
+                      <img 
+                        src={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`}
+                        alt="Capture" 
+                        className="rounded-lg max-h-[350px] w-auto"
+                      />
+                    </div>
+                  </div>
+                )}
+                
                 {/* Footer: Hora + Stake */}
                 <div className="flex items-center justify-between text-xs">
                   {horaLabel ? (
