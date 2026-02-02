@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   LayoutDashboard, Users, Calendar, Zap, Wallet, Settings,
-  LogOut, Menu, X, Trophy, ChevronRight
+  LogOut, Menu, X, Trophy, ChevronRight, Crown
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { authAPI, loadTokens, isAuthenticated } from '@/lib/api';
@@ -59,6 +59,8 @@ export default function DashboardLayout({
     logout();
     router.push('/login');
   };
+
+  const isSuscripcionActive = pathname.startsWith('/dashboard/suscripcion') || pathname.startsWith('/dashboard/sala-vip');
 
   if (isLoading) {
     return (
@@ -114,6 +116,28 @@ export default function DashboardLayout({
               </Link>
             );
           })}
+
+          {/* Separador + Botón Suscripción */}
+          <div className="pt-3 mt-3 border-t border-[#334155]">
+            <Link
+              href="/dashboard/suscripcion"
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                isSuscripcionActive
+                  ? 'text-[#FFBB00]'
+                  : 'text-[#FFBB00] hover:text-[#FFD700]'
+              }`}
+              style={{
+                background: isSuscripcionActive
+                  ? 'linear-gradient(135deg, rgba(255,187,0,0.15), rgba(249,115,22,0.1))'
+                  : 'linear-gradient(135deg, rgba(255,187,0,0.08), rgba(249,115,22,0.05))',
+                border: '1px solid rgba(255,187,0,0.25)',
+              }}
+            >
+              <Crown className="h-5 w-5" />
+              <span className="font-bold">Suscripción</span>
+              {isSuscripcionActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+            </Link>
+          </div>
         </nav>
 
         {/* User */}
@@ -192,6 +216,20 @@ export default function DashboardLayout({
                   </Link>
                 );
               })}
+
+              {/* Suscripción en mobile menu */}
+              <Link
+                href="/dashboard/suscripcion"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-[#FFBB00]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,187,0,0.1), rgba(249,115,22,0.05))',
+                  border: '1px solid rgba(255,187,0,0.25)',
+                }}
+              >
+                <Crown className="h-5 w-5" />
+                <span className="font-bold">Suscripción</span>
+              </Link>
             </nav>
             <div className="mt-4 pt-4 border-t border-[#334155]">
               <button
@@ -206,13 +244,15 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* Mobile Bottom Nav - PRO */}
+      {/* Mobile Bottom Nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1E293B]/95 border-t border-[#334155] z-40 flex items-center justify-around px-2"
         style={{ backdropFilter: 'blur(16px)' }}>
-        {NAV_ITEMS.slice(0, 5).map((item) => {
+        {[...NAV_ITEMS.slice(0, 4), { href: '/dashboard/suscripcion', label: 'Premium', icon: Crown }].map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || 
-            (item.href !== '/dashboard' && pathname.startsWith(item.href));
+          const isPremiumBtn = item.href === '/dashboard/suscripcion';
+          const isActive = isPremiumBtn
+            ? isSuscripcionActive
+            : pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           
           return (
             <Link
@@ -220,10 +260,10 @@ export default function DashboardLayout({
               href={item.href}
               className="flex flex-col items-center justify-center p-2 rounded-lg transition-all relative"
               style={isActive ? {
-                color: '#00D1B2',
-                filter: 'drop-shadow(0 0 6px rgba(0, 209, 178, 0.4))',
+                color: isPremiumBtn ? '#FFBB00' : '#00D1B2',
+                filter: `drop-shadow(0 0 6px ${isPremiumBtn ? 'rgba(255,187,0,0.4)' : 'rgba(0,209,178,0.4)'})`,
               } : {
-                color: '#64748B',
+                color: isPremiumBtn ? '#FFBB00' : '#64748B',
               }}
             >
               <Icon className="h-5 w-5" />
@@ -232,8 +272,8 @@ export default function DashboardLayout({
                 <span style={{
                   position: 'absolute', bottom: '2px',
                   width: '4px', height: '4px', borderRadius: '50%',
-                  background: '#00D1B2',
-                  boxShadow: '0 0 6px rgba(0, 209, 178, 0.6)',
+                  background: isPremiumBtn ? '#FFBB00' : '#00D1B2',
+                  boxShadow: `0 0 6px ${isPremiumBtn ? 'rgba(255,187,0,0.6)' : 'rgba(0,209,178,0.6)'}`,
                 }} />
               )}
             </Link>
