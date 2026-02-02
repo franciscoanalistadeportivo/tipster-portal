@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Shield, Star, CheckCircle, ArrowRight, Zap, Target, 
-  Brain, Eye, Lock, BarChart3, Menu, X, Crown
+  Brain, Eye, Lock, BarChart3, Menu, X, Crown, MessageCircle, Phone
 } from 'lucide-react';
 
 const LOGO_URL = "/logo.png";
@@ -540,6 +540,84 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ========== COMUNIDAD TELEGRAM + WHATSAPP ========== */}
+      <section className="py-12 sm:py-16 px-4 sm:px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-3">
+            Únete a la comunidad
+          </h2>
+          <p className="text-[#94A3B8] text-center mb-8 text-sm sm:text-base">
+            Recibe picks gratis, alertas y análisis directo en tu celular
+          </p>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* Telegram */}
+            <a href="https://t.me/IaNeuroTips" target="_blank" rel="noopener noreferrer"
+              className="group bg-[#0A0A0A] border border-[#0EA5E9]/20 hover:border-[#0EA5E9]/50 rounded-xl p-5 sm:p-6 transition-all hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-[#0EA5E9]/10 rounded-xl flex items-center justify-center group-hover:bg-[#0EA5E9]/20 transition">
+                  <MessageCircle className="h-6 w-6 text-[#0EA5E9]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base">Canal de Telegram</h3>
+                  <p className="text-[#0EA5E9] text-xs font-medium">@IaNeuroTips</p>
+                </div>
+              </div>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                  <CheckCircle className="h-3.5 w-3.5 text-[#0EA5E9] flex-shrink-0" />
+                  1 pick gratis verificado por IA diario
+                </li>
+                <li className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                  <CheckCircle className="h-3.5 w-3.5 text-[#0EA5E9] flex-shrink-0" />
+                  Alertas de rachas y oportunidades
+                </li>
+                <li className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                  <CheckCircle className="h-3.5 w-3.5 text-[#0EA5E9] flex-shrink-0" />
+                  Comunidad activa de apostadores
+                </li>
+              </ul>
+              <div className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/30 group-hover:bg-[#0EA5E9]/20">
+                Unirme al Canal
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </a>
+
+            {/* WhatsApp */}
+            <a href="https://wa.me/56978516119?text=Hola%20NeuroTips%20quiero%20info" target="_blank" rel="noopener noreferrer"
+              className="group bg-[#0A0A0A] border border-[#22C55E]/20 hover:border-[#22C55E]/50 rounded-xl p-5 sm:p-6 transition-all hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-[#22C55E]/10 rounded-xl flex items-center justify-center group-hover:bg-[#22C55E]/20 transition">
+                  <Phone className="h-6 w-6 text-[#22C55E]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base">WhatsApp Directo</h3>
+                  <p className="text-[#22C55E] text-xs font-medium">Soporte personalizado</p>
+                </div>
+              </div>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                  <CheckCircle className="h-3.5 w-3.5 text-[#22C55E] flex-shrink-0" />
+                  Respuesta en menos de 5 minutos
+                </li>
+                <li className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                  <CheckCircle className="h-3.5 w-3.5 text-[#22C55E] flex-shrink-0" />
+                  Asesoría sobre planes y features
+                </li>
+                <li className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                  <CheckCircle className="h-3.5 w-3.5 text-[#22C55E] flex-shrink-0" />
+                  Soporte técnico directo
+                </li>
+              </ul>
+              <div className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/30 group-hover:bg-[#22C55E]/20">
+                Escribir por WhatsApp
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ========== FINAL CTA ========== */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 bg-[#0A0A0A]">
         <div className="max-w-2xl mx-auto text-center">
@@ -576,23 +654,53 @@ export default function LandingPage() {
 
       {/* ========== FOOTER ========== */}
       <footer className="py-8 sm:py-10 px-4 sm:px-6 border-t border-white/5">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00FF88]/20 to-[#FFD700]/20 border border-[#00FF88]/30 flex items-center justify-center">
-              <span className="text-[#00FF88] font-bold">N</span>
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00FF88]/20 to-[#FFD700]/20 border border-[#00FF88]/30 flex items-center justify-center">
+                <span className="text-[#00FF88] font-bold">N</span>
+              </div>
+              <span className="font-bold text-white text-sm sm:text-base">
+                Neuro<span className="text-[#00FF88]">Tips</span>
+              </span>
             </div>
-            <span className="font-bold text-white text-sm sm:text-base">
-              Neuro<span className="text-[#00FF88]">Tips</span>
-            </span>
+
+            {/* Social links */}
+            <div className="flex items-center gap-3">
+              <a href="https://t.me/IaNeuroTips" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition hover:bg-[#0EA5E9]/10"
+                style={{ color: '#0EA5E9', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
+                <MessageCircle className="h-3.5 w-3.5" />
+                Telegram
+              </a>
+              <a href="https://wa.me/56978516119?text=Hola%20NeuroTips" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition hover:bg-[#22C55E]/10"
+                style={{ color: '#22C55E', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                <Phone className="h-3.5 w-3.5" />
+                WhatsApp
+              </a>
+            </div>
+
+            <p className="text-[#64748B] text-xs sm:text-sm text-center">
+              © 2026 NeuroTips • Todos los derechos reservados
+            </p>
           </div>
-          <p className="text-[#64748B] text-xs sm:text-sm text-center">
-            © 2026 NeuroTips • Todos los derechos reservados
-          </p>
           <p className="text-[#64748B] text-xs text-center">
             Juego responsable. Solo +18.
           </p>
         </div>
       </footer>
+
+      {/* ========== FLOATING WHATSAPP BUTTON ========== */}
+      <a href="https://wa.me/56978516119?text=Hola%20NeuroTips%20quiero%20info" target="_blank" rel="noopener noreferrer"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+        style={{
+          background: '#22C55E',
+          boxShadow: '0 4px 20px rgba(34, 197, 94, 0.4)',
+        }}
+        aria-label="WhatsApp">
+        <Phone className="h-6 w-6 text-white" />
+      </a>
     </div>
   );
 }
