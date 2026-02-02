@@ -433,56 +433,108 @@ export default function DashboardPage() {
         {apuestasNormalizadas.length > 0 ? (
           <div className="space-y-3">
             {/* PENDIENTES PRIMERO - DESTACADAS */}
-            {pendientes.map((apuesta: any, idx: number) => (
+            {pendientes.map((apuesta: any, idx: number) => {
+              // Determinar estado hora
+              const hora = apuesta.hora_partido;
+              let horaLabel = '';
+              let horaColor = '#94A3B8';
+              if (hora) {
+                try {
+                  const [h, m] = hora.split(':').map(Number);
+                  const ahora = new Date();
+                  const horaMin = h * 60 + m;
+                  const ahoraMin = ahora.getHours() * 60 + ahora.getMinutes();
+                  if (ahoraMin >= horaMin) {
+                    horaLabel = `🔴 EN VIVO · ${hora}`;
+                    horaColor = '#EF4444';
+                  } else if (horaMin - ahoraMin <= 30) {
+                    horaLabel = `⚡ POR INICIAR · ${hora}`;
+                    horaColor = '#FFBB00';
+                  } else {
+                    horaLabel = `🕐 ${hora} CL`;
+                    horaColor = '#FFBB00';
+                  }
+                } catch { horaLabel = hora; }
+              }
+              const unidades = apuesta.stake_ia ? (Number(apuesta.stake_ia) / 1000).toFixed(1) + 'u' : '';
+
+              return (
               <div 
                 key={`p-${idx}`}
                 className="rounded-xl p-4 relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255, 187, 0, 0.08) 0%, rgba(255, 221, 87, 0.03) 100%)',
-                  border: '1.5px solid rgba(255, 187, 0, 0.35)',
+                  background: horaColor === '#EF4444'
+                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(255, 50, 50, 0.03) 100%)'
+                    : 'linear-gradient(135deg, rgba(255, 187, 0, 0.08) 0%, rgba(255, 221, 87, 0.03) 100%)',
+                  border: horaColor === '#EF4444'
+                    ? '1.5px solid rgba(239, 68, 68, 0.4)'
+                    : '1.5px solid rgba(255, 187, 0, 0.35)',
                   animation: 'pendienteBorder 3s ease-in-out infinite'
                 }}
               >
-                {/* Badge PENDIENTE */}
+                {/* Badge PENDIENTE / LIVE */}
                 <div className="flex items-center justify-between mb-2">
-                  <span style={{
-                    background: 'linear-gradient(135deg, #F59E0B, #FFBB00)',
-                    color: '#000',
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    padding: '3px 10px',
-                    borderRadius: '6px',
-                    letterSpacing: '0.5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px'
-                  }}>
-                    ⏳ PENDIENTE
-                  </span>
-                  <span className="font-mono font-bold text-[#FFBB00]">
+                  <div className="flex items-center gap-2">
+                    {horaColor === '#EF4444' ? (
+                      <span style={{
+                        background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                        color: '#FFF', fontSize: '10px', fontWeight: 800,
+                        padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px',
+                        display: 'flex', alignItems: 'center', gap: '5px',
+                        boxShadow: '0 0 12px rgba(239, 68, 68, 0.4)',
+                      }}>
+                        🔴 EN VIVO
+                      </span>
+                    ) : (
+                      <span style={{
+                        background: 'linear-gradient(135deg, #F59E0B, #FFBB00)',
+                        color: '#000', fontSize: '10px', fontWeight: 800,
+                        padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px',
+                        display: 'flex', alignItems: 'center', gap: '5px'
+                      }}>
+                        ⏳ PENDIENTE
+                      </span>
+                    )}
+                    {apuesta.tipo_mercado && (
+                      <span style={{
+                        background: 'rgba(99, 102, 241, 0.15)', color: '#818CF8',
+                        fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px',
+                      }}>
+                        {apuesta.tipo_mercado === 'COMBINADAS' ? 'COMBI' : apuesta.tipo_mercado.length > 8 ? apuesta.tipo_mercado.slice(0, 8) : apuesta.tipo_mercado}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono font-bold text-lg" style={{ color: horaColor === '#EF4444' ? '#EF4444' : '#FFBB00' }}>
                     @{Number(apuesta.cuota || 0).toFixed(2)}
                   </span>
                 </div>
                 
                 {/* Apuesta */}
-                <p className="text-white font-medium text-sm leading-snug mb-1">
+                <p className="text-white font-medium text-sm leading-snug mb-2">
                   {apuesta.apuesta}
                 </p>
                 
-                {/* Info extra */}
-                <div className="flex items-center justify-between text-xs text-[#94A3B8]">
-                  <span className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" /> Esperando resultado...
-                  </span>
-                  {apuesta.stake_ia && (
-                    <span className="font-mono">Stake: ${Number(apuesta.stake_ia).toLocaleString()}</span>
+                {/* Footer: Hora + Stake */}
+                <div className="flex items-center justify-between text-xs">
+                  {horaLabel ? (
+                    <span className="flex items-center gap-1 font-mono font-bold" style={{ color: horaColor }}>
+                      {horaLabel}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-[#94A3B8]">
+                      <Eye className="h-3 w-3" /> Esperando resultado...
+                    </span>
+                  )}
+                  {unidades && (
+                    <span className="font-mono text-[#94A3B8]">Stake: {unidades}</span>
                   )}
                 </div>
                 
                 {/* Barra de progreso */}
                 <ProgressBarPendiente />
               </div>
-            ))}
+              );
+            })}
 
             {/* RESUELTAS */}
             {resueltas.map((apuesta: any, idx: number) => (
