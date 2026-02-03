@@ -413,8 +413,14 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
 // ============================================================================
 const OddsCompareWidget = ({ odds }: { odds: any }) => {
   const [expanded, setExpanded] = useState(false);
-  if (!odds || !odds.bookmakers) return null;
-  const casas = odds.bookmakers.slice(0, 5);
+  
+  // Parse if string
+  let parsed = odds;
+  if (typeof odds === 'string') {
+    try { parsed = JSON.parse(odds); } catch(_e) { return null; }
+  }
+  if (!parsed || !Array.isArray(parsed.bookmakers)) return null;
+  const casas = parsed.bookmakers.slice(0, 5);
   if (casas.length === 0) return null;
 
   return (
@@ -448,7 +454,7 @@ const OddsCompareWidget = ({ odds }: { odds: any }) => {
             </div>
           ))}
           <div style={{ padding: '4px 10px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-            <span style={{ fontSize: '9px', color: '#64748B' }}>Datos: The Odds API · {new Date(odds.timestamp).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>
+            <span style={{ fontSize: '9px', color: '#64748B' }}>Datos: The Odds API · {parsed.timestamp ? new Date(parsed.timestamp).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
           </div>
         </div>
       )}
