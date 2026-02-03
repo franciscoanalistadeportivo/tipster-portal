@@ -717,7 +717,7 @@ export default function DashboardPage() {
 
         setData({
           totalTipsters: dashboardData.tipsters?.total || 0,
-          apuestasHoy: nuevasApuestas.length || dashboardData.apuestas?.total || 0,
+          apuestasHoy: dashboardData.apuestas?.total || nuevasApuestas.length || 0,
           topTipster: dashboardData.topTipster || null,
           alertas: dashboardData.alertas || [],
           apuestasRecientes: nuevasApuestas,
@@ -878,7 +878,7 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
-          <p className="text-3xl font-bold font-mono" style={{ color: '#FFBB00' }}>{apuestas.length || data.apuestasHoy}</p>
+          <p className="text-3xl font-bold font-mono" style={{ color: '#FFBB00' }}>{data.apuestasHoy || apuestas.length}</p>
           <p className="text-sm mt-0.5" style={{ color: '#D4A843' }}>Apuestas Hoy</p>
           <p style={{ fontSize: '9px', color: '#94A3B8', marginTop: '2px' }}>
             {pendientes.length > 0 ? `${pendientes.length} pendiente${pendientes.length > 1 ? 's' : ''}` : ''}
