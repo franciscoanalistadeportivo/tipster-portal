@@ -467,7 +467,7 @@ const OddsCompareWidget = ({ odds }: { odds: any }) => {
 // ============================================================================
 const FRASES_NEUROTIPS = [
   "Hacemos lo que el ojo humano no ve",
-  "9 tipsters analizados con IA profunda",
+  "25 tipsters analizados con IA profunda",
   "Tu ventaja empieza aquí",
   "Análisis inteligente, decisiones rentables",
   "El poder de la IA en cada apuesta",
