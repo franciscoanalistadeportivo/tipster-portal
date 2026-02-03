@@ -5,19 +5,27 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   LayoutDashboard, Users, Calendar, Zap, Wallet,
-  LogOut, Menu, X, ChevronRight, Crown, Flame, GraduationCap, KeyRound
+  LogOut, Menu, X, ChevronRight, Crown, Flame, GraduationCap, KeyRound,
+  Bell
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
-import { authAPI, loadTokens, isAuthenticated } from '@/lib/api';
+import { authAPI, loadTokens, isAuthenticated, picksAPI, alertasAPI } from '@/lib/api';
+
+interface BadgeCounts {
+  apuestasPendientes: number;
+  picksOro: number;
+  alertasRachas: number;
+  livePicks: number;
+}
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
-  { href: '/dashboard/tipsters', label: 'Tipsters', icon: Users },
-  { href: '/dashboard/apuestas', label: 'Apuestas', icon: Calendar },
-  { href: '/dashboard/recomendaciones', label: 'IA Picks', icon: Zap },
-  { href: '/dashboard/mi-banca', label: 'Mi Banca', icon: Wallet },
-  { href: '/dashboard/sala-vip', label: 'Sala VIP', icon: Flame },
-  { href: '/dashboard/academia', label: 'Academia', icon: GraduationCap },
+  { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard, badgeKey: null },
+  { href: '/dashboard/tipsters', label: 'Tipsters', icon: Users, badgeKey: null },
+  { href: '/dashboard/apuestas', label: 'Apuestas', icon: Calendar, badgeKey: 'apuestasPendientes' as const },
+  { href: '/dashboard/recomendaciones', label: 'IA Picks', icon: Zap, badgeKey: 'picksOro' as const },
+  { href: '/dashboard/mi-banca', label: 'Mi Banca', icon: Wallet, badgeKey: null },
+  { href: '/dashboard/sala-vip', label: 'Sala VIP', icon: Flame, badgeKey: null },
+  { href: '/dashboard/academia', label: 'Academia', icon: GraduationCap, badgeKey: null },
 ];
 
 export default function DashboardLayout({
@@ -30,6 +38,7 @@ export default function DashboardLayout({
   const { user, setUser, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [badges, setBadges] = useState<BadgeCounts>({ apuestasPendientes: 0, picksOro: 0, alertasRachas: 0, livePicks: 0 });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -75,6 +84,35 @@ export default function DashboardLayout({
     const interval = setInterval(sendHeartbeat, 30000); // Cada 30s
     return () => clearInterval(interval);
   }, [isLoading, pathname]);
+
+  // ★ Badge counts — fetch live data for sidebar badges
+  useEffect(() => {
+    if (isLoading) return;
+    const fetchBadges = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+        const [liveRes, rachasRes, dashRes] = await Promise.all([
+          picksAPI.getLive().catch(() => ({ total_live: 0, live: [] })),
+          alertasAPI.getRachas().catch(() => ({ total: 0 })),
+          fetch(`${API_URL}/api/public/dashboard-ia`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+        ]);
+
+        const apuestas = dashRes?.apuestas?.apuestas || [];
+        const pendientes = apuestas.filter((a: any) => !a.resultado || a.resultado === 'PENDIENTE' || a.resultado === '').length;
+        const picksOro = (liveRes.live || []).filter((p: any) => p.neuroscore >= 75).length;
+
+        setBadges({
+          apuestasPendientes: pendientes,
+          picksOro: picksOro || (dashRes?.apuestas?.apuestas || []).filter((a: any) => a.ia_analysis?.zona === 'ORO').length,
+          alertasRachas: rachasRes.total || 0,
+          livePicks: liveRes.total_live || 0,
+        });
+      } catch {}
+    };
+    fetchBadges();
+    const badgeInterval = setInterval(fetchBadges, 60000);
+    return () => clearInterval(badgeInterval);
+  }, [isLoading]);
 
   const handleLogout = () => {
     authAPI.logout();
@@ -122,21 +160,50 @@ export default function DashboardLayout({
             const isActive = pathname === item.href || 
               (item.href !== '/dashboard' && pathname.startsWith(item.href));
             const isVip = item.href === '/dashboard/sala-vip';
+            const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+            const isPicks = item.href === '/dashboard/recomendaciones';
             
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
                   isActive
                     ? isVip ? 'text-[#FFBB00]' : 'bg-[#00D1B2]/10 text-[#00D1B2]'
                     : isVip ? 'text-[#FFBB00]/70 hover:text-[#FFBB00] hover:bg-[#FFBB00]/5' : 'text-[#94A3B8] hover:bg-[#334155] hover:text-white'
                 }`}
                 style={isVip && isActive ? { background: 'rgba(255,187,0,0.1)' } : undefined}
               >
-                <Icon className="h-5 w-5" />
+                <div className="relative">
+                  <Icon className="h-5 w-5 transition-transform group-hover:scale-110" />
+                  {/* Live dot on Inicio when there are live picks */}
+                  {item.href === '/dashboard' && badges.livePicks > 0 && (
+                    <span style={{
+                      position: 'absolute', top: '-2px', right: '-2px',
+                      width: '7px', height: '7px', borderRadius: '50%',
+                      background: '#EF4444', border: '1.5px solid #1E293B',
+                      animation: 'badgePulse 1.5s ease-in-out infinite',
+                    }} />
+                  )}
+                </div>
                 <span className={`font-medium ${isVip ? 'font-bold' : ''}`}>{item.label}</span>
-                {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+                
+                {/* Dynamic badge */}
+                {badgeCount > 0 && (
+                  <span style={{
+                    marginLeft: 'auto',
+                    fontSize: '10px', fontWeight: 700, fontFamily: 'monospace',
+                    padding: '1px 7px', borderRadius: '10px',
+                    background: isPicks ? 'rgba(0, 209, 178, 0.15)' : 'rgba(255, 187, 0, 0.12)',
+                    color: isPicks ? '#00D1B2' : '#FFBB00',
+                    border: `1px solid ${isPicks ? 'rgba(0, 209, 178, 0.3)' : 'rgba(255, 187, 0, 0.25)'}`,
+                    lineHeight: '16px',
+                  }}>
+                    {isPicks ? `${badgeCount} 🔥` : badgeCount}
+                  </span>
+                )}
+                
+                {isActive && !badgeCount && <ChevronRight className="h-4 w-4 ml-auto" />}
               </Link>
             );
           })}
@@ -229,6 +296,8 @@ export default function DashboardLayout({
                 const isActive = pathname === item.href || 
                   (item.href !== '/dashboard' && pathname.startsWith(item.href));
                 const isVip = item.href === '/dashboard/sala-vip';
+                const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+                const isPicks = item.href === '/dashboard/recomendaciones';
                 
                 return (
                   <Link
@@ -243,6 +312,18 @@ export default function DashboardLayout({
                   >
                     <Icon className="h-5 w-5" />
                     <span className={isVip ? 'font-bold' : ''}>{item.label}</span>
+                    {badgeCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        fontSize: '10px', fontWeight: 700, fontFamily: 'monospace',
+                        padding: '1px 7px', borderRadius: '10px',
+                        background: isPicks ? 'rgba(0, 209, 178, 0.15)' : 'rgba(255, 187, 0, 0.12)',
+                        color: isPicks ? '#00D1B2' : '#FFBB00',
+                        border: `1px solid ${isPicks ? 'rgba(0, 209, 178, 0.3)' : 'rgba(255, 187, 0, 0.25)'}`,
+                      }}>
+                        {isPicks ? `${badgeCount} 🔥` : badgeCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -286,17 +367,18 @@ export default function DashboardLayout({
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1E293B]/95 border-t border-[#334155] z-40 flex items-center justify-around px-2"
         style={{ backdropFilter: 'blur(16px)' }}>
         {[
-          { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
-          { href: '/dashboard/apuestas', label: 'Apuestas', icon: Calendar },
-          { href: '/dashboard/sala-vip', label: 'VIP', icon: Flame },
-          { href: '/dashboard/academia', label: 'Academia', icon: GraduationCap },
-          { href: '/dashboard/suscripcion', label: 'Premium', icon: Crown },
+          { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard, badgeKey: 'livePicks' as keyof BadgeCounts },
+          { href: '/dashboard/apuestas', label: 'Apuestas', icon: Calendar, badgeKey: 'apuestasPendientes' as keyof BadgeCounts },
+          { href: '/dashboard/sala-vip', label: 'VIP', icon: Flame, badgeKey: null },
+          { href: '/dashboard/academia', label: 'Academia', icon: GraduationCap, badgeKey: null },
+          { href: '/dashboard/suscripcion', label: 'Premium', icon: Crown, badgeKey: null },
         ].map((item) => {
           const Icon = item.icon;
           const isVipOrPremium = item.href === '/dashboard/sala-vip' || item.href === '/dashboard/suscripcion';
           const isActive = item.href === '/dashboard/suscripcion'
             ? isSuscripcionActive
             : pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+          const mBadge = item.badgeKey ? badges[item.badgeKey] : 0;
           
           return (
             <Link
@@ -310,7 +392,21 @@ export default function DashboardLayout({
                 color: isVipOrPremium ? '#FFBB00' : '#64748B',
               }}
             >
-              <Icon className="h-5 w-5" />
+              <div className="relative">
+                <Icon className="h-5 w-5" />
+                {mBadge > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-5px', right: '-8px',
+                    fontSize: '8px', fontWeight: 800, fontFamily: 'monospace',
+                    padding: '0px 4px', borderRadius: '6px', lineHeight: '14px',
+                    background: item.href === '/dashboard' ? '#EF4444' : '#FFBB00',
+                    color: 'white', border: '1.5px solid #1E293B',
+                    minWidth: '14px', textAlign: 'center',
+                  }}>
+                    {mBadge}
+                  </span>
+                )}
+              </div>
               <span className={`text-[10px] mt-1 ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
               {isActive && (
                 <span style={{
@@ -331,6 +427,13 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+
+      <style jsx>{`
+        @keyframes badgePulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.2); }
+        }
+      `}</style>
     </div>
   );
 }
