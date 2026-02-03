@@ -901,8 +901,8 @@ export default function DashboardPage() {
           </div>
           <p className="text-lg font-bold text-white truncate">{data.topTipster?.alias || '—'}</p>
           {data.topTipster && (
-            <p className="text-[#00D1B2] font-mono font-bold flex items-center gap-1 mt-0.5">
-              <TrendingUp className="h-3.5 w-3.5" /> +${Math.abs(data.topTipster.ganancia).toLocaleString()}
+            <p className="text-[#00D1B2] font-bold flex items-center gap-1 mt-0.5 text-sm">
+              <TrendingUp className="h-3.5 w-3.5" /> Mejor rendimiento
             </p>
           )}
           <p className="text-xs mt-1" style={{ color: '#D4A843' }}>👑 Tipster del Mes</p>
@@ -1332,8 +1332,8 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div style={{ textAlign: 'center', padding: '12px', borderRadius: '10px', background: 'rgba(0,209,178,0.06)', border: '1px solid rgba(0,209,178,0.12)' }}>
-            <p style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'monospace', color: '#00D1B2' }}>+$847K</p>
-            <p style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px' }}>Profit este mes</p>
+            <p style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'monospace', color: '#00D1B2' }}>64%</p>
+            <p style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px' }}>Win Rate Global</p>
           </div>
           <div style={{ textAlign: 'center', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <p style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'monospace', color: '#FFF' }}>78%</p>
