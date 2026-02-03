@@ -647,7 +647,7 @@ export default function ApuestasPage() {
     ? Math.round((stats.ganadas / (stats.ganadas + stats.perdidas)) * 100) : 0;
 
   const fechaFormateada = fecha 
-    ? new Date(fecha).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
+    ? new Date(fecha + 'T12:00:00').toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
     : 'Hoy';
 
   if (isLoading) {
