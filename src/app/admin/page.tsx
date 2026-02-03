@@ -7,7 +7,7 @@ import {
   CheckCircle, XCircle, RefreshCw, Trophy, Target,
   DollarSign, Activity, Clock, Wifi, Crown, Star,
   ShieldAlert, Pause, Eye, ChevronDown, ChevronUp,
-  BarChart3
+  BarChart3, Settings, Globe, Save
 } from 'lucide-react';
 
 // ============================================================
@@ -225,6 +225,19 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  // ★ Config Resultados Públicos
+  const [resConfig, setResConfig] = useState({
+    resultados_periodo_default: 'semana',
+    resultados_mostrar_pendientes: 'true',
+    resultados_mostrar_top_tipsters: 'true',
+    resultados_max_items: '200',
+    resultados_deportes_habilitados: 'Fútbol,Tenis,Básquet,eSports,Hockey,Béisbol',
+    resultados_cta_visible: 'true',
+    resultados_page_activa: 'true',
+  });
+  const [resConfigSaving, setResConfigSaving] = useState(false);
+  const [resConfigSaved, setResConfigSaved] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!accessToken) return;
     try {
@@ -267,6 +280,40 @@ export default function AdminDashboard() {
     const interval = setInterval(fetchData, 30 * 1000);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  // ★ Fetch & Save Resultados Config
+  useEffect(() => {
+    if (!accessToken) return;
+    const fetchResConfig = async () => {
+      try {
+        const resp = await adminFetch('/api/admin/config/resultados', {}, accessToken);
+        if (resp.ok) {
+          const data = await resp.json();
+          setResConfig(data);
+        }
+      } catch {}
+    };
+    fetchResConfig();
+  }, [accessToken]);
+
+  const saveResConfig = async () => {
+    if (!accessToken) return;
+    setResConfigSaving(true);
+    setResConfigSaved(false);
+    try {
+      const resp = await adminFetch('/api/admin/config/resultados', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(resConfig),
+      }, accessToken);
+      if (resp.ok) {
+        setResConfigSaved(true);
+        setTimeout(() => setResConfigSaved(false), 3000);
+      }
+    } catch {} finally {
+      setResConfigSaving(false);
+    }
+  };
 
   if (isLoading && !stats) {
     return (
@@ -551,6 +598,118 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )) : <div className="p-8 text-center text-gray-500">No hay datos de tipsters</div>}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ CONFIG RESULTADOS PÚBLICOS ═══ */}
+      <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Globe className="w-5 h-5 text-teal-400" /> Página Resultados Públicos
+          </h2>
+          <div className="flex items-center gap-2">
+            {resConfigSaved && (
+              <span className="text-xs text-emerald-400 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Guardado
+              </span>
+            )}
+            <button onClick={saveResConfig} disabled={resConfigSaving}
+              className="px-4 py-1.5 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-white rounded-lg flex items-center gap-2 text-sm font-medium">
+              <Save className="w-4 h-4" /> {resConfigSaving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* Page active toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm font-medium">Página Activa</p>
+              <p className="text-gray-500 text-xs">Si se desactiva, /resultados no mostrará datos</p>
+            </div>
+            <button onClick={() => setResConfig(c => ({ ...c, resultados_page_activa: c.resultados_page_activa === 'true' ? 'false' : 'true' }))}
+              className={`w-12 h-6 rounded-full transition-all relative ${resConfig.resultados_page_activa === 'true' ? 'bg-teal-500' : 'bg-slate-600'}`}>
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${resConfig.resultados_page_activa === 'true' ? 'left-6' : 'left-0.5'}`} />
+            </button>
+          </div>
+
+          {/* Periodo default */}
+          <div>
+            <p className="text-white text-sm font-medium mb-2">Período por defecto</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'hoy', label: 'Hoy' },
+                { key: 'ayer', label: 'Ayer' },
+                { key: 'semana', label: '7 días' },
+                { key: 'mes', label: '30 días' },
+                { key: 'trimestre', label: '90 días' },
+              ].map(p => (
+                <button key={p.key}
+                  onClick={() => setResConfig(c => ({ ...c, resultados_periodo_default: p.key }))}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    resConfig.resultados_periodo_default === p.key
+                      ? 'bg-teal-500 text-white'
+                      : 'bg-slate-700 text-gray-400 hover:bg-slate-600'
+                  }`}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Toggles grid */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[
+              { key: 'resultados_mostrar_pendientes', label: 'Mostrar En Juego', desc: 'Apuestas pendientes visibles' },
+              { key: 'resultados_mostrar_top_tipsters', label: 'Mostrar Top Tipsters', desc: 'Ranking de tipsters del período' },
+              { key: 'resultados_cta_visible', label: 'CTA Registro', desc: 'Botón "Comenzar Gratis" visible' },
+            ].map(toggle => (
+              <div key={toggle.key} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                <div>
+                  <p className="text-white text-sm font-medium">{toggle.label}</p>
+                  <p className="text-gray-500 text-[11px]">{toggle.desc}</p>
+                </div>
+                <button 
+                  onClick={() => setResConfig(c => ({ ...c, [toggle.key]: (c as any)[toggle.key] === 'true' ? 'false' : 'true' }))}
+                  className={`w-10 h-5 rounded-full transition-all relative ${(resConfig as any)[toggle.key] === 'true' ? 'bg-teal-500' : 'bg-slate-600'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${(resConfig as any)[toggle.key] === 'true' ? 'left-5' : 'left-0.5'}`} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Deportes */}
+          <div>
+            <p className="text-white text-sm font-medium mb-2">Deportes habilitados en filtros</p>
+            <div className="flex flex-wrap gap-2">
+              {['Fútbol', 'Tenis', 'Básquet', 'eSports', 'Hockey', 'Béisbol'].map(d => {
+                const enabled = resConfig.resultados_deportes_habilitados.includes(d);
+                return (
+                  <button key={d}
+                    onClick={() => {
+                      setResConfig(c => {
+                        const list = c.resultados_deportes_habilitados.split(',').filter(Boolean);
+                        const updated = enabled ? list.filter(x => x !== d) : [...list, d];
+                        return { ...c, resultados_deportes_habilitados: updated.join(',') };
+                      });
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                      enabled ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-slate-700 text-gray-500'
+                    }`}>
+                    {d}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Preview link */}
+          <div className="pt-2 border-t border-slate-700">
+            <a href="/resultados" target="_blank" rel="noopener noreferrer"
+              className="text-sm text-teal-400 hover:text-teal-300 flex items-center gap-1.5">
+              <Eye className="w-4 h-4" /> Ver página de resultados →
+            </a>
           </div>
         </div>
       </div>
