@@ -856,15 +856,9 @@ export default function DashboardPage() {
           <p style={{ fontSize: '9px', color: '#00D1B2', marginTop: '2px' }}>{data.profilesAvailable.length} perfilados IA</p>
         </div>
 
-        {/* APUESTAS HOY - with IA score overlay */}
-        <div className="rounded-2xl p-4 animate-fadeInUp stagger-2"
-          style={{
-            background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(12px)',
-            border: '2px solid rgba(255, 187, 0, 0.5)',
-            boxShadow: '0 0 20px rgba(255, 187, 0, 0.15)',
-            animation: 'goldPulse 4s ease-in-out infinite',
-          }}>
-          <div className="flex items-start justify-between mb-2">
+        {/* APUESTAS HOY */}
+        <div className="stat-card animate-fadeInUp stagger-2" style={{ borderColor: 'rgba(255, 187, 0, 0.5)', borderWidth: '2px', boxShadow: '0 0 20px rgba(255, 187, 0, 0.15)' }}>
+          <div className="flex items-start justify-between mb-3">
             <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,187,0,0.15)' }}>
               <Calendar className="h-5 w-5 text-[#FFBB00]" />
             </div>
@@ -873,9 +867,8 @@ export default function DashboardPage() {
                 background: 'linear-gradient(135deg, #DC2626, #EF4444)', color: 'white',
                 fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px',
                 display: 'flex', alignItems: 'center', gap: '4px',
-                animation: 'livePulse 1.5s infinite',
               }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'white' }} /> EN VIVO
+                <span className="animate-pulse" style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'white', display: 'inline-block' }} /> EN VIVO
               </span>
             )}
           </div>
