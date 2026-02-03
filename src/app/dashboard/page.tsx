@@ -8,7 +8,7 @@ import {
   Flame, Shield, Eye, Activity, BarChart3, MessageCircle, Phone,
   Volume2, VolumeX, ChevronDown, ChevronUp, Award, Percent, Info
 } from 'lucide-react';
-import { dashboardAPI } from '@/lib/api';
+import { dashboardAPI, picksAPI, alertasAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 
 // ============================================================================
@@ -673,6 +673,8 @@ export default function DashboardPage() {
     apuestasRecientes: [], iaVersion: '2.0', profilesAvailable: []
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [liveData, setLiveData] = useState<{ live: any[]; urgentes: any[]; total_live: number; total_urgentes: number }>({ live: [], urgentes: [], total_live: 0, total_urgentes: 0 });
+  const [rachasData, setRachasData] = useState<{ alertas: any[]; total: number }>({ alertas: [], total: 0 });
   const prevApuestasRef = useRef<string>('');
   const { soundEnabled, setSoundEnabled, playNewPick, playWin, playLoss } = useSoundNotifications();
 
@@ -724,6 +726,17 @@ export default function DashboardPage() {
           iaVersion: dashboardData.ia_version || '2.0',
           profilesAvailable: dashboardData.profiles_available || [],
         });
+
+        // ★ FASE 2: Live picks + Rachas alerts (non-blocking)
+        try {
+          const [liveRes, rachasRes] = await Promise.all([
+            picksAPI.getLive().catch(() => ({ live: [], urgentes: [], total_live: 0, total_urgentes: 0 })),
+            alertasAPI.getRachas().catch(() => ({ alertas: [], total: 0 })),
+          ]);
+          setLiveData(liveRes);
+          setRachasData(rachasRes);
+        } catch (_) {}
+
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -925,6 +938,103 @@ export default function DashboardPage() {
           <p style={{ fontSize: '9px', color: '#64748B', marginTop: '2px' }}>{iaScores.length} picks analizados</p>
         </div>
       </div>
+
+      {/* ============================================================ */}
+      {/* 🔴 LIVE PICKS — URGENTES (Fase 2-D)                            */}
+      {/* ============================================================ */}
+      {liveData.total_live > 0 && (
+        <div className="rounded-2xl overflow-hidden animate-fadeInUp" style={{
+          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(255, 187, 0, 0.05))',
+          border: '1px solid rgba(239, 68, 68, 0.25)',
+          animation: 'liveBorderPulse 2s ease-in-out infinite',
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: '12px 16px',
+            background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.12), transparent)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                background: 'rgba(239, 68, 68, 0.2)', padding: '4px 10px',
+                borderRadius: '8px', fontSize: '11px', fontWeight: 700, color: '#EF4444',
+              }}>
+                <span style={{
+                  width: '7px', height: '7px', borderRadius: '50%',
+                  background: '#EF4444', display: 'inline-block',
+                  animation: 'livePulse 1.5s ease-in-out infinite',
+                }} />
+                EN VIVO
+              </span>
+              <span style={{ fontSize: '14px', fontWeight: 700, color: 'white' }}>
+                {liveData.total_live} pick{liveData.total_live > 1 ? 's' : ''} en juego ahora
+              </span>
+            </div>
+            {liveData.total_urgentes > 0 && (
+              <span style={{
+                fontSize: '10px', fontWeight: 700, padding: '3px 8px',
+                borderRadius: '6px', background: 'rgba(255, 187, 0, 0.15)',
+                color: '#FFBB00', border: '1px solid rgba(255, 187, 0, 0.3)',
+              }}>
+                ⚡ {liveData.total_urgentes} urgente{liveData.total_urgentes > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          
+          {/* Live picks list */}
+          <div style={{ padding: '8px 12px 12px' }}>
+            {liveData.live.slice(0, 4).map((pick: any, idx: number) => (
+              <div key={pick.id} style={{
+                padding: '10px 12px', borderRadius: '10px', marginBottom: idx < Math.min(liveData.live.length, 4) - 1 ? '6px' : 0,
+                background: pick.is_urgente ? 'rgba(255, 187, 0, 0.06)' : 'rgba(30, 41, 59, 0.5)',
+                border: `1px solid ${pick.is_urgente ? 'rgba(255, 187, 0, 0.2)' : 'rgba(255,255,255,0.04)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#00D1B2' }}>{pick.tipster}</span>
+                    {pick.is_urgente && (
+                      <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(255, 187, 0, 0.15)', color: '#FFBB00' }}>
+                        ⚡ URGENTE
+                      </span>
+                    )}
+                    {pick.hora_partido && (
+                      <span style={{ fontSize: '10px', color: '#EF4444', fontWeight: 600 }}>● {pick.hora_partido}</span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {pick.apuesta}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  {/* Mini NeuroScore */}
+                  <div style={{
+                    width: '32px', height: '32px', borderRadius: '50%',
+                    border: `2px solid ${pick.neuroscore >= 75 ? '#00D1B2' : pick.neuroscore >= 50 ? '#FFBB00' : '#EF4444'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '10px', fontWeight: 700, fontFamily: 'monospace',
+                    color: pick.neuroscore >= 75 ? '#00D1B2' : pick.neuroscore >= 50 ? '#FFBB00' : '#EF4444',
+                  }}>
+                    {pick.neuroscore}
+                  </div>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: 'white', fontFamily: 'monospace' }}>
+                    @{pick.cuota}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {liveData.total_live > 4 && (
+              <Link href="/dashboard/apuestas" style={{
+                display: 'block', textAlign: 'center', paddingTop: '8px',
+                fontSize: '12px', color: '#00D1B2', textDecoration: 'none',
+              }}>
+                Ver {liveData.total_live - 4} más →
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* 🏆 PICK DEL DÍA IA                                           */}
@@ -1364,6 +1474,81 @@ export default function DashboardPage() {
       </div>
 
       {/* ============================================================ */}
+      {/* 🔥 ALERTAS DE RACHAS (Fase 2-F)                                */}
+      {/* ============================================================ */}
+      {rachasData.total > 0 && (
+        <div className="rounded-2xl p-4 animate-fadeInUp" style={{
+          background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8))',
+          border: '1px solid rgba(255, 187, 0, 0.15)',
+          backdropFilter: 'blur(12px)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(255, 187, 0, 0.1)' }}>
+                <Flame className="h-5 w-5 text-[#FFBB00]" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'white' }}>Alertas de Rachas</h3>
+                <p style={{ fontSize: '11px', color: '#94A3B8' }}>
+                  {rachasData.alertas.filter((a: any) => a.tipo === 'positiva').length} positivas · {rachasData.alertas.filter((a: any) => a.tipo === 'negativa').length} negativas
+                </p>
+              </div>
+            </div>
+            <span style={{
+              fontSize: '10px', fontWeight: 700, padding: '3px 10px',
+              borderRadius: '8px', background: 'rgba(255, 187, 0, 0.1)',
+              color: '#FFBB00', border: '1px solid rgba(255, 187, 0, 0.2)',
+            }}>
+              {rachasData.total} alerta{rachasData.total > 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gap: '8px' }}>
+            {rachasData.alertas.slice(0, 6).map((alerta: any, idx: number) => (
+              <div key={idx} style={{
+                padding: '12px 14px', borderRadius: '10px',
+                background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 178, 0.05)' : 'rgba(239, 68, 68, 0.05)',
+                borderLeft: `3px solid ${alerta.color || (alerta.tipo === 'positiva' ? '#00D1B2' : '#EF4444')}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                    <span style={{
+                      fontSize: '12px', fontWeight: 700,
+                      color: alerta.tipo === 'positiva' ? '#00D1B2' : '#EF4444',
+                    }}>
+                      {alerta.tipster}
+                    </span>
+                    <span style={{
+                      fontSize: '9px', padding: '1px 6px', borderRadius: '4px', fontWeight: 700,
+                      background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 178, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      color: alerta.tipo === 'positiva' ? '#00D1B2' : '#EF4444',
+                    }}>
+                      {alerta.racha > 0 ? `🔥 W${alerta.racha}` : `⚠️ L${Math.abs(alerta.racha)}`}
+                    </span>
+                    {alerta.severidad === 'alta' && (
+                      <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', fontWeight: 700, background: 'rgba(255, 187, 0, 0.15)', color: '#FFBB00' }}>
+                        ¡IMPORTANTE!
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#94A3B8' }}>{alerta.mensaje}</p>
+                </div>
+                <div style={{
+                  padding: '6px 10px', borderRadius: '8px', flexShrink: 0,
+                  background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 178, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                  fontSize: '10px', color: alerta.tipo === 'positiva' ? '#00D1B2' : '#EF4444',
+                  fontWeight: 600, textAlign: 'center', maxWidth: '120px',
+                }}>
+                  {alerta.accion}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
       {/* FOOTER                                                        */}
       {/* ============================================================ */}
       <div className="flex items-center justify-between text-xs text-[#64748B] pt-4 border-t border-slate-800/50">
@@ -1437,6 +1622,10 @@ export default function DashboardPage() {
         @keyframes iaPulse {
           0%, 100% { box-shadow: 0 0 0 rgba(0,209,178,0); }
           50% { box-shadow: 0 0 12px rgba(0,209,178,0.15); }
+        }
+        @keyframes liveBorderPulse {
+          0%, 100% { border-color: rgba(239,68,68,0.25); box-shadow: 0 0 0 rgba(239,68,68,0); }
+          50% { border-color: rgba(239,68,68,0.5); box-shadow: 0 0 15px rgba(239,68,68,0.08); }
         }
       `}</style>
     </div>
