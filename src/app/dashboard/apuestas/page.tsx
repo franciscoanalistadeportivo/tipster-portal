@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react';
 import { 
   Calendar, CheckCircle, XCircle, Clock, Zap, TrendingUp, 
   TrendingDown, Filter, Activity, Eye, Target, BarChart3, 
-  Brain, Shield, ChevronDown, ChevronUp
+  Brain, Shield, ChevronDown, ChevronUp, AlertTriangle
 } from 'lucide-react';
 import { apuestasAPI } from '@/lib/api';
 
+// ============================================================================
+// TYPES
+// ============================================================================
 interface Apuesta {
   id: number;
   tipster_alias: string;
@@ -23,6 +26,19 @@ interface Apuesta {
   tipo_mercado?: string;
   hora_partido?: string;
   imagen_url?: string;
+}
+
+interface IAAnalysis {
+  score: number;
+  zona: string;
+  zona_color: string;
+  factores: { nombre: string; valor: number; impacto: string }[];
+  veredicto: string;
+  stake_mult: number;
+  alerts: string[];
+  ev: number;
+  tipster_wr?: number;
+  tipster_roi?: number;
 }
 
 // ============================================================================
@@ -66,38 +82,165 @@ const getMercadoLabel = (tipo: string | undefined) => {
   return map[tipo] || { label: tipo.slice(0, 6), color: '#64748B' };
 };
 
-/**
- * Determina si un partido está LIVE, pendiente, o sin hora.
- * - LIVE: hora_partido ya pasó (se está jugando o jugó hoy)
- * - PRÓXIMO: hora_partido está en el futuro hoy
- * - null: no tiene hora_partido
- */
 const getEstadoPartido = (hora_partido?: string): { estado: 'LIVE' | 'PROXIMO' | 'SIN_HORA'; texto: string; color: string } => {
   if (!hora_partido) {
     return { estado: 'SIN_HORA', texto: 'Sin hora', color: '#94A3B8' };
   }
-
   try {
     const [h, m] = hora_partido.split(':').map(Number);
     const ahora = new Date();
     const horaPartidoMinutos = h * 60 + m;
     const ahoraMinutos = ahora.getHours() * 60 + ahora.getMinutes();
-    
-    // Si la hora del partido ya pasó (con margen de ~2h para duración del partido)
     if (ahoraMinutos >= horaPartidoMinutos) {
       return { estado: 'LIVE', texto: `🔴 EN VIVO · ${hora_partido}`, color: '#EF4444' };
     }
-    
-    // Si falta menos de 30 min
     if (horaPartidoMinutos - ahoraMinutos <= 30) {
       return { estado: 'PROXIMO', texto: `⚡ POR INICIAR · ${hora_partido}`, color: '#FFBB00' };
     }
-    
-    // Futuro
     return { estado: 'PROXIMO', texto: `🕐 ${hora_partido} CL`, color: '#FFBB00' };
   } catch {
     return { estado: 'SIN_HORA', texto: hora_partido, color: '#94A3B8' };
   }
+};
+
+// ============================================================================
+// COMPONENTE: NeuroScore Badge (circular score)
+// ============================================================================
+const NeuroScoreBadge = ({ 
+  score, zona, zona_color 
+}: { 
+  score: number; zona: string; zona_color: string 
+}) => {
+  const colorMap: Record<string, string> = {
+    'green': '#00D1B2',
+    'yellow': '#FFBB00', 
+    'red': '#EF4444',
+  };
+  const color = colorMap[zona_color] || '#94A3B8';
+  const radius = 18;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+
+  return (
+    <div className="flex flex-col items-center gap-0.5" title={`NeuroScore: ${score}/100 — ${zona}`}>
+      <div className="relative" style={{ width: '48px', height: '48px' }}>
+        <svg width="48" height="48" viewBox="0 0 48 48" className="transform -rotate-90">
+          {/* Background circle */}
+          <circle
+            cx="24" cy="24" r={radius}
+            fill="none"
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth="3"
+          />
+          {/* Score arc */}
+          <circle
+            cx="24" cy="24" r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-sm font-bold font-mono" style={{ color }}>
+            {score}
+          </span>
+        </div>
+      </div>
+      <span className="text-[9px] font-bold tracking-wide" style={{ color }}>
+        {zona === 'ORO' ? '🟢 ORO' : zona === 'NEUTRA' ? '🟡 NEU' : zona === 'BLOQUEADO' ? '🚫' : '🔴 RIE'}
+      </span>
+    </div>
+  );
+};
+
+// ============================================================================
+// COMPONENTE: NeuroScore Detail (expandible con factores)
+// ============================================================================
+const NeuroScoreDetail = ({ analysis }: { analysis: IAAnalysis }) => {
+  const [open, setOpen] = useState(false);
+
+  const impactoColor: Record<string, string> = {
+    'muy_positivo': '#00D1B2',
+    'positivo': '#34D399',
+    'neutral': '#94A3B8',
+    'negativo': '#F59E0B',
+    'muy_negativo': '#EF4444',
+  };
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#00D1B2] transition-colors"
+      >
+        <Brain className="h-3 w-3" />
+        <span>NeuroScore {analysis.score}/100</span>
+        {analysis.ev > 0 && (
+          <span className="text-[#00D1B2] font-mono">+{analysis.ev}% EV</span>
+        )}
+        {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+      </button>
+      
+      {open && (
+        <div className="mt-2 p-3 rounded-lg bg-[#0F172A]/70 border border-white/5 space-y-2.5">
+          {/* Veredicto */}
+          <p className="text-sm font-medium" style={{ 
+            color: analysis.zona === 'ORO' ? '#00D1B2' : analysis.zona === 'NEUTRA' ? '#FFBB00' : '#EF4444'
+          }}>
+            {analysis.veredicto}
+          </p>
+
+          {/* Factores */}
+          <div className="space-y-1.5">
+            {analysis.factores.map((f, i) => (
+              <div key={i} className="flex items-center justify-between text-xs">
+                <span className="text-[#94A3B8]">{f.nombre}</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-16 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ 
+                        width: `${Math.min(100, Math.max(5, f.valor))}%`,
+                        background: impactoColor[f.impacto] || '#94A3B8',
+                      }} 
+                    />
+                  </div>
+                  <span className="font-mono w-8 text-right" style={{ color: impactoColor[f.impacto] || '#94A3B8' }}>
+                    {f.valor}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Alertas */}
+          {analysis.alerts.length > 0 && (
+            <div className="space-y-1 pt-1 border-t border-white/5">
+              {analysis.alerts.map((alert, i) => (
+                <div key={i} className="flex items-start gap-1.5 text-xs">
+                  <AlertTriangle className="h-3 w-3 text-[#F59E0B] mt-0.5 flex-shrink-0" />
+                  <span className="text-[#F59E0B]">{alert}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Stats tipster */}
+          {(analysis.tipster_wr || analysis.tipster_roi) && (
+            <div className="flex gap-3 pt-1 border-t border-white/5 text-[10px] text-[#64748B]">
+              {analysis.tipster_wr && <span>WR Global: {analysis.tipster_wr}%</span>}
+              {analysis.tipster_roi && <span>ROI: {analysis.tipster_roi}%</span>}
+              <span>×{analysis.stake_mult} stake</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 // ============================================================================
@@ -143,9 +286,13 @@ const KPICard = ({
 );
 
 // ============================================================================
-// COMPONENTE: Card Apuesta PENDIENTE (destacada dorada)
+// COMPONENTE: Card Apuesta PENDIENTE (con NeuroScore)
 // ============================================================================
-const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) => {
+const CardPendiente = ({ 
+  apuesta, index, iaData 
+}: { 
+  apuesta: Apuesta; index: number; iaData?: IAAnalysis 
+}) => {
   const mercado = getMercadoLabel(apuesta.tipo_mercado);
   const estadoPartido = getEstadoPartido(apuesta.hora_partido);
   const isLive = estadoPartido.estado === 'LIVE';
@@ -173,10 +320,9 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
       }} />
 
       <div className="pl-3">
-        {/* Header: Badge + Tipster + Cuota */}
+        {/* Header: Badge + Tipster + Cuota + NeuroScore */}
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Badge LIVE o EN JUEGO */}
+          <div className="flex items-center gap-2 flex-wrap flex-1">
             {isLive ? (
               <span className="live-badge" style={{
                 background: 'linear-gradient(135deg, #EF4444, #DC2626)',
@@ -219,9 +365,20 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
               </span>
             )}
           </div>
-          <span className="font-mono font-bold text-lg" style={{ color: isLive ? '#EF4444' : '#FFBB00' }}>
-            @{Number(apuesta.cuota || 0).toFixed(2)}
-          </span>
+
+          {/* NeuroScore + Cuota */}
+          <div className="flex items-center gap-3">
+            {iaData && (
+              <NeuroScoreBadge 
+                score={iaData.score} 
+                zona={iaData.zona} 
+                zona_color={iaData.zona_color} 
+              />
+            )}
+            <span className="font-mono font-bold text-lg" style={{ color: isLive ? '#EF4444' : '#FFBB00' }}>
+              @{Number(apuesta.cuota || 0).toFixed(2)}
+            </span>
+          </div>
         </div>
 
         {/* Apuesta */}
@@ -229,7 +386,7 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
           {apuesta.apuesta}
         </p>
 
-        {/* Imagen capture si existe */}
+        {/* Imagen capture */}
         {apuesta.imagen_url && (
           <ImageCapture url={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`} />
         )}
@@ -237,7 +394,6 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
         {/* Footer: Hora del partido */}
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
-            {/* Hora del partido con estado */}
             <span className="flex items-center gap-1 font-mono font-bold" style={{ color: estadoPartido.color }}>
               {estadoPartido.texto}
             </span>
@@ -253,6 +409,9 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
             </span>
           )}
         </div>
+
+        {/* NeuroScore detalle expandible */}
+        {iaData && <NeuroScoreDetail analysis={iaData} />}
 
         {/* Barra progreso animada */}
         <div style={{ 
@@ -273,9 +432,13 @@ const CardPendiente = ({ apuesta, index }: { apuesta: Apuesta; index: number }) 
 };
 
 // ============================================================================
-// COMPONENTE: Card Apuesta RESUELTA
+// COMPONENTE: Card Apuesta RESUELTA (con NeuroScore)
 // ============================================================================
-const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) => {
+const CardResuelta = ({ 
+  apuesta, index, iaData 
+}: { 
+  apuesta: Apuesta; index: number; iaData?: IAAnalysis 
+}) => {
   const [showAnalisis, setShowAnalisis] = useState(false);
   const isGanada = apuesta.resultado === 'GANADA';
   const mercado = getMercadoLabel(apuesta.tipo_mercado);
@@ -317,8 +480,11 @@ const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) =
           )}
         </div>
 
-        {/* Datos numéricos */}
+        {/* NeuroScore + Datos numéricos */}
         <div className="flex items-center gap-4 lg:gap-6">
+          {iaData && (
+            <NeuroScoreBadge score={iaData.score} zona={iaData.zona} zona_color={iaData.zona_color} />
+          )}
           <div className="text-center">
             <p className="text-[10px] text-[#64748B] uppercase">Cuota</p>
             <p className="text-xl font-bold text-white font-mono">@{Number(apuesta.cuota || 0).toFixed(2)}</p>
@@ -337,8 +503,10 @@ const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) =
         </div>
       </div>
 
-      {/* Análisis IA colapsable */}
-      {apuesta.analisis && (
+      {/* NeuroScore detalle O análisis IA clásico */}
+      {iaData ? (
+        <NeuroScoreDetail analysis={iaData} />
+      ) : apuesta.analisis ? (
         <div className="mt-3">
           <button
             onClick={() => setShowAnalisis(!showAnalisis)}
@@ -354,13 +522,13 @@ const CardResuelta = ({ apuesta, index }: { apuesta: Apuesta; index: number }) =
             </div>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
 
 // ============================================================================
-// COMPONENTE: Imagen Capture (click to expand)
+// COMPONENTE: Imagen Capture
 // ============================================================================
 const ImageCapture = ({ url }: { url: string }) => {
   const [open, setOpen] = useState(false);
@@ -392,13 +560,17 @@ const ImageCapture = ({ url }: { url: string }) => {
 };
 
 // ============================================================================
-// PÁGINA PRINCIPAL
+// PÁGINA PRINCIPAL — Centro de Operaciones con NeuroScore
 // ============================================================================
 export default function ApuestasPage() {
   const [apuestas, setApuestas] = useState<Apuesta[]>([]);
   const [fecha, setFecha] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<'todas' | 'ia' | 'pendientes' | 'ganadas'>('todas');
+  const [filter, setFilter] = useState<'todas' | 'ia' | 'pendientes' | 'ganadas' | 'oro'>('todas');
+  
+  // ★ NUEVO: Estado para análisis IA (NeuroScore por apuesta)
+  const [iaAnalysis, setIaAnalysis] = useState<Record<number, IAAnalysis>>({});
+  const [iaLoading, setIaLoading] = useState(false);
 
   useEffect(() => {
     const fetchApuestas = async () => {
@@ -415,7 +587,33 @@ export default function ApuestasPage() {
     fetchApuestas();
   }, []);
 
-  // Normalizar: null/undefined/vacío = PENDIENTE
+  // ★ NUEVO: Cargar NeuroScore cuando hay apuestas
+  useEffect(() => {
+    if (apuestas.length === 0) return;
+    
+    const fetchIA = async () => {
+      setIaLoading(true);
+      try {
+        const data = await apuestasAPI.getAnalisisHoy();
+        if (data?.analisis) {
+          // La API devuelve { analisis: { [apuesta_id]: IAAnalysis } }
+          const parsed: Record<number, IAAnalysis> = {};
+          for (const [id, analysis] of Object.entries(data.analisis)) {
+            parsed[Number(id)] = analysis as IAAnalysis;
+          }
+          setIaAnalysis(parsed);
+        }
+      } catch (error) {
+        // NeuroScore es mejora visual, no bloquea funcionalidad
+        console.warn('NeuroScore no disponible:', error);
+      } finally {
+        setIaLoading(false);
+      }
+    };
+    fetchIA();
+  }, [apuestas]);
+
+  // Normalizar
   const apuestasNorm = apuestas.map(a => ({
     ...a,
     resultado: (a.resultado && a.resultado !== '' && a.resultado !== 'NULA') 
@@ -426,11 +624,15 @@ export default function ApuestasPage() {
     if (filter === 'ia') return a.filtro_claude === 'APROBADA';
     if (filter === 'pendientes') return a.resultado === 'PENDIENTE';
     if (filter === 'ganadas') return a.resultado === 'GANADA';
+    // ★ NUEVO: Filtro ZONA ORO (NeuroScore >= 75)
+    if (filter === 'oro') return (iaAnalysis[a.id]?.score || 0) >= 75;
     return true;
   });
 
   const pendientes = filtradas.filter(a => a.resultado === 'PENDIENTE');
   const resueltas = filtradas.filter(a => a.resultado === 'GANADA' || a.resultado === 'PERDIDA');
+
+  const oroCount = apuestasNorm.filter(a => (iaAnalysis[a.id]?.score || 0) >= 75).length;
 
   const stats = {
     total: apuestasNorm.length,
@@ -489,6 +691,17 @@ export default function ApuestasPage() {
                   {stats.ganadas} ganadas
                 </span>
               )}
+              {/* ★ NUEVO: Badge NeuroScore activo */}
+              {Object.keys(iaAnalysis).length > 0 && (
+                <span style={{
+                  background: 'rgba(139, 92, 246, 0.15)',
+                  color: '#A78BFA', fontSize: '10px', fontWeight: 700,
+                  padding: '2px 8px', borderRadius: '10px',
+                  display: 'flex', alignItems: 'center', gap: '3px',
+                }}>
+                  <Brain className="h-3 w-3" /> NeuroScore ON
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -516,7 +729,7 @@ export default function ApuestasPage() {
           icono={<Activity className="h-4 w-4 text-[#FFBB00]" />}
         />
         
-        {/* Win Rate - card especial */}
+        {/* Win Rate */}
         <div className="rounded-2xl p-4 col-span-2 lg:col-span-1" style={{
           background: winRate >= 50 
             ? 'linear-gradient(135deg, rgba(0, 209, 178, 0.1), rgba(30, 41, 59, 0.7))'
@@ -542,10 +755,11 @@ export default function ApuestasPage() {
         </div>
       </div>
 
-      {/* FILTROS */}
+      {/* FILTROS (★ NUEVO: filtro Zona Oro) */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {[
           { key: 'todas', label: `Todas (${stats.total})`, color: '#00D1B2' },
+          { key: 'oro', label: `🟢 Oro (${oroCount})`, color: '#A855F7' },
           { key: 'ia', label: `IA ✓ (${stats.iaApproved})`, color: '#FFDD57' },
           { key: 'pendientes', label: `En Juego (${stats.pendientes})`, color: '#FFBB00' },
           { key: 'ganadas', label: `Ganadas (${stats.ganadas})`, color: '#00D1B2' },
@@ -556,7 +770,7 @@ export default function ApuestasPage() {
             className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all"
             style={filter === tab.key ? {
               background: tab.color,
-              color: tab.key === 'ia' || tab.key === 'pendientes' ? '#000' : '#fff',
+              color: ['ia', 'pendientes'].includes(tab.key) ? '#000' : '#fff',
               boxShadow: `0 0 15px ${tab.color}30`,
             } : {
               background: 'rgba(30, 41, 59, 0.7)',
@@ -584,7 +798,7 @@ export default function ApuestasPage() {
           {/* PENDIENTES */}
           {pendientes.length > 0 && (
             <div>
-              {(filter === 'todas') && (
+              {(filter === 'todas' || filter === 'oro') && (
                 <div className="flex items-center gap-2 mb-3">
                   {pendientes.some(a => getEstadoPartido(a.hora_partido).estado === 'LIVE') && (
                     <span className="live-dot-anim" style={{
@@ -617,20 +831,26 @@ export default function ApuestasPage() {
                 </div>
               )}
               <div className="space-y-3">
-                {/* LIVE primero, luego pendientes */}
                 {[...pendientes].sort((a, b) => {
                   const aLive = getEstadoPartido(a.hora_partido).estado === 'LIVE' ? 0 : 1;
                   const bLive = getEstadoPartido(b.hora_partido).estado === 'LIVE' ? 0 : 1;
-                  return aLive - bLive;
+                  if (aLive !== bLive) return aLive - bLive;
+                  // ★ NUEVO: secundariamente ordenar por NeuroScore
+                  return (iaAnalysis[b.id]?.score || 0) - (iaAnalysis[a.id]?.score || 0);
                 }).map((a, i) => (
-                  <CardPendiente key={a.id} apuesta={a} index={i} />
+                  <CardPendiente 
+                    key={a.id} 
+                    apuesta={a} 
+                    index={i} 
+                    iaData={iaAnalysis[a.id]}
+                  />
                 ))}
               </div>
             </div>
           )}
 
           {/* SEPARADOR */}
-          {pendientes.length > 0 && resueltas.length > 0 && filter === 'todas' && (
+          {pendientes.length > 0 && resueltas.length > 0 && (filter === 'todas' || filter === 'oro') && (
             <div className="flex items-center gap-2 pt-2">
               <CheckCircle className="h-4 w-4 text-[#64748B]" />
               <span className="text-sm font-medium text-[#64748B]">
@@ -647,7 +867,12 @@ export default function ApuestasPage() {
           {resueltas.length > 0 && (
             <div className="space-y-3">
               {resueltas.map((a, i) => (
-                <CardResuelta key={a.id} apuesta={a} index={i} />
+                <CardResuelta 
+                  key={a.id} 
+                  apuesta={a} 
+                  index={i} 
+                  iaData={iaAnalysis[a.id]}
+                />
               ))}
             </div>
           )}
