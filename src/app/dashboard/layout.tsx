@@ -97,13 +97,13 @@ export default function DashboardLayout({
           fetch(`${API_URL}/api/public/dashboard-ia`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
         ]);
 
-        const apuestas = dashRes?.apuestas?.apuestas || [];
+        const apuestas = (dashRes as any)?.apuestas?.apuestas || [];
         const pendientes = apuestas.filter((a: any) => !a.resultado || a.resultado === 'PENDIENTE' || a.resultado === '').length;
         const picksOro = (liveRes.live || []).filter((p: any) => p.neuroscore >= 75).length;
 
         setBadges({
           apuestasPendientes: pendientes,
-          picksOro: picksOro || (dashRes?.apuestas?.apuestas || []).filter((a: any) => a.ia_analysis?.zona === 'ORO').length,
+          picksOro: picksOro || apuestas.filter((a: any) => a.ia_analysis?.zona === 'ORO').length,
           alertasRachas: rachasRes.total || 0,
           livePicks: liveRes.total_live || 0,
         });
