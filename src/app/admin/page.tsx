@@ -5,7 +5,7 @@ import { useAuth, adminFetch } from './layout';
 import { 
   AlertTriangle, TrendingUp, TrendingDown, Users, Calendar,
   CheckCircle, XCircle, RefreshCw, Trophy, Target,
-  DollarSign, Activity, Clock
+  DollarSign, Activity, Clock, Wifi, Crown, Star
 } from 'lucide-react';
 
 // ============================================================
@@ -14,8 +14,9 @@ import {
 
 interface DashboardStats {
   total_usuarios?: number;
-  usuarios_activos?: number;
-  total_tipsters?: number;
+  usuarios_premium?: number;
+  usuarios_trial?: number;
+  usuarios_online?: number;
   tipsters_activos?: number;
   total_apuestas?: number;
   apuestas_pendientes?: number;
@@ -43,6 +44,7 @@ interface ApuestaReciente {
   fecha: string;
   tipster_id: number;
   tipster_nombre?: string;
+  tipster_alias?: string;
   apuesta: string;
   cuota: number;
   stake_ia: number;
@@ -50,6 +52,14 @@ interface ApuestaReciente {
   ganancia_neta: number;
   tipo_mercado?: string;
   racha_actual?: number;
+}
+
+interface UsuarioActivo {
+  id: number;
+  email: string;
+  nombre: string;
+  plan: string;
+  last_active: string;
 }
 
 // ============================================================
@@ -69,22 +79,25 @@ const StatCard = ({
   icon: Icon, 
   label, 
   value, 
+  subtitle,
   color = 'teal',
   trend
 }: { 
   icon: React.ElementType; 
   label: string; 
   value: string | number; 
-  color?: 'teal' | 'emerald' | 'amber' | 'red' | 'blue' | 'purple';
+  subtitle?: string;
+  color?: 'teal' | 'emerald' | 'amber' | 'red' | 'blue' | 'purple' | 'green';
   trend?: 'up' | 'down' | null;
 }) => {
-  const colorClasses = {
+  const colorClasses: Record<string, string> = {
     teal: 'from-teal-500 to-teal-600',
     emerald: 'from-emerald-500 to-emerald-600',
     amber: 'from-amber-500 to-amber-600',
     red: 'from-red-500 to-red-600',
     blue: 'from-blue-500 to-blue-600',
-    purple: 'from-purple-500 to-purple-600'
+    purple: 'from-purple-500 to-purple-600',
+    green: 'from-green-500 to-green-600',
   };
 
   return (
@@ -101,6 +114,7 @@ const StatCard = ({
       </div>
       <p className="text-gray-400 text-sm mb-1">{label}</p>
       <p className="text-2xl font-bold text-white">{value}</p>
+      {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
     </div>
   );
 };
@@ -140,6 +154,46 @@ const RachaBadge = ({ racha }: { racha: number }) => {
   );
 };
 
+// Badge de plan
+const PlanBadge = ({ plan }: { plan: string }) => {
+  if (plan === 'PREMIUM') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-full text-[10px] font-bold">
+        <Crown className="w-3 h-3" /> PREMIUM
+      </span>
+    );
+  }
+  if (plan === 'FREE_TRIAL') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full text-[10px] font-bold">
+        <Star className="w-3 h-3" /> TRIAL
+      </span>
+    );
+  }
+  return (
+    <span className="px-2 py-0.5 bg-slate-600/50 text-gray-400 rounded-full text-[10px] font-bold">
+      FREE
+    </span>
+  );
+};
+
+// Indicador de pulso online
+const PulseIndicator = () => (
+  <span className="relative flex h-2.5 w-2.5">
+    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+  </span>
+);
+
+// Tiempo relativo
+const timeAgo = (isoDate: string): string => {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'ahora';
+  if (mins < 60) return `hace ${mins}m`;
+  return `hace ${Math.floor(mins / 60)}h`;
+};
+
 // ============================================================
 // COMPONENTE PRINCIPAL
 // ============================================================
@@ -149,6 +203,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [tipsters, setTipsters] = useState<TipsterStat[]>([]);
   const [apuestas, setApuestas] = useState<ApuestaReciente[]>([]);
+  const [usuariosOnline, setUsuariosOnline] = useState<UsuarioActivo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -164,15 +219,14 @@ export default function AdminDashboard() {
       const statsRes = await adminFetch('/api/admin/dashboard/stats', {}, accessToken);
       if (statsRes.ok) {
         const statsData = await statsRes.json();
-        setStats(statsData.data || statsData);
+        setStats(statsData);
       }
 
       // Fetch tipsters stats
       const tipstersRes = await adminFetch('/api/admin/tipsters/stats', {}, accessToken);
       if (tipstersRes.ok) {
         const tipstersData = await tipstersRes.json();
-        // Ordenar por profit descendente
-        const sorted = (tipstersData.data || tipstersData || [])
+        const sorted = (tipstersData || [])
           .sort((a: TipsterStat, b: TipsterStat) => (b.profit || 0) - (a.profit || 0))
           .slice(0, 10);
         setTipsters(sorted);
@@ -182,7 +236,14 @@ export default function AdminDashboard() {
       const apuestasRes = await adminFetch('/api/admin/apuestas?limit=15', {}, accessToken);
       if (apuestasRes.ok) {
         const apuestasData = await apuestasRes.json();
-        setApuestas((apuestasData.data || apuestasData.apuestas || []).slice(0, 10));
+        setApuestas((apuestasData.apuestas || apuestasData.data || []).slice(0, 10));
+      }
+
+      // Fetch usuarios activos
+      const onlineRes = await adminFetch('/api/admin/usuarios-activos', {}, accessToken);
+      if (onlineRes.ok) {
+        const onlineData = await onlineRes.json();
+        setUsuariosOnline(onlineData.usuarios || []);
       }
 
       setLastUpdate(new Date());
@@ -197,8 +258,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchData();
     
-    // Auto-refresh cada 2 minutos
-    const interval = setInterval(fetchData, 2 * 60 * 1000);
+    // Auto-refresh cada 30 segundos (para usuarios activos en tiempo real)
+    const interval = setInterval(fetchData, 30 * 1000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
@@ -256,24 +317,32 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid - 5 cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard 
           icon={Users}
           label="Usuarios Registrados" 
           value={stats?.total_usuarios || 0}
+          subtitle={`${stats?.usuarios_premium || 0} premium · ${stats?.usuarios_trial || 0} trial`}
           color="blue"
+        />
+        <StatCard 
+          icon={Wifi}
+          label="Usuarios Online" 
+          value={stats?.usuarios_online || 0}
+          color="green"
         />
         <StatCard 
           icon={Trophy}
           label="Tipsters Activos" 
-          value={stats?.tipsters_activos || stats?.total_tipsters || 0}
+          value={stats?.tipsters_activos || 0}
           color="purple"
         />
         <StatCard 
           icon={Target}
           label="Total Apuestas" 
           value={stats?.total_apuestas || 0}
+          subtitle={stats?.apuestas_pendientes ? `${stats.apuestas_pendientes} pendientes` : undefined}
           color="teal"
         />
         <StatCard 
@@ -306,6 +375,34 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      {/* Usuarios Online (expandible) */}
+      {usuariosOnline.length > 0 && (
+        <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <PulseIndicator />
+              Usuarios Online Ahora
+              <span className="text-sm font-normal text-emerald-400">({usuariosOnline.length})</span>
+            </h2>
+          </div>
+          <div className="p-4 flex flex-wrap gap-3">
+            {usuariosOnline.map((u) => (
+              <div key={u.id} className="flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2">
+                <PulseIndicator />
+                <div>
+                  <p className="text-white text-sm font-medium">{u.nombre || u.email.split('@')[0]}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400">{u.email}</span>
+                    <PlanBadge plan={u.plan} />
+                    <span className="text-[10px] text-gray-500">{timeAgo(u.last_active)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Two Column Layout */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Apuestas Recientes */}
@@ -327,6 +424,7 @@ export default function AdminDashboard() {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-teal-400 font-mono text-sm">#{apuesta.id}</span>
+                      <span className="text-gray-500 text-xs">{apuesta.tipster_alias || apuesta.tipster_nombre || ''}</span>
                       {apuesta.racha_actual !== undefined && (
                         <RachaBadge racha={apuesta.racha_actual} />
                       )}
