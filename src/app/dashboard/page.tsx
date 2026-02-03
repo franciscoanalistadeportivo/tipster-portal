@@ -6,8 +6,7 @@ import {
   TrendingUp, TrendingDown, Users, Calendar, Target, AlertTriangle, 
   ChevronRight, Zap, Trophy, Clock, Star, ArrowUpRight, Brain,
   Flame, Shield, Eye, Activity, BarChart3, MessageCircle, Phone,
-  Volume2, VolumeX, ChevronDown, ChevronUp, Award, Percent,
-  CheckCircle, XCircle, Lock, Sparkles, ArrowRight, Info, Crosshair
+  Volume2, VolumeX, ChevronDown, ChevronUp, Award, Percent, Info
 } from 'lucide-react';
 import { dashboardAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
@@ -50,7 +49,7 @@ interface Apuesta {
   hora_partido: string;
   imagen_url: string;
   odds_comparacion: any;
-  ia_analysis: IAAnalysis;
+  ia_analysis?: IAAnalysis | null;
 }
 
 interface DashboardData {
@@ -89,7 +88,7 @@ const useSoundNotifications = () => {
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
       osc.connect(gain); gain.connect(ctx.destination);
       osc.start(ctx.currentTime); osc.stop(ctx.currentTime + duration);
-    } catch {}
+    } catch(_e) {}
   }, [soundEnabled, getCtx]);
 
   const playNewPick = useCallback(() => {
@@ -261,11 +260,11 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
               <p style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '8px' }}>
                 Factores que determinan la confianza IA:
               </p>
-              {ia.factores.map((f, i) => <FactorBar key={i} factor={f} />)}
-              {ia.alerts.length > 0 && (
+              {(ia.factores || []).map((f, i) => <FactorBar key={i} factor={f} />)}
+              {(ia.alerts || []).length > 0 && (
                 <div style={{ marginTop: '8px', padding: '8px', borderRadius: '8px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
-                  {ia.alerts.map((alert, i) => (
-                    <p key={i} style={{ fontSize: '11px', color: '#EF4444', marginBottom: i < ia.alerts.length - 1 ? '4px' : 0 }}>{alert}</p>
+                  {(ia.alerts || []).map((alert, i) => (
+                    <p key={i} style={{ fontSize: '11px', color: '#EF4444', marginBottom: i < (ia.alerts || []).length - 1 ? '4px' : 0 }}>{alert}</p>
                   ))}
                 </div>
               )}
@@ -298,13 +297,13 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', textAlign: 'center' }}>
                   <p style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace', color: '#FFBB00' }}>
-                    @{apuesta.cuota.toFixed(2)}
+                    @{(apuesta.cuota || 0).toFixed(2)}
                   </p>
                   <p style={{ fontSize: '9px', color: '#64748B' }}>CUOTA</p>
                 </div>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', textAlign: 'center' }}>
                   <p style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace', color: '#00D1B2' }}>
-                    x{ia.stake_mult.toFixed(2)}
+                    x{(ia.stake_mult || 1).toFixed(2)}
                   </p>
                   <p style={{ fontSize: '9px', color: '#64748B' }}>STAKE MULT</p>
                 </div>
@@ -330,35 +329,35 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
                   </div>
                   <div>
                     <p style={{ fontSize: '12px', fontWeight: 800, color: '#FFF' }}>{apuesta.tipster_alias}</p>
-                    <p style={{ fontSize: '10px', color: '#94A3B8' }}>{ia.tipster_specialty} · {ia.total_bets_analyzed} picks</p>
+                    <p style={{ fontSize: '10px', color: '#94A3B8' }}>{ia.tipster_specialty || 'Sin perfil'} · {ia.total_bets_analyzed || 0} picks</p>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
                   <div style={{ textAlign: 'center', padding: '6px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)' }}>
-                    <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: ia.tipster_wr >= 65 ? '#00D1B2' : ia.tipster_wr >= 58 ? '#FFBB00' : '#EF4444' }}>
-                      {ia.tipster_wr.toFixed(1)}%
+                    <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: (ia.tipster_wr || 0) >= 65 ? '#00D1B2' : (ia.tipster_wr || 0) >= 58 ? '#FFBB00' : '#EF4444' }}>
+                      {(ia.tipster_wr || 0).toFixed(1)}%
                     </p>
                     <p style={{ fontSize: '8px', color: '#64748B', fontWeight: 600 }}>WIN RATE</p>
                   </div>
                   <div style={{ textAlign: 'center', padding: '6px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)' }}>
-                    <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: ia.tipster_roi > 0 ? '#00D1B2' : '#EF4444' }}>
-                      {ia.tipster_roi > 0 ? '+' : ''}{ia.tipster_roi.toFixed(1)}%
+                    <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: (ia.tipster_roi || 0) > 0 ? '#00D1B2' : '#EF4444' }}>
+                      {(ia.tipster_roi || 0) > 0 ? '+' : ''}{(ia.tipster_roi || 0).toFixed(1)}%
                     </p>
                     <p style={{ fontSize: '8px', color: '#64748B', fontWeight: 600 }}>ROI</p>
                   </div>
                   <div style={{ textAlign: 'center', padding: '6px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)' }}>
                     <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: '#FFDD57' }}>
-                      +{ia.tipster_best_streak}
+                      +{ia.tipster_best_streak || 0}
                     </p>
                     <p style={{ fontSize: '8px', color: '#64748B', fontWeight: 600 }}>BEST</p>
                   </div>
                 </div>
               </div>
               {/* Golden rules */}
-              {ia.golden_rules.length > 0 && (
+              {(ia.golden_rules || []).length > 0 && (
                 <div>
                   <p style={{ fontSize: '10px', fontWeight: 700, color: '#FFDD57', marginBottom: '6px' }}>📌 Reglas de oro del tipster:</p>
-                  {ia.golden_rules.slice(0, 3).map((rule, i) => (
+                  {(ia.golden_rules || []).slice(0, 3).map((rule, i) => (
                     <p key={i} style={{ fontSize: '10px', color: '#94A3B8', marginBottom: '3px', paddingLeft: '8px', borderLeft: '2px solid rgba(255,221,87,0.3)' }}>
                       {rule}
                     </p>
@@ -548,11 +547,11 @@ const ProgressBarPendiente = () => (
 // PICK DEL DÍA CARD — Best bet of the day by IA score
 // ============================================================================
 const PickDelDia = ({ apuestas }: { apuestas: Apuesta[] }) => {
-  const pendientes = apuestas.filter(a => a.resultado === 'PENDIENTE' && a.ia_analysis);
+  const pendientes = apuestas.filter(a => a.resultado === 'PENDIENTE' && a.ia_analysis?.score != null);
   if (pendientes.length === 0) return null;
   
-  const best = pendientes.reduce((a, b) => (a.ia_analysis.score > b.ia_analysis.score) ? a : b);
-  if (best.ia_analysis.score < 65) return null; // Only show if score is high enough
+  const best = pendientes.reduce((a, b) => ((a.ia_analysis?.score || 0) > (b.ia_analysis?.score || 0)) ? a : b);
+  if (!best.ia_analysis || best.ia_analysis.score < 65) return null; // Only show if score is high enough
 
   return (
     <div style={{
@@ -576,30 +575,30 @@ const PickDelDia = ({ apuestas }: { apuestas: Apuesta[] }) => {
           display: 'flex', alignItems: 'center', gap: '4px',
           boxShadow: '0 0 12px rgba(0,209,178,0.4)',
         }}>
-          <Sparkles style={{ width: '12px', height: '12px' }} />
+          <Star style={{ width: '12px', height: '12px' }} />
           PICK DEL DÍA IA
         </span>
-        <ZonaBadge zona={best.ia_analysis.zona} small />
+        <ZonaBadge zona={best.ia_analysis?.zona || 'NEUTRA'} small />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <IAConfidenceRing score={best.ia_analysis.score} zona={best.ia_analysis.zona} size={60} />
+        <IAConfidenceRing score={best.ia_analysis?.score || 0} zona={best.ia_analysis?.zona || 'NEUTRA'} size={60} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
-            {best.tipster_alias} · {best.tipo_mercado || 'Mercado'}
+            {best.tipster_alias || 'Tipster'} · {best.tipo_mercado || 'Mercado'}
           </p>
           <p style={{ fontSize: '14px', fontWeight: 700, color: '#FFF', marginBottom: '4px', lineHeight: 1.3 }}>
             {best.apuesta}
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 800, color: '#FFBB00' }}>
-              @{best.cuota.toFixed(2)}
+              @{(best.cuota || 0).toFixed(2)}
             </span>
-            <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: best.ia_analysis.ev > 0 ? '#00D1B2' : '#EF4444' }}>
-              EV: {best.ia_analysis.ev > 0 ? '+' : ''}{best.ia_analysis.ev}%
+            <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: (best.ia_analysis?.ev || 0) > 0 ? '#00D1B2' : '#EF4444' }}>
+              EV: {(best.ia_analysis?.ev || 0) > 0 ? '+' : ''}{best.ia_analysis?.ev || 0}%
             </span>
             <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: '#818CF8' }}>
-              Stake: x{best.ia_analysis.stake_mult.toFixed(2)}
+              Stake: x{(best.ia_analysis?.stake_mult || 1).toFixed(2)}
             </span>
           </div>
         </div>
@@ -615,9 +614,10 @@ const IAInsights = ({ apuestas, alertas }: { apuestas: Apuesta[]; alertas: any[]
   const insights: { emoji: string; texto: string; tipo: 'positivo' | 'neutral' | 'precaucion' }[] = [];
   
   const pendientes = apuestas.filter(a => a.resultado === 'PENDIENTE' && a.ia_analysis);
-  const zonasOro = pendientes.filter(a => a.ia_analysis.zona === 'ORO');
-  const zonasRiesgo = pendientes.filter(a => a.ia_analysis.zona === 'RIESGO' || a.ia_analysis.zona === 'BLOQUEADO');
-  const avgScore = pendientes.length > 0 ? Math.round(pendientes.reduce((s, a) => s + a.ia_analysis.score, 0) / pendientes.length) : 0;
+  const zonasOro = pendientes.filter(a => a.ia_analysis?.zona === 'ORO');
+  const zonasRiesgo = pendientes.filter(a => a.ia_analysis?.zona === 'RIESGO' || a.ia_analysis?.zona === 'BLOQUEADO');
+  const scoredPendientes = pendientes.filter(a => a.ia_analysis?.score != null);
+  const avgScore = scoredPendientes.length > 0 ? Math.round(scoredPendientes.reduce((s, a) => s + (a.ia_analysis?.score || 0), 0) / scoredPendientes.length) : 0;
 
   if (zonasOro.length > 0) {
     insights.push({
@@ -645,11 +645,11 @@ const IAInsights = ({ apuestas, alertas }: { apuestas: Apuesta[]; alertas: any[]
     });
   }
   if (pendientes.length > 0) {
-    const bestEV = pendientes.reduce((a, b) => a.ia_analysis.ev > b.ia_analysis.ev ? a : b);
-    if (bestEV.ia_analysis.ev > 5) {
+    const bestEV = pendientes.reduce((a, b) => (a.ia_analysis?.ev || 0) > (b.ia_analysis?.ev || 0) ? a : b);
+    if (bestEV.ia_analysis && bestEV.ia_analysis.ev > 5) {
       insights.push({
         emoji: '💰', tipo: 'positivo',
-        texto: `Mejor EV: ${bestEV.tipster_alias} con +${bestEV.ia_analysis.ev}% en ${bestEV.tipo_mercado || 'su pick'}.`
+        texto: `Mejor EV: ${bestEV.tipster_alias || 'Tipster'} con +${bestEV.ia_analysis.ev}% en ${bestEV.tipo_mercado || 'su pick'}.`
       });
     }
   }
@@ -686,7 +686,7 @@ export default function DashboardPage() {
             // Fallback to regular endpoint
             dashboardData = await dashboardAPI.getData();
           }
-        } catch {
+        } catch (_e) {
           dashboardData = await dashboardAPI.getData();
         }
 
@@ -967,7 +967,7 @@ export default function DashboardPage() {
                   if (nowMin >= horaMin) { horaLabel = `🔴 EN VIVO · ${hora}`; horaColor = '#EF4444'; }
                   else if (horaMin - nowMin <= 30) { horaLabel = `⚡ POR INICIAR · ${hora}`; horaColor = '#FFBB00'; }
                   else { horaLabel = `🕐 ${hora} CL`; horaColor = '#FFBB00'; }
-                } catch { horaLabel = hora; }
+                } catch(_e) { horaLabel = hora; }
               }
               const unidades = apuesta.stake_ia ? (apuesta.stake_ia / 1000).toFixed(1) + 'u' : '';
               const ia = apuesta.ia_analysis;
@@ -1049,7 +1049,7 @@ export default function DashboardPage() {
                           color: '#818CF8', padding: '1px 6px', borderRadius: '4px',
                           background: 'rgba(99,102,241,0.1)',
                         }}>
-                          ↑ Stake x{ia.stake_mult.toFixed(1)}
+                          ↑ Stake x{(ia.stake_mult || 1).toFixed(1)}
                         </span>
                       )}
                       {ia.stake_mult === 0 && (
@@ -1069,7 +1069,7 @@ export default function DashboardPage() {
                       {apuesta.apuesta}
                     </p>
                     <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '16px', color: '#FFBB00', flexShrink: 0 }}>
-                      @{apuesta.cuota.toFixed(2)}
+                      @{(apuesta.cuota || 0).toFixed(2)}
                     </span>
                   </div>
 
@@ -1144,7 +1144,7 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
                       {ia && <IAConfidenceRing score={ia.score} zona={ia.zona} size={32} />}
                       <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '13px', color: isWin ? '#00D1B2' : '#EF4444' }}>
-                        @{apuesta.cuota.toFixed(2)}
+                        @{(apuesta.cuota || 0).toFixed(2)}
                       </span>
                     </div>
                   </div>
