@@ -54,6 +54,28 @@ export default function DashboardLayout({
     checkAuth();
   }, [router, setUser]);
 
+  // ── Heartbeat: trackea usuarios activos cada 30s ──
+  useEffect(() => {
+    if (isLoading) return;
+    
+    const sendHeartbeat = () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/heartbeat`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ page: pathname }),
+      }).catch(() => {}); // Silencioso - no interrumpe la UX
+    };
+
+    sendHeartbeat(); // Enviar al cargar
+    const interval = setInterval(sendHeartbeat, 30000); // Cada 30s
+    return () => clearInterval(interval);
+  }, [isLoading, pathname]);
+
   const handleLogout = () => {
     authAPI.logout();
     logout();
