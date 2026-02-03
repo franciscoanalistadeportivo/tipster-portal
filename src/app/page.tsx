@@ -16,15 +16,14 @@ const LOGO_URL = '/logo.png';
 const LOGO_ICON = '/logo-icon.png';
 
 // ============================================================================
-// DATOS REALES VERIFICADOS — Fuente: Análisis matemáticos 9 tipsters
+// DATOS REALES VERIFICADOS — Top 9 analizados en profundidad, +25 en seguimiento
 // Fallback estático si la API falla. Toda cifra es verificable.
 // ============================================================================
 const REAL_STATS = {
-  totalTipsters: 9,
+  totalTipsters: 25,
   totalApuestas: 547,
   bestWinRate: 71.1,
   bestStreak: 12,
-  rentables: 8,
   roiPromedio: 8.4,
 };
 
@@ -71,7 +70,7 @@ const ACTIVITY_EVENTS = [
   { text: 'Raqueta de Oro 84.6% WR en combinadas', icon: '🎾' },
   { text: '547 apuestas verificadas en el sistema', icon: '📊' },
   { text: 'Visión de Cancha racha de 11 aciertos seguidos', icon: '🏀' },
-  { text: '8 de 9 tipsters con ROI positivo', icon: '✅' },
+  { text: '+25 tipsters monitoreados con IA', icon: '✅' },
 ];
 
 // ============================================================================
@@ -320,9 +319,9 @@ export default function LandingPage() {
             </div>
             <div className="text-center">
               <p className="text-2xl sm:text-3xl font-bold text-[#FFDD57] font-mono">
-                <AnimatedCounter value={REAL_STATS.rentables} suffix="/9" />
+                +<AnimatedCounter value={REAL_STATS.roiPromedio} suffix="%" decimals={1} />
               </p>
-              <p className="text-[#94A3B8] text-xs sm:text-sm">Tipsters Rentables</p>
+              <p className="text-[#94A3B8] text-xs sm:text-sm">ROI Promedio</p>
             </div>
           </div>
 
@@ -522,7 +521,7 @@ export default function LandingPage() {
           {/* Nota de aliases + link */}
           <div className="mt-8 text-center space-y-3">
             <Link href="/registro" className="text-[#00D1B2] hover:underline text-sm sm:text-base inline-flex items-center gap-1">
-              Ver los {stats.totalTipsters} tipsters
+              Ver los +{stats.totalTipsters} tipsters
               <ChevronRight className="h-4 w-4" />
             </Link>
             <p className="text-[#475569] text-xs max-w-md mx-auto">
@@ -932,7 +931,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-[#94A3B8] mb-6 sm:mb-8 text-sm sm:text-base">
             {REAL_STATS.totalApuestas}+ apuestas verificadas.
-            {' '}{REAL_STATS.rentables} de {REAL_STATS.totalTipsters - REAL_STATS.rentables + REAL_STATS.rentables} tipsters con ROI positivo.
+            {' '}+{REAL_STATS.totalTipsters} tipsters analizados con IA.
             {' '}Deja de apostar a ciegas.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
