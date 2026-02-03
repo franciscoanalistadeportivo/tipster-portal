@@ -645,7 +645,7 @@ export default function PicksRecomendadosPage() {
           <p className="text-xs text-[#94A3B8]">Alto rendimiento comprobado</p>
           {picks.length > 0 ? (
             <div className="space-y-2 mt-3">
-              {[...new Map(picks.filter(p => (p.neuroscore || 0) >= 70).map(p => [p.tipster, p])).values()]
+              {Array.from(new Map(picks.filter(p => (p.neuroscore || 0) >= 70).map(p => [p.tipster, p] as [string, Pick])).values())
                 .slice(0, 3)
                 .map((p, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded-lg" style={{
@@ -682,7 +682,7 @@ export default function PicksRecomendadosPage() {
           <p className="text-xs text-[#94A3B8]">Considerar evitar o reducir stake</p>
           {picks.filter(p => (p.neuroscore || 0) < 50).length > 0 ? (
             <div className="space-y-2 mt-3">
-              {[...new Map(picks.filter(p => (p.neuroscore || 0) < 50).map(p => [p.tipster, p])).values()]
+              {Array.from(new Map(picks.filter(p => (p.neuroscore || 0) < 50).map(p => [p.tipster, p] as [string, Pick])).values())
                 .slice(0, 3)
                 .map((p, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded-lg" style={{
