@@ -316,6 +316,29 @@ export const picksAPI = {
     const response = await api.get('/api/picks/recomendados');
     return response.data;
   },
+  // ★ NUEVO v2.4: Picks en vivo y urgentes
+  getLive: async () => {
+    try {
+      const response = await api.get('/api/picks/live');
+      return response.data;
+    } catch {
+      return { live: [], urgentes: [], total_live: 0, total_urgentes: 0 };
+    }
+  },
+};
+
+// ============================================================================
+// ALERTAS API (v2.4 — rachas)
+// ============================================================================
+export const alertasAPI = {
+  getRachas: async () => {
+    try {
+      const response = await api.get('/api/alertas/rachas');
+      return response.data;
+    } catch {
+      return { alertas: [], total: 0 };
+    }
+  },
 };
 
 // ============================================================================
@@ -428,6 +451,24 @@ export const recomendacionesAPI = {
       return response.data;
     } catch (error) {
       return { seguir: [], evitar: [] };
+    }
+  },
+};
+
+// ============================================================================
+// RESULTADOS PÚBLICOS API (v2.4 — SEO page)
+// ============================================================================
+export const resultadosPublicAPI = {
+  get: async (periodo: string = 'semana', deporte: string = '') => {
+    const PERIODOS_VALIDOS = ['hoy', 'ayer', 'semana', 'mes', 'trimestre'];
+    const safePeriodo = PERIODOS_VALIDOS.includes(periodo) ? periodo : 'semana';
+    const params = new URLSearchParams({ periodo: safePeriodo });
+    if (deporte) params.append('deporte', deporte);
+    try {
+      const response = await api.get(`/api/public/resultados?${params}`);
+      return response.data;
+    } catch {
+      return { apuestas: [], stats: null, top_tipsters: [] };
     }
   },
 };
