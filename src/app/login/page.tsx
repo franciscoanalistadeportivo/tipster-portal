@@ -14,9 +14,9 @@ const API = process.env.NEXT_PUBLIC_API_URL || '';
 // ─── Stats reales verificadas (547 apuestas, 9 tipsters) ───
 const STATS = [
   { value: '71.1%', label: 'Mejor Win Rate', icon: Target, color: '#00D1B2' },
-  { value: '9', label: 'Tipsters Verificados', icon: Brain, color: '#0EA5E9' },
+  { value: '+25', label: 'Tipsters IA', icon: Brain, color: '#0EA5E9' },
   { value: '547+', label: 'Apuestas Registradas', icon: BarChart3, color: '#FFBB00' },
-  { value: '8/9', label: 'Tipsters Rentables', icon: TrendingUp, color: '#A78BFA' },
+  { value: '+8.4%', label: 'ROI Promedio', icon: TrendingUp, color: '#A78BFA' },
 ];
 
 const FEATURES = [
@@ -30,7 +30,7 @@ const FEATURES = [
 const HIGHLIGHTS = [
   { label: 'Punto de Quiebre', text: 'Racha de 12 victorias consecutivas en tenis. 71.1% Win Rate con +20.8% ROI verificado.', stat: '🎾 #1 Tipster' },
   { label: 'Goleador Pro', text: '100% efectividad en Under Goles. 69% Win Rate general con ROI de +17.8%.', stat: '⚽ Top 2' },
-  { label: 'Sistema IA', text: '8 de 9 tipsters con ROI positivo. Análisis de 547+ apuestas con filtros de valor esperado.', stat: '🧠 +8.4% ROI' },
+  { label: 'Sistema IA', text: '+25 tipsters monitoreados con IA. Análisis de 547+ apuestas con filtros de valor esperado y stake óptimo.', stat: '🧠 +8.4% ROI' },
 ];
 
 export default function LoginPage() {
