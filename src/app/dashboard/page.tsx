@@ -711,7 +711,7 @@ export default function DashboardPage() {
 
         setData({
           totalTipsters: dashboardData.tipsters?.total || 0,
-          apuestasHoy: dashboardData.apuestas?.total || 0,
+          apuestasHoy: nuevasApuestas.length || dashboardData.apuestas?.total || 0,
           topTipster: dashboardData.topTipster || null,
           alertas: dashboardData.alertas || [],
           apuestasRecientes: nuevasApuestas,
@@ -879,10 +879,16 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
-          <p className="text-3xl font-bold font-mono" style={{ color: '#FFBB00' }}>{data.apuestasHoy}</p>
+          <p className="text-3xl font-bold font-mono" style={{ color: '#FFBB00' }}>{apuestas.length || data.apuestasHoy}</p>
           <p className="text-sm mt-0.5" style={{ color: '#D4A843' }}>Apuestas Hoy</p>
+          <p style={{ fontSize: '9px', color: '#94A3B8', marginTop: '2px' }}>
+            {pendientes.length > 0 ? `${pendientes.length} pendiente${pendientes.length > 1 ? 's' : ''}` : ''}
+            {pendientes.length > 0 && resueltas.length > 0 ? ' · ' : ''}
+            {resueltas.length > 0 ? `${resueltas.length} resuelta${resueltas.length > 1 ? 's' : ''}` : ''}
+            {apuestas.length === 0 ? 'Sin picks aún' : ''}
+          </p>
           {zonaOroCount > 0 && (
-            <p style={{ fontSize: '9px', color: '#00D1B2', marginTop: '2px' }}>🟢 {zonaOroCount} en Zona ORO</p>
+            <p style={{ fontSize: '9px', color: '#00D1B2', marginTop: '1px' }}>🟢 {zonaOroCount} en Zona ORO</p>
           )}
         </div>
 
