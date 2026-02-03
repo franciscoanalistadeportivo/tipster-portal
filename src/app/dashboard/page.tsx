@@ -756,7 +756,7 @@ export default function DashboardPage() {
   const insights = IAInsights({ apuestas, alertas: data.alertas });
 
   // IA stats for KPIs
-  const iaScores = apuestas.filter(a => a.ia_analysis).map(a => a.ia_analysis.score);
+  const iaScores = apuestas.filter(a => a.ia_analysis).map(a => a.ia_analysis!.score);
   const avgIAScore = iaScores.length > 0 ? Math.round(iaScores.reduce((a, b) => a + b, 0) / iaScores.length) : 0;
   const zonaOroCount = apuestas.filter(a => a.ia_analysis?.zona === 'ORO').length;
 
