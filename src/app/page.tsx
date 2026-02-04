@@ -9,6 +9,7 @@ import {
   TrendingUp, Activity, Award, ChevronRight, Flame, Clock, Globe
 } from 'lucide-react';
 import { dashboardAPI } from '@/lib/api';
+import CombinadaIA from '@/components/CombinadaIA';
 
 // ============================================================================
 // ASSETS
@@ -531,6 +532,11 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ================================================================
+          COMBINADA IA DEL DÍA
+          ================================================================ */}
+      <CombinadaIA />
 
       {/* ================================================================
           TOP TIPSTERS — Datos reales de BD
