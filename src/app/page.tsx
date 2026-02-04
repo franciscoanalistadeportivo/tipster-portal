@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import {
   Shield, Star, CheckCircle, ArrowRight, Zap, Target,
   Brain, Eye, Lock, BarChart3, Menu, X, Crown, MessageCircle, Phone,
-  TrendingUp, Activity, Award, ChevronRight, Flame, Clock
+  TrendingUp, Activity, Award, ChevronRight, Flame, Clock, Globe
 } from 'lucide-react';
 import { dashboardAPI } from '@/lib/api';
 
@@ -147,6 +148,64 @@ const WinRateBar = ({ value, color = '#00D1B2' }: { value: number; color?: strin
 );
 
 // ============================================================================
+// GOOGLE TRANSLATE WIDGET
+// ============================================================================
+const LANGUAGES = [
+  { code: 'es', label: 'ES', flag: '🇪🇸' },
+  { code: 'en', label: 'EN', flag: '🇬🇧' },
+  { code: 'pt', label: 'PT', flag: '🇧🇷' },
+  { code: 'fr', label: 'FR', flag: '🇫🇷' },
+  { code: 'de', label: 'DE', flag: '🇩🇪' },
+  { code: 'it', label: 'IT', flag: '🇮🇹' },
+];
+
+const LanguageSelector = () => {
+  const [open, setOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState('es');
+
+  const changeLang = useCallback((langCode: string) => {
+    setCurrentLang(langCode);
+    setOpen(false);
+
+    // Trigger Google Translate
+    const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+    if (select) {
+      select.value = langCode;
+      select.dispatchEvent(new Event('change'));
+    }
+  }, []);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition hover:bg-white/10"
+        style={{ color: '#94A3B8', border: '1px solid rgba(148, 163, 184, 0.2)' }}
+      >
+        <Globe className="h-3.5 w-3.5" />
+        {LANGUAGES.find(l => l.code === currentLang)?.flag} {LANGUAGES.find(l => l.code === currentLang)?.label}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 py-1 rounded-lg shadow-xl z-[100] min-w-[120px]"
+          style={{ background: '#1E293B', border: '1px solid rgba(255,255,255,0.1)' }}>
+          {LANGUAGES.map(lang => (
+            <button
+              key={lang.code}
+              onClick={() => changeLang(lang.code)}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs transition hover:bg-white/10 ${currentLang === lang.code ? 'text-[#00D1B2]' : 'text-[#94A3B8]'}`}
+            >
+              <span>{lang.flag}</span>
+              <span>{lang.label}</span>
+              {currentLang === lang.code && <CheckCircle className="h-3 w-3 ml-auto" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
 // LANDING PAGE
 // ============================================================================
 export default function LandingPage() {
@@ -200,6 +259,35 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ background: '#0B1120' }}>
 
+      {/* Google Translate — hidden default widget, we use custom selector */}
+      <div id="google_translate_element" className="hidden" />
+      <Script
+        src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+        strategy="afterInteractive"
+      />
+      <Script id="google-translate-init" strategy="afterInteractive">
+        {`
+          function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+              pageLanguage: 'es',
+              includedLanguages: 'en,es,pt,fr,de,it',
+              autoDisplay: false,
+              layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+          }
+        `}
+      </Script>
+      <style jsx global>{`
+        .goog-te-banner-frame, .goog-te-balloon-frame,
+        #goog-gt-tt, .goog-te-balloon-frame,
+        .goog-tooltip, .goog-tooltip:hover,
+        .goog-text-highlight { display: none !important; }
+        .goog-te-gadget { display: none !important; }
+        body { top: 0 !important; }
+        .skiptranslate { display: none !important; }
+        .VIpgJd-ZVi9od-ORHb-OEVmcd { display: none !important; }
+      `}</style>
+
       {/* ================================================================
           HEADER
           ================================================================ */}
@@ -222,6 +310,7 @@ export default function LandingPage() {
             </Link>
 
             <div className="hidden md:flex items-center gap-4">
+              <LanguageSelector />
               <Link href="/login" className="text-[#94A3B8] hover:text-white transition text-sm px-3 py-2">
                 Iniciar Sesión
               </Link>
@@ -245,6 +334,9 @@ export default function LandingPage() {
 
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-white/10 py-4 space-y-3">
+              <div className="flex justify-center mb-2">
+                <LanguageSelector />
+              </div>
               <Link href="/login" className="block w-full text-center py-3 text-white border border-white/20 rounded-lg font-medium"
                 onClick={() => setMobileMenuOpen(false)}>
                 Iniciar Sesión
