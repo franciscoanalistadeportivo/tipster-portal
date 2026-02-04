@@ -383,6 +383,32 @@ export const apuestasAPI = {
       return dashboard.apuestas || { total: 0, apuestas: [] };
     }
   },
+  getAnalisisHoy: async () => {
+    try {
+      const response = await api.get('/api/apuestas/analisis-hoy');
+      return response.data;
+    } catch (error) {
+      return { analisis: {} };
+    }
+  },
+};
+
+// ============================================================================
+// ALERTAS API
+// ============================================================================
+export const alertasAPI = {
+  getActivas: async () => {
+    try {
+      const response = await api.get('/api/alertas/activas');
+      return response.data;
+    } catch (error) {
+      return { alertas: [] };
+    }
+  },
+  marcarLeida: async (id: number) => {
+    const response = await api.put(`/api/alertas/${id}/leida`);
+    return response.data;
+  },
 };
 
 // ============================================================================
