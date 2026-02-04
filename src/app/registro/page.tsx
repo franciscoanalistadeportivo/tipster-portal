@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ArrowRight, CheckCircle, Loader2, MessageCircle, Phone } from 'lucide-react';
+import { getFingerprint } from '@/lib/fingerprint';
 
 const LOGO_URL = "/logo.png";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
@@ -21,6 +22,12 @@ export default function RegistroPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deviceFingerprint, setDeviceFingerprint] = useState('');
+
+  // ★ Generar fingerprint al cargar la página (silencioso)
+  useEffect(() => {
+    getFingerprint().then(fp => setDeviceFingerprint(fp)).catch(() => {});
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -56,7 +63,8 @@ export default function RegistroPage() {
           nombre: formData.nombre,
           email: formData.email,
           telefono: formData.telefono || null,
-          password: formData.password
+          password: formData.password,
+          fingerprint: deviceFingerprint
         })
       });
 
