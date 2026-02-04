@@ -30,7 +30,6 @@ const RESULTADO_STYLES: Record<string, { bg: string; border: string; text: strin
 };
 
 interface Pick {
-  id: number;
   tipster: string;
   deporte: string;
   apuesta: string;
@@ -38,9 +37,7 @@ interface Pick {
   cuota: number;
   neuroscore: number;
   zona: string;
-  zona_color: string;
   hora_partido: string;
-  ev: number;
   resultado: string;
 }
 
@@ -291,7 +288,7 @@ export default function CombinadaIA() {
                   const hasResult = pick.resultado !== 'PENDIENTE';
 
                   return (
-                    <div key={pick.id} className="flex items-center gap-3 p-3.5 rounded-xl transition-all" style={{
+                    <div key={idx} className="flex items-center gap-3 p-3.5 rounded-xl transition-all" style={{
                       background: hasResult
                         ? pick.resultado === 'GANADA' ? 'rgba(46,213,115,0.04)' : pick.resultado === 'PERDIDA' ? 'rgba(255,71,87,0.04)' : 'rgba(255,255,255,0.025)'
                         : 'rgba(255,255,255,0.025)',
