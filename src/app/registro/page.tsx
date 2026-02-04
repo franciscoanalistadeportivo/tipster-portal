@@ -87,16 +87,33 @@ export default function RegistroPage() {
   // FACEBOOK OAUTH
   // ════════════════════════════════════════════════════
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).fbAsyncInit = function () {
-        (window as any).FB.init({ appId: FACEBOOK_APP_ID, cookie: true, xfbml: true, version: 'v18.0' });
+    if (typeof window !== 'undefined' && !(window as any).FB) {
+      // Load Facebook SDK manually
+      const script = document.createElement('script');
+      script.src = 'https://connect.facebook.net/es_LA/sdk.js';
+      script.async = true;
+      script.defer = true;
+      script.crossOrigin = 'anonymous';
+      script.onload = () => {
+        (window as any).FB.init({ 
+          appId: FACEBOOK_APP_ID, 
+          cookie: true, 
+          xfbml: true, 
+          version: 'v18.0' 
+        });
         setFbReady(true);
       };
+      document.body.appendChild(script);
+    } else if ((window as any).FB) {
+      setFbReady(true);
     }
   }, []);
 
   const handleFacebookClick = () => {
-    if (!fbReady || !(window as any).FB) { setError('Facebook SDK aún no está listo. Intenta de nuevo.'); return; }
+    if (!(window as any).FB) { 
+      setError('Cargando Facebook... Intenta de nuevo en 2 segundos.');
+      return; 
+    }
     setSocialLoading('facebook'); setError('');
     (window as any).FB.login(async (response: any) => {
       if (response.authResponse) {
@@ -180,8 +197,6 @@ export default function RegistroPage() {
     <>
       {/* Google Script */}
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={() => initializeGoogle()} />
-      {/* Facebook Script */}
-      <Script src="https://connect.facebook.net/es_LA/sdk.js" strategy="afterInteractive" async defer crossOrigin="anonymous" />
 
       <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 py-8">
         {/* Fondo */}
