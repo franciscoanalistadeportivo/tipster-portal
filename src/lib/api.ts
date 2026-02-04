@@ -1,13 +1,6 @@
 /**
  * API Client - Conexión segura al backend
- * Versión 2.3 - NeuroScore + Picks Recomendados + Estadísticas Banca
- * 
- * CAMBIOS v2.3:
- * - apuestasAPI.getAnalisisHoy() → NeuroScore batch para Centro de Operaciones
- * - apuestasAPI.getAnalisisById() → NeuroScore individual
- * - picksAPI.getRecomendados() → Ahora conectado al backend real
- * - miBancaAPI.getEstadisticas() → Estadísticas completas por periodo
- * - misApuestasAPI.eliminar() → Endpoint DELETE conectado
+ * Versión 2.2 - Token persistente + Teléfono en registro
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
@@ -39,6 +32,7 @@ const publicApi: AxiosInstance = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    // Intentar obtener token de memoria o localStorage
     const token = accessToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
@@ -108,6 +102,7 @@ export const isAuthenticated = () => {
 // AUTH API
 // ============================================================================
 export const authAPI = {
+  // Registro con email/password
   register: async (email: string, password: string, nombre: string, telefono?: string) => {
     const response = await api.post('/api/auth/register', { email, password, nombre, telefono });
     if (response.data.access_token) {
@@ -135,6 +130,30 @@ export const authAPI = {
     const response = await api.post('/api/auth/reset-password', { token, password });
     return response.data;
   },
+
+  // ★ LOGIN SOCIAL — Google, Facebook, Apple, Twitter
+  socialLogin: async (provider: 'google' | 'facebook' | 'apple' | 'twitter', token: string, extra?: { nombre?: string; email?: string }) => {
+    const response = await publicApi.post(`/api/auth/social/${provider}`, {
+      token,
+      ...extra,
+    });
+    if (response.data.access_token) {
+      setTokens(response.data.access_token, response.data.refresh_token);
+    }
+    return response.data;
+  },
+
+  // ★ COMUNIDAD — Marcar que el usuario se unió a Telegram o WhatsApp
+  joinCommunity: async (canal: 'telegram' | 'whatsapp') => {
+    const response = await api.post('/api/auth/community/join', { canal });
+    return response.data;
+  },
+
+  // ★ Verificar si el usuario está en alguna comunidad
+  checkCommunity: async () => {
+    const response = await api.get('/api/auth/community/status');
+    return response.data;
+  },
 };
 
 // ============================================================================
@@ -143,11 +162,6 @@ export const authAPI = {
 export const dashboardAPI = {
   getData: async () => {
     const response = await publicApi.get('/api/public/dashboard');
-    return response.data;
-  },
-  // ★ NUEVO v2.3: Dashboard con NeuroScore incluido
-  getDataIA: async () => {
-    const response = await publicApi.get('/api/public/dashboard-ia');
     return response.data;
   },
 };
@@ -192,15 +206,6 @@ export const tipstersAPI = {
       }
     }
   },
-  // ★ NUEVO v2.3: Perfiles IA de tipsters
-  getProfiles: async () => {
-    try {
-      const response = await api.get('/api/tipster-profiles');
-      return response.data;
-    } catch {
-      return { profiles: {} };
-    }
-  },
 };
 
 // ============================================================================
@@ -218,7 +223,7 @@ export const bancaAPI = {
 };
 
 // ============================================================================
-// MI BANCA API (v7 + v2.3)
+// MI BANCA API (Nuevo v7)
 // ============================================================================
 export const miBancaAPI = {
   setup: async (data: {
@@ -248,32 +253,24 @@ export const miBancaAPI = {
     return response.data;
   },
 
-  // ★ NUEVO v2.3: Estadísticas completas (ahora conectado al backend)
-  getEstadisticas: async (periodo: 'semana' | 'mes' | 'trimestre' | 'todo' = 'mes') => {
-    const validPeriodos = ['semana', 'mes', 'trimestre', 'todo'];
-    const safePeriodo = validPeriodos.includes(periodo) ? periodo : 'mes';
-    const response = await api.get(`/api/banca/estadisticas?periodo=${safePeriodo}`);
+  getHistorial: async (dias: number = 30) => {
+    const response = await api.get(`/api/banca/historial?dias=${dias}`);
     return response.data;
   },
 
-  getHistorial: async (dias: number = 30) => {
-    const safeDias = Math.min(Math.max(1, Math.floor(Number(dias))), 365);
-    const response = await api.get(`/api/banca/historial?dias=${safeDias}`);
+  getEstadisticas: async (periodo: 'semana' | 'mes' | 'todo' = 'mes') => {
+    const response = await api.get(`/api/banca/estadisticas?periodo=${periodo}`);
     return response.data;
   },
 };
 
 // ============================================================================
-// MIS APUESTAS API (v7 + v2.3)
+// MIS APUESTAS API (Nuevo v7)
 // ============================================================================
 export const misApuestasAPI = {
   getAll: async (estado?: string, limite: number = 50) => {
-    const validEstados = ['PENDIENTE', 'GANADA', 'PERDIDA', 'NULA'];
-    const safeLimite = Math.min(Math.max(1, Math.floor(Number(limite))), 100);
-    let url = `/api/mis-apuestas?limite=${safeLimite}`;
-    if (estado && validEstados.includes(estado)) {
-      url += `&estado=${estado}`;
-    }
+    let url = `/api/mis-apuestas?limite=${limite}`;
+    if (estado) url += `&estado=${estado}`;
     const response = await api.get(url);
     return response.data;
   },
@@ -292,94 +289,28 @@ export const misApuestasAPI = {
   },
 
   marcarResultado: async (id: number, resultado: 'GANADA' | 'PERDIDA' | 'NULA') => {
-    const safeId = Math.abs(Math.floor(Number(id)));
-    const validResultados = ['GANADA', 'PERDIDA', 'NULA'];
-    if (!safeId || !validResultados.includes(resultado)) return null;
-    const response = await api.put(`/api/mis-apuestas/${safeId}/resultado`, { resultado });
+    const response = await api.put(`/api/mis-apuestas/${id}/resultado`, { resultado });
     return response.data;
   },
 
-  // ★ NUEVO v2.3: Eliminar apuesta (ahora conectado al backend)
   eliminar: async (id: number) => {
-    const safeId = Math.abs(Math.floor(Number(id)));
-    if (!safeId) return null;
-    const response = await api.delete(`/api/mis-apuestas/${safeId}`);
+    const response = await api.delete(`/api/mis-apuestas/${id}`);
     return response.data;
   },
 };
 
 // ============================================================================
-// PICKS RECOMENDADOS API (v7 + v2.3 — ahora conectado al backend)
+// PICKS RECOMENDADOS API (Nuevo v7)
 // ============================================================================
 export const picksAPI = {
   getRecomendados: async () => {
     const response = await api.get('/api/picks/recomendados');
     return response.data;
   },
-  // ★ NUEVO v2.4: Picks en vivo y urgentes
-  getLive: async () => {
-    try {
-      const response = await api.get('/api/picks/live');
-      return response.data;
-    } catch {
-      return { live: [], urgentes: [], total_live: 0, total_urgentes: 0 };
-    }
-  },
 };
 
 // ============================================================================
-// ALERTAS API (v2.4 — rachas)
-// ============================================================================
-export const alertasAPI = {
-  getRachas: async () => {
-    try {
-      const response = await api.get('/api/alertas/rachas');
-      return response.data;
-    } catch {
-      return { alertas: [], total: 0 };
-    }
-  },
-};
-
-// ============================================================================
-// APUESTAS API (v2.3 — con NeuroScore)
-// ============================================================================
-export const apuestasAPI = {
-  getHoy: async () => {
-    try {
-      const response = await api.get('/api/apuestas/hoy');
-      return response.data;
-    } catch (error) {
-      const dashboard = await dashboardAPI.getData();
-      return dashboard.apuestas || { total: 0, apuestas: [] };
-    }
-  },
-
-  // ★ NUEVO v2.3: NeuroScore batch para todas las apuestas del día
-  getAnalisisHoy: async () => {
-    try {
-      const response = await api.get('/api/analisis-ia/hoy');
-      return response.data;
-    } catch {
-      return { analisis: {} };
-    }
-  },
-
-  // ★ NUEVO v2.3: NeuroScore individual para una apuesta
-  getAnalisisById: async (apuestaId: number) => {
-    const safeId = Math.abs(Math.floor(Number(apuestaId)));
-    if (!safeId) return null;
-    try {
-      const response = await api.get(`/api/analisis-ia/${safeId}`);
-      return response.data;
-    } catch {
-      return null;
-    }
-  },
-};
-
-// ============================================================================
-// NOTIFICACIONES API
+// NOTIFICACIONES API (Nuevo v7)
 // ============================================================================
 export const notificacionesAPI = {
   getConfig: async () => {
@@ -420,7 +351,7 @@ export const notificacionesAPI = {
 };
 
 // ============================================================================
-// LOGROS API
+// LOGROS API (Nuevo v7)
 // ============================================================================
 export const logrosAPI = {
   getMisLogros: async () => {
@@ -434,10 +365,23 @@ export const logrosAPI = {
 // ============================================================================
 export const consejoIAAPI = {
   get: async (tipsterId: number) => {
-    const safeId = Math.abs(Math.floor(Number(tipsterId)));
-    if (!safeId) return null;
-    const response = await api.get(`/api/consejo-ia/${safeId}`);
+    const response = await api.get(`/api/consejo-ia/${tipsterId}`);
     return response.data;
+  },
+};
+
+// ============================================================================
+// APUESTAS API
+// ============================================================================
+export const apuestasAPI = {
+  getHoy: async () => {
+    try {
+      const response = await api.get('/api/apuestas/hoy');
+      return response.data;
+    } catch (error) {
+      const dashboard = await dashboardAPI.getData();
+      return dashboard.apuestas || { total: 0, apuestas: [] };
+    }
   },
 };
 
@@ -451,24 +395,6 @@ export const recomendacionesAPI = {
       return response.data;
     } catch (error) {
       return { seguir: [], evitar: [] };
-    }
-  },
-};
-
-// ============================================================================
-// RESULTADOS PÚBLICOS API (v2.4 — SEO page)
-// ============================================================================
-export const resultadosPublicAPI = {
-  get: async (periodo: string = 'semana', deporte: string = '') => {
-    const PERIODOS_VALIDOS = ['hoy', 'ayer', 'semana', 'mes', 'trimestre'];
-    const safePeriodo = PERIODOS_VALIDOS.includes(periodo) ? periodo : 'semana';
-    const params = new URLSearchParams({ periodo: safePeriodo });
-    if (deporte) params.append('deporte', deporte);
-    try {
-      const response = await api.get(`/api/public/resultados?${params}`);
-      return response.data;
-    } catch {
-      return { apuestas: [], stats: null, top_tipsters: [] };
     }
   },
 };

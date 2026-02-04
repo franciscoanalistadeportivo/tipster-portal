@@ -1,6 +1,7 @@
 /**
  * Store Global - Gestión de estado
  * Usa Zustand para estado simple y eficiente
+ * v2.0 — Social auth + comunidad
  */
 
 import { create } from 'zustand';
@@ -11,6 +12,10 @@ interface User {
   nombre: string;
   plan: 'FREE_TRIAL' | 'PREMIUM' | 'EXPIRED';
   suscripcion_hasta: string | null;
+  auth_provider?: string | null;
+  avatar_url?: string | null;
+  comunidad_canal?: string | null;
+  comunidad_verificado?: boolean;
 }
 
 interface AuthState {
