@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { dashboardAPI, picksAPI, alertasAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
+import CombinadaDashboard from '@/components/CombinadaDashboard';
 
 // ============================================================================
 // TYPES
@@ -1040,6 +1041,11 @@ export default function DashboardPage() {
       {/* 🏆 PICK DEL DÍA IA                                           */}
       {/* ============================================================ */}
       <PickDelDia apuestas={apuestas} />
+
+      {/* ============================================================ */}
+      {/* 🧠 COMBINADA IA DEL DÍA                                      */}
+      {/* ============================================================ */}
+      <CombinadaDashboard />
 
       {/* ============================================================ */}
       {/* APUESTAS EN JUEGO — With IA Analysis                         */}
