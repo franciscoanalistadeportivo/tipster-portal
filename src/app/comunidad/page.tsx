@@ -9,8 +9,8 @@ import { useAuthStore } from '@/lib/store';
 // ============================================================================
 // LINKS DE COMUNIDAD — Actualizar con los reales
 // ============================================================================
-const TELEGRAM_LINK = 'https://t.me/neurotips_ia';  // Cambiar por tu canal real
-const WHATSAPP_LINK = 'https://chat.whatsapp.com/XXXXXXXXXXXXXX';  // Cambiar por tu grupo real
+const TELEGRAM_LINK = 'https://t.me/IaNeuroTips';
+const WHATSAPP_LINK = 'https://chat.whatsapp.com/LVDsxEZlkZAEyeOr6blbF3';
 
 export default function ComunidadPage() {
   const router = useRouter();
