@@ -1,35 +1,12 @@
 /**
- * API Certification — Client para endpoints de certificación IA v2.0
- * 
- * Nuevos endpoints:
- * - GET  /api/public/stats-reales         → Stats reales (reemplaza hardcoded)
- * - GET  /api/public/ia-transparency      → Transparencia IA (4 escenarios)
- * - GET  /api/public/tipster/:id/certificacion → Reporte de tipster
- * - GET  /api/public/picks-certificados   → Picks del día con cert_level
- * - POST /api/admin/certificacion/sync    → Backfill (admin only)
- * 
- * Endpoints existentes mejorados (ahora incluyen cert_level):
- * - GET /api/public/combinada-ia          → Combinada con cert badges
- * - GET /api/public/dashboard-ia          → Dashboard con cert levels
- * - GET /api/picks/recomendados           → Recomendados con cert
- * - GET /api/analisis-ia/:id              → Análisis con cert
+ * API Client — Certificación NeuroTips v2.1
+ * Todas las métricas son FLAT STAKE (1 unidad por pick)
+ * No hay datos personales de stakes ni ganancias en CLP
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-// ═══════════════════════════════════════════
-// Types
-// ═══════════════════════════════════════════
-
-export type CertLevel = 'TRIPLE_CHECK' | 'DOUBLE_CHECK' | 'SINGLE_CHECK' | 'REJECTED' | 'PENDING';
-
-export interface CertInfo {
-  cert_level: CertLevel;
-  cert_emoji: string;
-  cert_label: string;
-  cert_color: string;
-  cert_confidence: number;
-}
+// ── Types ──
 
 export interface PlatformStats {
   global: {
@@ -38,9 +15,9 @@ export interface PlatformStats {
     perdidas: number;
     pendientes: number;
     win_rate: number;
-    roi: number;
-    profit_total: number;
-    total_apostado: number;
+    roi: number;           // ROI flat de toda la plataforma
+    roi_recomendados: number; // ROI flat solo de TRIPLE_CHECK
+    picks_recomendados: number;
     cuota_promedio: number;
   };
   mes_actual: {
@@ -48,133 +25,133 @@ export interface PlatformStats {
     ganadas: number;
     perdidas: number;
     win_rate: number;
-    roi: number;
-    profit: number;
+    roi: number;           // ROI flat últimos 30 días
   };
   por_filtro_ia: Record<string, {
     total: number;
     ganadas: number;
     perdidas: number;
     win_rate: number;
-    roi: number;
-    profit: number;
+    roi: number;           // ROI flat
   }>;
   tipsters_activos: number;
   perfiles_ia: number;
 }
 
 export interface IATransparencyData {
-  por_filtro: Record<string, any>;
-  por_cert_level: Record<string, any>;
-  escenarios: Record<string, {
-    count: number;
-    emoji: string;
-    label: string;
-    description: string;
-  }>;
-  total_con_filtro: number;
-  beneficio_neto_ia: number;
-  historial_mensual: Record<string, any>;
   resumen: {
-    aprobada_wr: number;
-    rechazada_wr: number;
-    diferencia: number;
-    total_analizado: number;
+    total_analizado: string;
+    aprobada_wr: string;
+    rechazada_wr: string;
+    diferencia: string;
     mensaje: string;
   };
+  escenarios: Record<string, {
+    count: number;
+    label: string;
+    emoji: string;
+    description: string;
+  }>;
+  historial_mensual: Record<string, Record<string, {
+    ganadas: number;
+    total: number;
+    win_rate: number;
+  }>>;
+  por_filtro: Record<string, {
+    total: number;
+    ganadas: number;
+    perdidas: number;
+    win_rate: number;
+    roi: number;
+  }>;
+  por_cert_level: Record<string, {
+    total: string;
+    ganadas: string;
+    perdidas: string;
+    win_rate: string;
+  }>;
+  total_con_filtro: number;
 }
 
-export interface TipsterCertReport {
-  tipster: { id: number; alias: string; deporte: string };
-  certificacion: { nivel: string; tiene_perfil_ia: boolean; total_picks_auditados: number };
-  stats: { total: number; ganadas: number; perdidas: number; win_rate: number; roi: number; profit: number; cuota_promedio: number };
-  rachas: { actual: number; mejor_positiva: number; peor_negativa: number };
-  por_filtro_ia: Record<string, any>;
-  por_mercado: Array<{ mercado: string; total: number; ganadas: number; win_rate: number; roi: number }>;
-  perfil_ia: { specialty: string | null; golden_rules: string[]; blacklist: string[]; markets: Record<string, any> };
+export type CertLevel = 'TRIPLE_CHECK' | 'DOUBLE_CHECK' | 'SINGLE_CHECK' | 'REJECTED';
+
+export interface CertifiedPick {
+  id: number;
+  tipster_alias: string;
+  deporte: string;
+  apuesta: string;
+  cuota: number;
+  tipo_mercado: string;
+  cert_level: CertLevel;
+  cert_emoji: string;
+  cert_label: string;
+  cert_color: string;
+  neuroscore: number;
+  ev: number;
+  stake_mult: number;
+  zona: string;
 }
 
-// ═══════════════════════════════════════════
-// API Functions
-// ═══════════════════════════════════════════
-
-async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, options);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-function authHeaders(token: string): HeadersInit {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
+export interface TipsterCertData {
+  tipster_id: number;
+  alias: string;
+  deporte: string;
+  stats: {
+    total: number;
+    ganadas: number;
+    perdidas: number;
+    win_rate: number;
+    roi: number;         // ROI flat
+    cuota_promedio: number;
   };
+  filtros: Record<string, {
+    total: number;
+    ganadas: number;
+    win_rate: number;
+    roi: number;         // ROI flat
+  }>;
+  mercados: Array<{
+    mercado: string;
+    total: number;
+    ganadas: number;
+    win_rate: number;
+    roi: number;         // ROI flat
+  }>;
+  cert_distribution: Record<CertLevel, number>;
 }
 
-// ── Public endpoints (no auth) ──
+// ── Cert Level Helpers ──
 
-export const getStatsReales = () =>
-  fetchJSON<PlatformStats>(`${API_BASE}/api/public/stats-reales`);
-
-export const getIATransparency = () =>
-  fetchJSON<IATransparencyData>(`${API_BASE}/api/public/ia-transparency`);
-
-export const getTipsterCertificacion = (tipsterId: number) =>
-  fetchJSON<TipsterCertReport>(`${API_BASE}/api/public/tipster/${tipsterId}/certificacion`);
-
-export const getPicksCertificados = () =>
-  fetchJSON<any>(`${API_BASE}/api/public/picks-certificados`);
-
-// ── Admin endpoints (JWT required) ──
-
-export const syncCertificacion = (token: string) =>
-  fetchJSON<{ success: boolean; apuestas_procesadas: number; message: string }>(
-    `${API_BASE}/api/admin/certificacion/sync`,
-    { method: 'POST', headers: authHeaders(token) }
-  );
-
-// ═══════════════════════════════════════════
-// Utility: Cert Level display helpers
-// ═══════════════════════════════════════════
-
-export const CERT_DISPLAY: Record<CertLevel, {
-  emoji: string;
-  label: string;
-  color: string;
-  description: string;
-}> = {
-  TRIPLE_CHECK: {
-    emoji: '✓✓✓',
-    label: 'Certificado Premium',
-    color: '#2ED573',
-    description: 'Máxima confianza: NeuroScore ≥75, IA Aprobada, tipster rentable, mercado élite',
-  },
-  DOUBLE_CHECK: {
-    emoji: '✓✓',
-    label: 'Certificado',
-    color: '#00D1B2',
-    description: 'Alta confianza: NeuroScore ≥60, sin señales de riesgo',
-  },
-  SINGLE_CHECK: {
-    emoji: '✓',
-    label: 'Verificado',
-    color: '#FFDD57',
-    description: 'Confianza moderada: analizado por IA con resultado mixto',
-  },
-  REJECTED: {
-    emoji: '✗',
-    label: 'No recomendado',
-    color: '#FF4757',
-    description: 'La IA detectó señales de riesgo en este pick',
-  },
-  PENDING: {
-    emoji: '⏳',
-    label: 'Analizando',
-    color: '#94A3B8',
-    description: 'El análisis IA está en proceso',
-  },
+export const CERT_CONFIG: Record<CertLevel, { emoji: string; label: string; color: string; bg: string }> = {
+  TRIPLE_CHECK: { emoji: '✓✓✓', label: 'Certificado Premium', color: '#2ED573', bg: 'rgba(46,213,115,0.1)' },
+  DOUBLE_CHECK: { emoji: '✓✓', label: 'Certificado', color: '#00D1B2', bg: 'rgba(0,209,178,0.1)' },
+  SINGLE_CHECK: { emoji: '✓', label: 'Verificado', color: '#FFDD57', bg: 'rgba(255,221,87,0.1)' },
+  REJECTED: { emoji: '✗', label: 'No recomendado', color: '#FF4757', bg: 'rgba(255,71,87,0.1)' },
 };
 
-export function getCertDisplay(level: string) {
-  return CERT_DISPLAY[level as CertLevel] || CERT_DISPLAY.PENDING;
+// ── API Functions ──
+
+async function apiFetch<T>(endpoint: string): Promise<T | null> {
+  try {
+    const res = await fetch(`${API_URL}${endpoint}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error(`API Error [${endpoint}]:`, err);
+    return null;
+  }
 }
+
+export const certAPI = {
+  /** Estadísticas reales de la plataforma (flat ROI) */
+  getStats: () => apiFetch<PlatformStats>('/api/public/stats-reales'),
+  
+  /** Datos de transparencia IA (escenarios, historial) */
+  getTransparency: () => apiFetch<IATransparencyData>('/api/public/ia-transparency'),
+  
+  /** Picks certificados del día con combo sugerida */
+  getCertifiedPicks: () => apiFetch<{ picks: CertifiedPick[]; combo: any }>('/api/public/picks-certificados'),
+  
+  /** Reporte de certificación de un tipster específico */
+  getTipsterCert: (id: number) => apiFetch<TipsterCertData>(`/api/public/tipster/${id}/certificacion`),
+};
