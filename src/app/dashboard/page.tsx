@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { dashboardAPI, picksAPI, alertasAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
-import CombinadaDashboard from '@/components/CombinadaDashboard';
+import CombinadaCertificada from '@/components/CombinadaCertificada';
+import StatsReales from '@/components/StatsReales';
 
 // ============================================================================
 // TYPES
@@ -1045,7 +1046,7 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       {/* 🧠 COMBINADA IA DEL DÍA                                      */}
       {/* ============================================================ */}
-      <CombinadaDashboard />
+      <CombinadaCertificada variant="dashboard" />
 
       {/* ============================================================ */}
       {/* APUESTAS EN JUEGO — With IA Analysis                         */}
@@ -1429,55 +1430,9 @@ export default function DashboardPage() {
       )}
 
       {/* ============================================================ */}
-      {/* RENDIMIENTO GLOBAL                                            */}
+      {/* RENDIMIENTO GLOBAL — DATOS REALES                              */}
       {/* ============================================================ */}
-      <div className="rounded-2xl p-5 animate-fadeInUp"
-        style={{
-          background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.9) 100%)',
-          backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)',
-        }}>
-        <div className="flex items-center gap-2 mb-5">
-          <Star className="h-5 w-5 text-[#FFDD57]" />
-          <h3 className="font-bold text-white">Rendimiento Global</h3>
-          <span style={{
-            fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
-            background: 'rgba(0,209,178,0.1)', color: '#00D1B2', marginLeft: 'auto',
-          }}>
-            Powered by IA
-          </span>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div style={{ textAlign: 'center', padding: '12px', borderRadius: '10px', background: 'rgba(0,209,178,0.06)', border: '1px solid rgba(0,209,178,0.12)' }}>
-            <p style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'monospace', color: '#00D1B2' }}>64%</p>
-            <p style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px' }}>Win Rate Global</p>
-          </div>
-          <div style={{ textAlign: 'center', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <p style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'monospace', color: '#FFF' }}>78%</p>
-            <p style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px' }}>Win Rate Promedio</p>
-          </div>
-          <div style={{ textAlign: 'center', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <p style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'monospace', color: '#FFF' }}>1,250+</p>
-            <p style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px' }}>Apuestas Analizadas</p>
-          </div>
-          <div style={{ textAlign: 'center', padding: '12px', borderRadius: '10px', background: 'rgba(255,221,87,0.06)', border: '1px solid rgba(255,221,87,0.12)' }}>
-            <p style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'monospace', color: '#FFDD57' }}>+12.3%</p>
-            <p style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px' }}>Yield Mensual</p>
-          </div>
-        </div>
-        <div style={{ marginTop: '12px', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11px', color: '#94A3B8' }}>Efectividad del sistema IA</span>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: '#00D1B2', fontFamily: 'monospace' }}>78%</span>
-          </div>
-          <div style={{ width: '100%', height: '5px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)' }}>
-            <div style={{
-              width: '78%', height: '100%', borderRadius: '3px',
-              background: 'linear-gradient(90deg, #00D1B2, #00E5C3)',
-              boxShadow: '0 0 8px rgba(0,209,178,0.35)',
-            }} />
-          </div>
-        </div>
-      </div>
+      <StatsReales variant="full" />
 
       {/* ============================================================ */}
       {/* 🔥 ALERTAS DE RACHAS (Fase 2-F)                                */}
