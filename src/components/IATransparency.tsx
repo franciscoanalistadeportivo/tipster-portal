@@ -8,16 +8,16 @@
 
 import React, { useEffect, useState } from 'react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface TransparencyData {
   por_filtro: Record<string, {
     total: number; ganadas: number; perdidas: number;
-    win_rate: number; roi: number; profit: number;
+    win_rate: number; roi: number;
   }>;
   por_cert_level: Record<string, {
     total: number; ganadas: number; perdidas: number;
-    win_rate: number; profit: number;
+    win_rate: number; profit: number; // units (not CLP)
   }>;
   escenarios: Record<string, {
     count: number; emoji: string; label: string; description: string;
@@ -165,8 +165,8 @@ function TabResumen({ data }: { data: TransparencyData }) {
                 </span>
                 <span className="text-sm text-slate-300">{d.win_rate}% WR</span>
                 <span className="text-xs text-slate-500">{d.total} picks</span>
-                <span className={`text-xs font-bold ${d.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {d.profit >= 0 ? '+' : ''}{d.profit.toFixed(0)} CLP
+                <span className={`text-xs font-bold ${parseFloat(String(d.profit)) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  ROI: {parseFloat(String(d.profit)) >= 0 ? '+' : ''}{(parseFloat(String(d.profit)) / parseFloat(String(d.total)) * 100).toFixed(1)}%
                 </span>
               </div>
             );

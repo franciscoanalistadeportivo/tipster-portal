@@ -9,12 +9,12 @@
 import React, { useEffect, useState } from 'react';
 import CertBadge from './CertBadge';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface TipsterReport {
   tipster: { id: number; alias: string; deporte: string };
   certificacion: { nivel: string; tiene_perfil_ia: boolean; total_picks_auditados: number };
-  stats: { total: number; ganadas: number; perdidas: number; win_rate: number; roi: number; profit: number; cuota_promedio: number };
+  stats: { total: number; ganadas: number; perdidas: number; win_rate: number; roi: number; cuota_promedio: number };
   rachas: { actual: number; mejor_positiva: number; peor_negativa: number };
   por_filtro_ia: Record<string, { total: number; ganadas: number; win_rate: number; roi: number }>;
   por_mercado: Array<{ mercado: string; total: number; ganadas: number; win_rate: number; roi: number }>;

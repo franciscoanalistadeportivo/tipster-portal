@@ -9,7 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import CertBadge, { CertConfidenceBar } from './CertBadge';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface CertPick {
   id: number;
