@@ -11,6 +11,7 @@ import {
 import { dashboardAPI, picksAPI, alertasAPI } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 import CombinadaCertificada from '@/components/CombinadaCertificada';
+import CombinadaLegs, { esCombinada } from '@/components/CombinadaLegs';
 import StatsReales from '@/components/StatsReales';
 
 // ============================================================================
@@ -73,15 +74,9 @@ const useSoundNotifications = () => {
 
   const getCtx = useCallback(() => {
     if (!audioCtxRef.current) {
-      try {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      } catch {
-        return null; // Instagram/FB/WhatsApp in-app browsers may block AudioContext
-      }
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
-    try {
-      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
-    } catch {}
+    if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
     return audioCtxRef.current;
   }, []);
 
@@ -89,7 +84,6 @@ const useSoundNotifications = () => {
     if (!soundEnabled) return;
     try {
       const ctx = getCtx();
-      if (!ctx) return; // AudioContext not available
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
@@ -602,9 +596,18 @@ const PickDelDia = ({ apuestas }: { apuestas: Apuesta[] }) => {
           <p style={{ fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
             {best.tipster_alias || 'Tipster'} · {best.tipo_mercado || 'Mercado'}
           </p>
-          <p style={{ fontSize: '14px', fontWeight: 700, color: '#FFF', marginBottom: '4px', lineHeight: 1.3 }}>
-            {best.apuesta}
-          </p>
+          {esCombinada({ tipo_mercado: best.tipo_mercado, apuesta: best.apuesta }) ? (
+            <CombinadaLegs
+              textoApuesta={best.apuesta}
+              cuotaTotal={best.cuota}
+              resultado={best.resultado}
+              compact
+            />
+          ) : (
+            <p style={{ fontSize: '14px', fontWeight: 700, color: '#FFF', marginBottom: '4px', lineHeight: 1.3 }}>
+              {best.apuesta}
+            </p>
+          )}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 800, color: '#FFBB00' }}>
               @{(best.cuota || 0).toFixed(2)}
@@ -1012,9 +1015,18 @@ export default function DashboardPage() {
                       <span style={{ fontSize: '10px', color: '#EF4444', fontWeight: 600 }}>● {pick.hora_partido}</span>
                     )}
                   </div>
-                  <p style={{ fontSize: '12px', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {pick.apuesta}
-                  </p>
+                  {esCombinada({ tipo_mercado: pick.tipo_mercado, apuesta: pick.apuesta }) ? (
+                    <CombinadaLegs
+                      textoApuesta={pick.apuesta}
+                      cuotaTotal={pick.cuota}
+                      resultado={pick.resultado}
+                      compact
+                    />
+                  ) : (
+                    <p style={{ fontSize: '12px', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {pick.apuesta}
+                    </p>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                   {/* Mini NeuroScore */}
@@ -1059,7 +1071,7 @@ export default function DashboardPage() {
       {/* APUESTAS EN JUEGO — With IA Analysis                         */}
       {/* ============================================================ */}
       <div className="rounded-2xl p-4 border border-white/10 animate-fadeInUp"
-        style={{ background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(4px)' }}>
+        style={{ background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(12px)' }}>
         
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -1194,14 +1206,25 @@ export default function DashboardPage() {
                   )}
 
                   {/* Bet text + cuota */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                    <p style={{ color: '#FFF', fontWeight: 600, fontSize: '13px', lineHeight: 1.4, flex: 1, paddingRight: '8px' }}>
-                      {apuesta.apuesta}
-                    </p>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '16px', color: '#FFBB00', flexShrink: 0 }}>
-                      @{(apuesta.cuota || 0).toFixed(2)}
-                    </span>
-                  </div>
+                  {esCombinada({ tipo_mercado: apuesta.tipo_mercado, apuesta: apuesta.apuesta }) ? (
+                    <div style={{ marginBottom: '4px' }}>
+                      <CombinadaLegs
+                        textoApuesta={apuesta.apuesta}
+                        cuotaTotal={apuesta.cuota}
+                        resultado={apuesta.resultado}
+                        compact
+                      />
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                      <p style={{ color: '#FFF', fontWeight: 600, fontSize: '13px', lineHeight: 1.4, flex: 1, paddingRight: '8px' }}>
+                        {apuesta.apuesta}
+                      </p>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '16px', color: '#FFBB00', flexShrink: 0 }}>
+                        @{(apuesta.cuota || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Image */}
                   {apuesta.imagen_url && (() => {
@@ -1267,9 +1290,20 @@ export default function DashboardPage() {
                       }}>
                         {isWin ? '✓' : '✗'}
                       </span>
-                      <span style={{ fontSize: '13px', color: '#FFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {apuesta.apuesta}
-                      </span>
+                      {esCombinada({ tipo_mercado: apuesta.tipo_mercado, apuesta: apuesta.apuesta }) ? (
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <CombinadaLegs
+                            textoApuesta={apuesta.apuesta}
+                            cuotaTotal={apuesta.cuota}
+                            resultado={apuesta.resultado}
+                            compact
+                          />
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '13px', color: '#FFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {apuesta.apuesta}
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
                       {ia && <IAConfidenceRing score={ia.score} zona={ia.zona} size={32} />}
@@ -1323,7 +1357,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-5 animate-fadeInUp"
           style={{
             background: 'linear-gradient(135deg, rgba(0,209,178,0.08) 0%, rgba(30,41,59,0.7) 100%)',
-            backdropFilter: 'blur(4px)', border: '1px solid rgba(0,209,178,0.25)',
+            backdropFilter: 'blur(12px)', border: '1px solid rgba(0,209,178,0.25)',
           }}>
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2.5 rounded-xl bg-[#00D1B2]/15">
@@ -1403,7 +1437,7 @@ export default function DashboardPage() {
       {data.alertas.length > 0 && (
         <div className="rounded-2xl p-5 animate-fadeInUp"
           style={{
-            background: 'rgba(30,41,59,0.7)', backdropFilter: 'blur(4px)',
+            background: 'rgba(30,41,59,0.7)', backdropFilter: 'blur(12px)',
             border: '1px solid rgba(239,68,68,0.2)', borderLeft: '4px solid #EF4444',
           }}>
           <div className="flex items-center gap-2 mb-4">
@@ -1448,7 +1482,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-4 animate-fadeInUp" style={{
           background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8))',
           border: '1px solid rgba(255, 187, 0, 0.15)',
-          backdropFilter: 'blur(4px)',
+          backdropFilter: 'blur(12px)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
