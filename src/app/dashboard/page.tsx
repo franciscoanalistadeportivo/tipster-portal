@@ -73,9 +73,15 @@ const useSoundNotifications = () => {
 
   const getCtx = useCallback(() => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      try {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch {
+        return null; // Instagram/FB/WhatsApp in-app browsers may block AudioContext
+      }
     }
-    if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
+    try {
+      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
+    } catch {}
     return audioCtxRef.current;
   }, []);
 
@@ -83,6 +89,7 @@ const useSoundNotifications = () => {
     if (!soundEnabled) return;
     try {
       const ctx = getCtx();
+      if (!ctx) return; // AudioContext not available
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
@@ -1052,7 +1059,7 @@ export default function DashboardPage() {
       {/* APUESTAS EN JUEGO — With IA Analysis                         */}
       {/* ============================================================ */}
       <div className="rounded-2xl p-4 border border-white/10 animate-fadeInUp"
-        style={{ background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(12px)' }}>
+        style={{ background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(4px)' }}>
         
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -1316,7 +1323,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-5 animate-fadeInUp"
           style={{
             background: 'linear-gradient(135deg, rgba(0,209,178,0.08) 0%, rgba(30,41,59,0.7) 100%)',
-            backdropFilter: 'blur(12px)', border: '1px solid rgba(0,209,178,0.25)',
+            backdropFilter: 'blur(4px)', border: '1px solid rgba(0,209,178,0.25)',
           }}>
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2.5 rounded-xl bg-[#00D1B2]/15">
@@ -1396,7 +1403,7 @@ export default function DashboardPage() {
       {data.alertas.length > 0 && (
         <div className="rounded-2xl p-5 animate-fadeInUp"
           style={{
-            background: 'rgba(30,41,59,0.7)', backdropFilter: 'blur(12px)',
+            background: 'rgba(30,41,59,0.7)', backdropFilter: 'blur(4px)',
             border: '1px solid rgba(239,68,68,0.2)', borderLeft: '4px solid #EF4444',
           }}>
           <div className="flex items-center gap-2 mb-4">
@@ -1441,7 +1448,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-4 animate-fadeInUp" style={{
           background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8))',
           border: '1px solid rgba(255, 187, 0, 0.15)',
-          backdropFilter: 'blur(12px)',
+          backdropFilter: 'blur(4px)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
