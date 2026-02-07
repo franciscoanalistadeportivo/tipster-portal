@@ -16,10 +16,10 @@ const GOOGLE_CLIENT_ID = '644626606903-sm4b1s17p31c53esf4bbk5mm5q639emq.apps.goo
 const API = process.env.NEXT_PUBLIC_API_URL || '';
 
 const STATS = [
-  { value: '71.1%', label: 'Mejor Win Rate', icon: Target, color: '#00D1B2' },
-  { value: '+25', label: 'Tipsters IA', icon: Brain, color: '#0EA5E9' },
-  { value: '547+', label: 'Apuestas Registradas', icon: BarChart3, color: '#FFBB00' },
-  { value: '+8.4%', label: 'ROI Promedio', icon: TrendingUp, color: '#A78BFA' },
+  { value: '61.6%', label: 'Win Rate Global', icon: Target, color: '#00D1B2' },
+  { value: '+31', label: 'Tipsters IA', icon: Brain, color: '#0EA5E9' },
+  { value: '923+', label: 'Picks Verificados', icon: BarChart3, color: '#FFBB00' },
+  { value: '+34.2%', label: 'ROI Picks ✓✓✓', icon: TrendingUp, color: '#A78BFA' },
 ];
 
 const FEATURES = [
@@ -30,9 +30,9 @@ const FEATURES = [
 ];
 
 const HIGHLIGHTS = [
-  { label: 'Punto de Quiebre', text: 'Racha de 12 victorias consecutivas en tenis. 71.1% Win Rate con +20.8% ROI verificado.', stat: '🎾 #1 Tipster' },
-  { label: 'Goleador Pro', text: '100% efectividad en Under Goles. 69% Win Rate general con ROI de +17.8%.', stat: '⚽ Top 2' },
-  { label: 'Sistema IA', text: '+25 tipsters monitoreados con IA. Análisis de 547+ apuestas con filtros de valor esperado y stake óptimo.', stat: '🧠 +8.4% ROI' },
+  { label: 'Gol Seguro', text: '65.2% Win Rate con +21.9% ROI verificado. Especialista en Under/Over Goles.', stat: '⚽ #1 Tipster' },
+  { label: 'Dato Mixto', text: '58.3% Win Rate multideporte. +10.3% ROI flat verificado en 120 picks.', stat: '🎯 Top 2' },
+  { label: 'Sistema IA', text: '+31 tipsters verificados con IA. 923+ picks analizados con certificación de 4 niveles y ROI flat.', stat: '🧠 +34.2% ROI' },
 ];
 
 export default function LoginPage() {
