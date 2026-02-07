@@ -11,7 +11,7 @@ import {
 // ============================================
 // PIN DE ACCESO SECRETO
 // ============================================
-const ADMIN_PIN = 'NT2026x';  // ← Cámbialo por el que quieras
+const ADMIN_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN || 'NT2026x';  // ← Definir NEXT_PUBLIC_ADMIN_PIN en .env.local
 
 // ============================================
 // TIPOS Y CONTEXTO AUTH
