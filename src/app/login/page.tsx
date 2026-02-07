@@ -15,7 +15,7 @@ import { useAuthStore } from '@/lib/store';
 const GOOGLE_CLIENT_ID = '644626606903-sm4b1s17p31c53esf4bbk5mm5q639emq.apps.googleusercontent.com';
 const API = process.env.NEXT_PUBLIC_API_URL || '';
 
-const STATS = [
+const STATS_FALLBACK = [
   { value: '61.6%', label: 'Win Rate Global', icon: Target, color: '#00D1B2' },
   { value: '+31', label: 'Tipsters IA', icon: Brain, color: '#0EA5E9' },
   { value: '923+', label: 'Picks Verificados', icon: BarChart3, color: '#FFBB00' },
@@ -47,6 +47,7 @@ export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
+  const [liveStats, setLiveStats] = useState(STATS_FALLBACK);
 
   useEffect(() => {
     setMounted(true);
@@ -54,6 +55,29 @@ export default function LoginPage() {
       setActiveHighlight((prev) => (prev + 1) % HIGHLIGHTS.length);
     }, 4000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch stats reales de la API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${API}/api/public/stats-reales`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.global) {
+            setLiveStats([
+              { value: `${data.global.win_rate}%`, label: 'Win Rate Global', icon: Target, color: '#00D1B2' },
+              { value: `+${data.tipsters_activos}`, label: 'Tipsters IA', icon: Brain, color: '#0EA5E9' },
+              { value: `${data.global.total_picks}+`, label: 'Picks Verificados', icon: BarChart3, color: '#FFBB00' },
+              { value: `+${data.global.roi_recomendados}%`, label: 'ROI Picks ✓✓✓', icon: TrendingUp, color: '#A78BFA' },
+            ]);
+          }
+        }
+      } catch (e) {
+        console.error('Login stats fetch error:', e);
+      }
+    };
+    fetchStats();
   }, []);
 
   // Google OAuth
@@ -165,7 +189,7 @@ export default function LoginPage() {
           </div>
 
           <div className="relative z-10 grid grid-cols-4 gap-4 my-10" style={{ opacity: mounted ? 1 : 0, transition: 'all 0.8s ease 0.4s' }}>
-            {STATS.map((stat, i) => (
+            {liveStats.map((stat, i) => (
               <div key={i} className="text-center p-4 rounded-xl" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(100, 116, 139, 0.1)' }}>
                 <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
                 <div className="text-xl font-black text-white">{stat.value}</div>
