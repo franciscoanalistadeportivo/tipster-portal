@@ -220,7 +220,7 @@ export default function LandingPage() {
           if (sorted.length >= 3) {
             const deporteEmoji: Record<string, string> = {
               'Futbol': '⚽', 'Fútbol': '⚽', 'Tenis': '🎾',
-              'NBA': 'ðŸ€', 'Baloncesto': 'ðŸ€', 'Mixto': 'ðŸŽ¯',
+              'NBA': '🏀', 'Baloncesto': '🏀', 'Mixto': '🎯',
             };
 
             setTopTipsters(sorted.map((t: any, i: number) => ({
@@ -576,7 +576,7 @@ export default function LandingPage() {
                 {i === 0 && (
                   <div className="absolute -top-3 left-4 text-xs font-bold px-3 py-1 rounded-full"
                     style={{ background: 'linear-gradient(135deg, #00D1B2, #00B89C)', color: '#0B1120' }}>
-                    ðŸ† #1 VERIFICADO
+                    🏆 #1 VERIFICADO
                   </div>
                 )}
 
@@ -1118,5 +1118,6 @@ export default function LandingPage() {
     </div>
   );
 }
+
 
 
