@@ -272,8 +272,12 @@ export default function NeuroVision() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Solo datos del mes actual (filtro IA se implementó en feb 2026)
+        const now = new Date();
+        const desde = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        
         const [statsRes, dashRes] = await Promise.all([
-          fetch(`${API_URL}/api/public/stats-reales`).then(r => r.ok ? r.json() : null),
+          fetch(`${API_URL}/api/public/stats-reales?desde=${desde}`).then(r => r.ok ? r.json() : null),
           fetch(`${API_URL}/api/public/dashboard-ia`).then(r => r.ok ? r.json() : null),
         ]);
         if (statsRes) setStats(statsRes);
@@ -302,14 +306,17 @@ export default function NeuroVision() {
 
   if (!stats) return null;
 
-  // Extract data
+  // Ensure numeric — API may return strings
+  const safeNum = (v: any, fallback = 0) => Number(v) || fallback;
+
+  // Don't show if not enough data this month
   const filtros = stats.por_filtro_ia || {};
   const aprobada = filtros['APROBADA'] || { total: 0, win_rate: 0, roi: 0, ganadas: 0, perdidas: 0 };
   const rechazada = filtros['RECHAZADA'] || { total: 0, win_rate: 0, roi: 0, ganadas: 0, perdidas: 0 };
   const global = stats.global;
+  
+  if (safeNum(global.total_picks) < 5) return null;
 
-  // Ensure numeric — API may return strings
-  const safeNum = (v: any, fallback = 0) => Number(v) || fallback;
   const avgOdds = safeNum(global.cuota_promedio, 1.75);
 
   // Generate curves
@@ -340,7 +347,7 @@ export default function NeuroVision() {
               ¿Qué pasa cuando activas la IA?
             </h2>
             <p className="text-[#94A3B8] max-w-2xl mx-auto text-sm sm:text-base">
-              {global.total_picks} picks reales analizados. Mismo período. Mismos tipsters. La única diferencia: el filtro IA.
+              Picks de este mes analizados. Mismos tipsters. La única diferencia: el filtro IA.
             </p>
           </div>
         </FadeInSection>
@@ -542,7 +549,7 @@ export default function NeuroVision() {
         <FadeInSection delay={0.3}>
           <div className="mt-8 text-center">
             <p className="text-[#64748B] text-xs max-w-xl mx-auto">
-              Datos calculados sobre {global.total_picks} picks históricos con flat stake (1 unidad por pick). 
+              Datos calculados con flat stake (1 unidad por pick) sobre los picks del mes actual. 
               Rendimiento pasado no garantiza resultados futuros.
             </p>
           </div>

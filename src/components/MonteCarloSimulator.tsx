@@ -298,7 +298,9 @@ export default function MonteCarloSimulator() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/public/stats-reales`);
+        const now = new Date();
+        const desde = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        const res = await fetch(`${API_URL}/api/public/stats-reales?desde=${desde}`);
         if (!res.ok) throw new Error('API error');
         const data = await res.json();
         const aprobada = data.por_filtro_ia?.APROBADA;
