@@ -22,57 +22,57 @@ const LOGO_ICON = '/logo-icon.png';
 // Fallback estático si la API falla. Toda cifra es verificable.
 // ============================================================================
 const REAL_STATS = {
-  totalTipsters: 25,
-  totalApuestas: 547,
-  bestWinRate: 71.1,
+  totalTipsters: 31,
+  totalApuestas: 923,
+  bestWinRate: 61.6,
   bestStreak: 12,
-  roiPromedio: 8.4,
+  roiPromedio: 34.2,
 };
 
 const TOP_TIPSTERS_FALLBACK = [
+  {
+    id: 13,
+    alias: 'Gol Seguro',
+    deporte: 'Fútbol',
+    emoji: '⚽',
+    winRate: 65.2,
+    roi: 21.9,
+    apuestas: 115,
+    racha: 5,
+    specialty: 'Under/Over Goles',
+  },
+  {
+    id: 9,
+    alias: 'Dato Mixto',
+    deporte: 'Mixto',
+    emoji: '🎯',
+    winRate: 58.3,
+    roi: 10.3,
+    apuestas: 120,
+    racha: 4,
+    specialty: 'Multideporte',
+  },
   {
     id: 16,
     alias: 'Punto de Quiebre',
     deporte: 'Tenis',
     emoji: '🎾',
-    winRate: 71.1,
-    roi: 20.8,
-    apuestas: 46,
-    racha: 12,
-    specialty: 'ATP, WTA, Dobles',
-  },
-  {
-    id: 1,
-    alias: 'Goleador Pro',
-    deporte: 'Fútbol',
-    emoji: '⚽',
-    winRate: 69.0,
-    roi: 17.8,
-    apuestas: 29,
-    racha: 8,
-    specialty: 'Under Goles, Ambos Marcan',
-  },
-  {
-    id: 15,
-    alias: 'Raqueta de Oro',
-    deporte: 'Tenis',
-    emoji: '🎾',
-    winRate: 65.8,
-    roi: 6.5,
-    apuestas: 76,
-    racha: 7,
-    specialty: 'Combinadas ATP/WTA',
+    winRate: 62.5,
+    roi: 10.1,
+    apuestas: 88,
+    racha: 6,
+    specialty: 'ATP, WTA',
   },
 ];
 
 // Actividad real basada en análisis verificados
 const ACTIVITY_EVENTS = [
-  { text: 'Punto de Quiebre alcanzó racha de 12 victorias', icon: '🔥' },
-  { text: 'Goleador Pro 100% en Under Goles este mes', icon: '⚽' },
-  { text: 'Raqueta de Oro 84.6% WR en combinadas', icon: '🎾' },
-  { text: '547 apuestas verificadas en el sistema', icon: '📊' },
-  { text: 'Visión de Cancha racha de 11 aciertos seguidos', icon: '🏀' },
-  { text: '+25 tipsters monitoreados con IA', icon: '✅' },
+  { text: '923 apuestas verificadas con IA', icon: '📊' },
+  { text: 'Picks ✓✓✓ con +34.2% ROI verificado', icon: '🟢' },
+  { text: '31 tipsters monitoreados en tiempo real', icon: '✅' },
+  { text: '80.4% Win Rate en picks certificados', icon: '🔥' },
+  { text: 'Zona 1.70-2.49 mejor rendimiento', icon: '🎯' },
+  { text: 'Sistema de certificación con 4 niveles IA', icon: '🧠' },
 ];
 
 // ============================================================================
@@ -218,6 +218,25 @@ export default function LandingPage() {
   // Intentar cargar datos live de la API (fallback a estáticos si falla)
   useEffect(() => {
     const fetchLive = async () => {
+      // ★ Fetch stats reales del API de certificación v2.1
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+        const statsRes = await fetch(`${API_URL}/api/public/stats-reales`);
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats({
+            totalTipsters: statsData.tipsters_activos || 31,
+            totalApuestas: statsData.global?.total_picks || 923,
+            bestWinRate: parseFloat(statsData.global?.win_rate || '61.6'),
+            bestStreak: 12,
+            roiPromedio: statsData.global?.roi_recomendados || 34.2,
+          });
+          setApiLoaded(true);
+        }
+      } catch (e) {
+        console.error('Stats reales API error:', e);
+      }
+
       try {
         const data = await dashboardAPI.getData();
         if (data?.tipsters_list?.length > 0) {
@@ -400,21 +419,21 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-6 sm:gap-10 mb-8 sm:mb-10">
             <div className="text-center">
               <p className="text-2xl sm:text-3xl font-bold text-[#00D1B2] font-mono">
-                <AnimatedCounter value={REAL_STATS.totalApuestas} suffix="+" />
+                <AnimatedCounter value={stats.totalApuestas} suffix="+" />
               </p>
-              <p className="text-[#94A3B8] text-xs sm:text-sm">Apuestas Verificadas</p>
+              <p className="text-[#94A3B8] text-xs sm:text-sm">Picks Analizados</p>
             </div>
             <div className="text-center">
               <p className="text-2xl sm:text-3xl font-bold text-white font-mono">
-                <AnimatedCounter value={REAL_STATS.bestWinRate} suffix="%" decimals={1} />
+                <AnimatedCounter value={stats.bestWinRate} suffix="%" decimals={1} />
               </p>
-              <p className="text-[#94A3B8] text-xs sm:text-sm">Mejor Win Rate</p>
+              <p className="text-[#94A3B8] text-xs sm:text-sm">Win Rate Global</p>
             </div>
             <div className="text-center">
               <p className="text-2xl sm:text-3xl font-bold text-[#FFDD57] font-mono">
-                +<AnimatedCounter value={REAL_STATS.roiPromedio} suffix="%" decimals={1} />
+                +<AnimatedCounter value={stats.roiPromedio} suffix="%" decimals={1} />
               </p>
-              <p className="text-[#94A3B8] text-xs sm:text-sm">ROI Promedio</p>
+              <p className="text-[#94A3B8] text-xs sm:text-sm">ROI Picks ✓✓✓</p>
             </div>
           </div>
 
@@ -548,7 +567,7 @@ export default function LandingPage() {
               Top Tipsters Verificados
             </h2>
             <p className="text-[#94A3B8] text-sm sm:text-base max-w-lg mx-auto">
-              Ranking basado en {REAL_STATS.totalApuestas}+ apuestas registradas.
+              Ranking basado en {stats.totalApuestas}+ apuestas registradas.
               Resultados actualizados diariamente.
             </p>
           </div>
@@ -1028,8 +1047,8 @@ export default function LandingPage() {
             ¿Listo para tu ventaja basada en datos?
           </h2>
           <p className="text-[#94A3B8] mb-6 sm:mb-8 text-sm sm:text-base">
-            {REAL_STATS.totalApuestas}+ apuestas verificadas.
-            {' '}+{REAL_STATS.totalTipsters} tipsters analizados con IA.
+            {stats.totalApuestas}+ apuestas verificadas.
+            {' '}+{stats.totalTipsters} tipsters analizados con IA.
             {' '}Deja de apostar a ciegas.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
