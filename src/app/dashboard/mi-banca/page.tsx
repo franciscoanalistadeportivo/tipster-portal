@@ -5,6 +5,7 @@ import {
   Wallet, Plus, Check, X, Calendar, BarChart3, 
   PiggyBank, Lightbulb, Edit3, Save, Flame, Trash2
 } from 'lucide-react';
+import MonteCarloSimulator from '@/components/MonteCarloSimulator';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://franciscoanalistadeportivo.pythonanywhere.com';
 
@@ -336,6 +337,9 @@ export default function MiBancaPage() {
 
       <Estadisticas stats={stats} />
 
+      {/* Monte Carlo Simulator — Future Banca Projection */}
+      <MonteCarloSimulator />
+
       {picksDelDia.length > 0 && (
         <div className="rounded-2xl p-4 border border-white/10" style={{ background: 'rgba(30,41,59,0.7)' }}>
           <h3 className="text-white font-bold flex items-center gap-2 mb-3"><Flame className="h-5 w-5 text-[#FFDD57]" /> Picks del Día</h3>
@@ -375,3 +379,4 @@ export default function MiBancaPage() {
     </div>
   );
 }
+
