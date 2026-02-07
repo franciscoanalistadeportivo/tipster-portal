@@ -7,6 +7,7 @@ import {
   Brain, Shield, ChevronDown, ChevronUp, AlertTriangle
 } from 'lucide-react';
 import { apuestasAPI } from '@/lib/api';
+import CombinadaLegs, { esCombinada } from '@/components/CombinadaLegs';
 
 // ============================================================================
 // TYPES
@@ -375,16 +376,27 @@ const CardPendiente = ({
                 zona_color={iaData.zona_color} 
               />
             )}
-            <span className="font-mono font-bold text-lg" style={{ color: isLive ? '#EF4444' : '#FFBB00' }}>
-              @{Number(apuesta.cuota || 0).toFixed(2)}
-            </span>
+            {!esCombinada(apuesta) && (
+              <span className="font-mono font-bold text-lg" style={{ color: isLive ? '#EF4444' : '#FFBB00' }}>
+                @{Number(apuesta.cuota || 0).toFixed(2)}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Apuesta */}
-        <p className="text-white font-medium text-[15px] mb-2 leading-snug">
-          {apuesta.apuesta}
-        </p>
+        {/* Apuesta — Combinadas se muestran con legs individuales */}
+        {esCombinada(apuesta) ? (
+          <CombinadaLegs
+            textoApuesta={apuesta.apuesta}
+            cuotaTotal={apuesta.cuota}
+            resultado={apuesta.resultado}
+            compact
+          />
+        ) : (
+          <p className="text-white font-medium text-[15px] mb-2 leading-snug">
+            {apuesta.apuesta}
+          </p>
+        )}
 
         {/* Imagen capture */}
         {apuesta.imagen_url && (
@@ -474,7 +486,16 @@ const CardResuelta = ({
               </span>
             )}
           </div>
-          <p className="text-white font-medium">{apuesta.apuesta}</p>
+          {esCombinada(apuesta) ? (
+            <CombinadaLegs
+              textoApuesta={apuesta.apuesta}
+              cuotaTotal={apuesta.cuota}
+              resultado={apuesta.resultado}
+              compact
+            />
+          ) : (
+            <p className="text-white font-medium">{apuesta.apuesta}</p>
+          )}
           {apuesta.imagen_url && (
             <ImageCapture url={`${process.env.NEXT_PUBLIC_API_URL || ''}${apuesta.imagen_url}`} />
           )}
@@ -910,3 +931,4 @@ export default function ApuestasPage() {
     </div>
   );
 }
+
