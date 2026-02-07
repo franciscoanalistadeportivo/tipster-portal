@@ -225,7 +225,7 @@ function BookmakerRadar({ odds }: { odds: Record<string, number> | null }) {
             <text x={lx} y={ly + 11} textAnchor="middle" dominantBaseline="middle"
               fill={best ? '#00D1B2' : '#64748B'} fontSize={10} fontWeight={700}
               fontFamily="'JetBrains Mono', monospace">
-              {v.toFixed(2)}
+              {Number(v).toFixed(2)}
             </text>
           </g>
         );
@@ -308,12 +308,14 @@ export default function NeuroVision() {
   const rechazada = filtros['RECHAZADA'] || { total: 0, win_rate: 0, roi: 0, ganadas: 0, perdidas: 0 };
   const global = stats.global;
 
-  const avgOdds = global.cuota_promedio || 1.75;
+  // Ensure numeric — API may return strings
+  const safeNum = (v: any, fallback = 0) => Number(v) || fallback;
+  const avgOdds = safeNum(global.cuota_promedio, 1.75);
 
   // Generate curves
-  const curveAll = generateCurve(global.total_picks, global.win_rate, avgOdds);
-  const curveAprobada = generateCurve(aprobada.total || 100, aprobada.win_rate || 60, avgOdds);
-  const curveRechazada = generateCurve(rechazada.total || 100, rechazada.win_rate || 45, avgOdds);
+  const curveAll = generateCurve(safeNum(global.total_picks), safeNum(global.win_rate), avgOdds);
+  const curveAprobada = generateCurve(safeNum(aprobada.total, 100), safeNum(aprobada.win_rate, 60), avgOdds);
+  const curveRechazada = generateCurve(safeNum(rechazada.total, 100), safeNum(rechazada.win_rate, 45), avgOdds);
 
   const handleToggle = () => {
     setIaEnabled(!iaEnabled);
@@ -375,9 +377,9 @@ export default function NeuroVision() {
                 <div className="text-xs text-[#64748B]">ROI acumulado</div>
                 <div className="text-xl font-bold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                   <AnimatedValue 
-                    value={iaEnabled ? (aprobada.roi || 0) : (global.roi || 0)} 
+                    value={iaEnabled ? safeNum(aprobada.roi) : safeNum(global.roi)} 
                     suffix="%" 
-                    color={iaEnabled ? '#00D1B2' : (global.roi >= 0 ? '#FFBB00' : '#EF4444')} 
+                    color={iaEnabled ? '#00D1B2' : (safeNum(global.roi) >= 0 ? '#FFBB00' : '#EF4444')} 
                   />
                 </div>
               </div>
@@ -468,15 +470,15 @@ export default function NeuroVision() {
                 <div>
                   <div className="text-[10px] text-[#64748B] uppercase tracking-wider">Win Rate</div>
                   <div className="text-xl font-bold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                    <AnimatedValue value={iaEnabled ? (aprobada.win_rate || 0) : global.win_rate} 
+                    <AnimatedValue value={iaEnabled ? safeNum(aprobada.win_rate) : safeNum(global.win_rate)} 
                       suffix="%" prefix="" color={iaEnabled ? '#00D1B2' : '#FFBB00'} />
                   </div>
                 </div>
                 <div>
                   <div className="text-[10px] text-[#64748B] uppercase tracking-wider">ROI Flat</div>
                   <div className="text-xl font-bold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                    <AnimatedValue value={iaEnabled ? (aprobada.roi || 0) : global.roi} 
-                      suffix="%" color={iaEnabled ? '#00D1B2' : (global.roi >= 0 ? '#FFBB00' : '#EF4444')} />
+                    <AnimatedValue value={iaEnabled ? safeNum(aprobada.roi) : safeNum(global.roi)} 
+                      suffix="%" color={iaEnabled ? '#00D1B2' : (safeNum(global.roi) >= 0 ? '#FFBB00' : '#EF4444')} />
                   </div>
                 </div>
               </div>
@@ -500,13 +502,13 @@ export default function NeuroVision() {
                 <div>
                   <div className="text-[10px] text-[#64748B] uppercase tracking-wider">Win Rate</div>
                   <div className="text-lg font-bold text-[#EF4444]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                    {(rechazada.win_rate || 0).toFixed(1)}%
+                    {Number(rechazada.win_rate || 0).toFixed(1)}%
                   </div>
                 </div>
                 <div>
                   <div className="text-[10px] text-[#64748B] uppercase tracking-wider">ROI</div>
                   <div className="text-lg font-bold text-[#EF4444]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                    {(rechazada.roi || 0).toFixed(1)}%
+                    {Number(rechazada.roi || 0).toFixed(1)}%
                   </div>
                 </div>
               </div>

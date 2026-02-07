@@ -304,17 +304,17 @@ export default function MonteCarloSimulator() {
         const aprobada = data.por_filtro_ia?.APROBADA;
         if (aprobada) {
           setPlatformStats({
-            win_rate: aprobada.win_rate || 58,
-            roi: aprobada.roi || 10,
-            cuota_promedio: data.global?.cuota_promedio || 1.75,
-            total: aprobada.total || 100,
+            win_rate: Number(aprobada.win_rate) || 58,
+            roi: Number(aprobada.roi) || 10,
+            cuota_promedio: Number(data.global?.cuota_promedio) || 1.75,
+            total: Number(aprobada.total) || 100,
           });
         } else {
           setPlatformStats({
-            win_rate: data.global?.win_rate || 56,
-            roi: data.global?.roi || 5,
-            cuota_promedio: data.global?.cuota_promedio || 1.75,
-            total: data.global?.total_picks || 100,
+            win_rate: Number(data.global?.win_rate) || 56,
+            roi: Number(data.global?.roi) || 5,
+            cuota_promedio: Number(data.global?.cuota_promedio) || 1.75,
+            total: Number(data.global?.total_picks) || 100,
           });
         }
       } catch (e) {
