@@ -49,7 +49,7 @@ const RegistrarModal = ({
   const cuotaNum = parseFloat(cuotaUsuario) || 0;
   const stakeNum = parseFloat(stake) || 0;
   const gananciaEstimada = stakeNum * (cuotaNum - 1);
-  const porcentajeBanca = (stakeNum / banca) * 100;
+  const porcentajeBanca = banca > 0 ? (stakeNum / banca) * 100 : 0;
 
   const handleSubmit = async () => {
     if (cuotaNum <= 1) {
@@ -195,14 +195,19 @@ export default function PicksRecomendadosPage() {
   const fetchData = async () => {
     try {
       const [picksData, bancaData] = await Promise.all([
-        picksAPI.getRecomendados(),
-        miBancaAPI.getEstado()
+        picksAPI.getRecomendados().catch(() => ({ picks: [], total: 0 })),
+        miBancaAPI.getEstado().catch(() => ({ banca_actual: 0, perfil_riesgo: 'moderado' }))
       ]);
       setPicks(picksData.picks || []);
-      setBancaInfo({
-        banca_actual: bancaData.banca_actual,
-        perfil_riesgo: bancaData.perfil_riesgo
-      });
+      const bancaActual = parseFloat(bancaData?.banca_actual) || 0;
+      if (bancaActual > 0) {
+        setBancaInfo({
+          banca_actual: bancaActual,
+          perfil_riesgo: bancaData?.perfil_riesgo || 'moderado'
+        });
+      } else {
+        setBancaInfo(null);
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -252,7 +257,7 @@ export default function PicksRecomendadosPage() {
             Picks Recomendados
           </h1>
           <p className="text-[#94A3B8] mt-1">
-            Stakes calculados para tu banca de ${bancaInfo?.banca_actual.toLocaleString()}
+            Stakes calculados para tu banca de ${bancaInfo?.banca_actual?.toLocaleString() || '0'}
           </p>
         </div>
       </div>
@@ -370,7 +375,7 @@ export default function PicksRecomendadosPage() {
       )}
 
       {/* Modal */}
-      {selectedPick && bancaInfo && (
+      {selectedPick && bancaInfo && bancaInfo.banca_actual > 0 && (
         <RegistrarModal
           pick={selectedPick}
           banca={bancaInfo.banca_actual}
