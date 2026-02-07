@@ -75,7 +75,6 @@ const getActivityEvents = (s: typeof REAL_STATS) => [
   { text: 'Zona 1.70-2.49 mejor rendimiento', icon: '🎯' },
   { text: 'Sistema de certificación con 4 niveles IA', icon: '🧠' },
 ];
-];
 
 // ============================================================================
 // COMPONENTES AUXILIARES
