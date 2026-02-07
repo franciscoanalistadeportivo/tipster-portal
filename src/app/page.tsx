@@ -68,12 +68,12 @@ const TOP_TIPSTERS_FALLBACK = [
 
 // Actividad real basada en análisis verificados
 const ACTIVITY_EVENTS = [
-  { text: '923 apuestas verificadas con IA', icon: 'ðŸ“Š' },
+  { text: '923 apuestas verificadas con IA', icon: '📊' },
   { text: 'Picks âœ“âœ“âœ“ con +34.2% ROI verificado', icon: '🟢' },
   { text: '31 tipsters monitoreados en tiempo real', icon: '✅' },
-  { text: '80.4% Win Rate en picks certificados', icon: 'ðŸ”¥' },
+  { text: '80.4% Win Rate en picks certificados', icon: '🔥' },
   { text: 'Zona 1.70-2.49 mejor rendimiento', icon: '🎯' },
-  { text: 'Sistema de certificación con 4 niveles IA', icon: 'ðŸ§ ' },
+  { text: 'Sistema de certificación con 4 niveles IA', icon: '🧠' },
 ];
 
 // ============================================================================
@@ -221,7 +221,7 @@ export default function LandingPage() {
           if (sorted.length >= 3) {
             const deporteEmoji: Record<string, string> = {
               'Futbol': '⚽', 'Fútbol': '⚽', 'Tenis': '🎾',
-              'NBA': 'ðŸ€', 'Baloncesto': 'ðŸ€', 'Mixto': '🎯',
+              'NBA': '🏀', 'Baloncesto': '🏀', 'Mixto': '🎯',
             };
 
             setTopTipsters(sorted.map((t: any, i: number) => ({
@@ -577,7 +577,7 @@ export default function LandingPage() {
                 {i === 0 && (
                   <div className="absolute -top-3 left-4 text-xs font-bold px-3 py-1 rounded-full"
                     style={{ background: 'linear-gradient(135deg, #00D1B2, #00B89C)', color: '#0B1120' }}>
-                    ðŸ† #1 VERIFICADO
+                    🏆 #1 VERIFICADO
                   </div>
                 )}
 
@@ -909,7 +909,7 @@ export default function LandingPage() {
             border: '1px solid rgba(255,221,87,0.2)',
           }}>
             <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="text-5xl sm:text-6xl">ðŸ”¥</div>
+              <div className="text-5xl sm:text-6xl">🔥</div>
               <div className="text-center sm:text-left flex-1">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3"
                   style={{ background: 'rgba(255,221,87,0.12)', border: '1px solid rgba(255,221,87,0.25)' }}>
@@ -943,7 +943,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <FadeInSection>
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-3">
-            Ášnete a la comunidad
+            Únete a la comunidad
           </h2>
           <p className="text-[#94A3B8] text-center mb-8 text-sm sm:text-base">
             Recibe picks gratis, alertas y análisis directo en tu celular
