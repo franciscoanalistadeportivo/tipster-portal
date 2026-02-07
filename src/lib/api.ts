@@ -257,8 +257,12 @@ export const miBancaAPI = {
   },
 
   getEstado: async () => {
-    const response = await api.get('/api/banca/estado');
-    return response.data;
+    try {
+      const response = await api.get('/api/banca/estado');
+      return response.data;
+    } catch {
+      return { onboarding_completo: false, banca_actual: 0, perfil_riesgo: 'moderado' };
+    }
   },
 
   actualizar: async (data: Partial<{
@@ -337,8 +341,12 @@ export const misApuestasAPI = {
 // ============================================================================
 export const picksAPI = {
   getRecomendados: async () => {
-    const response = await api.get('/api/picks/recomendados');
-    return response.data;
+    try {
+      const response = await api.get('/api/picks/recomendados');
+      return response.data;
+    } catch {
+      return { picks: [], total: 0, requiere_setup: false };
+    }
   },
   // ★ NUEVO v2.4: Picks en vivo y urgentes
   getLive: async () => {
