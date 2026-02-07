@@ -69,7 +69,7 @@ const TOP_TIPSTERS_FALLBACK = [
 // Actividad real basada en análisis verificados
 const ACTIVITY_EVENTS = [
   { text: '923 apuestas verificadas con IA', icon: '📊' },
-  { text: 'Picks âœ“âœ“âœ“ con +34.2% ROI verificado', icon: '🟢' },
+  { text: 'Picks ✓✓✓ con +34.2% ROI verificado', icon: '🟢' },
   { text: '31 tipsters monitoreados en tiempo real', icon: '✅' },
   { text: '80.4% Win Rate en picks certificados', icon: '🔥' },
   { text: 'Zona 1.70-2.49 mejor rendimiento', icon: '🎯' },
@@ -414,7 +414,7 @@ export default function LandingPage() {
               <p className="text-2xl sm:text-3xl font-bold text-[#FFDD57] font-mono">
                 <NumberTicker value={stats.roiPromedio} prefix="+" suffix="%" decimals={1} />
               </p>
-              <p className="text-[#94A3B8] text-xs sm:text-sm">ROI Picks âœ“âœ“âœ“</p>
+              <p className="text-[#94A3B8] text-xs sm:text-sm">ROI Picks ✓✓✓</p>
             </div>
           </div>
           </FadeInSection>
