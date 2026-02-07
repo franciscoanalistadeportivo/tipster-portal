@@ -465,3 +465,24 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ============================================================================
+   MOBILE PERFORMANCE — Reduce backdrop-filter for low-end devices
+   ============================================================================ */
+@media (max-width: 768px) {
+  /* Reduce blur intensity on mobile for GPU performance */
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg {
+    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+}
+
+/* Disable backdrop-filter entirely on very low-end devices */
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  * {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
