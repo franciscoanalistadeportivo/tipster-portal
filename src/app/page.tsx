@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { dashboardAPI } from '@/lib/api';
 import CombinadaIA from '@/components/CombinadaIA';
+import { FadeInSection, NumberTicker, ShimmerButton } from '@/components/ui/motion';
 
 // ============================================================================
 // ASSETS
@@ -18,8 +19,8 @@ const LOGO_URL = '/logo.png';
 const LOGO_ICON = '/logo-icon.png';
 
 // ============================================================================
-// DATOS REALES VERIFICADOS — Top 9 analizados en profundidad, +25 en seguimiento
-// Fallback estático si la API falla. Toda cifra es verificable.
+// DATOS REALES VERIFICADOS â€” Top 9 analizados en profundidad, +25 en seguimiento
+// Fallback estÃ¡tico si la API falla. Toda cifra es verificable.
 // ============================================================================
 const REAL_STATS = {
   totalTipsters: 31,
@@ -33,8 +34,8 @@ const TOP_TIPSTERS_FALLBACK = [
   {
     id: 13,
     alias: 'Gol Seguro',
-    deporte: 'Fútbol',
-    emoji: '⚽',
+    deporte: 'FÃºtbol',
+    emoji: 'âš½',
     winRate: 65.2,
     roi: 21.9,
     apuestas: 115,
@@ -45,7 +46,7 @@ const TOP_TIPSTERS_FALLBACK = [
     id: 9,
     alias: 'Dato Mixto',
     deporte: 'Mixto',
-    emoji: '🎯',
+    emoji: 'ðŸŽ¯',
     winRate: 58.3,
     roi: 10.3,
     apuestas: 120,
@@ -56,7 +57,7 @@ const TOP_TIPSTERS_FALLBACK = [
     id: 16,
     alias: 'Punto de Quiebre',
     deporte: 'Tenis',
-    emoji: '🎾',
+    emoji: 'ðŸŽ¾',
     winRate: 62.5,
     roi: 10.1,
     apuestas: 88,
@@ -65,49 +66,21 @@ const TOP_TIPSTERS_FALLBACK = [
   },
 ];
 
-// Actividad real basada en análisis verificados
+// Actividad real basada en anÃ¡lisis verificados
 const ACTIVITY_EVENTS = [
-  { text: '923 apuestas verificadas con IA', icon: '📊' },
-  { text: 'Picks ✓✓✓ con +34.2% ROI verificado', icon: '🟢' },
-  { text: '31 tipsters monitoreados en tiempo real', icon: '✅' },
-  { text: '80.4% Win Rate en picks certificados', icon: '🔥' },
-  { text: 'Zona 1.70-2.49 mejor rendimiento', icon: '🎯' },
-  { text: 'Sistema de certificación con 4 niveles IA', icon: '🧠' },
+  { text: '923 apuestas verificadas con IA', icon: 'ðŸ“Š' },
+  { text: 'Picks âœ“âœ“âœ“ con +34.2% ROI verificado', icon: 'ðŸŸ¢' },
+  { text: '31 tipsters monitoreados en tiempo real', icon: 'âœ…' },
+  { text: '80.4% Win Rate en picks certificados', icon: 'ðŸ”¥' },
+  { text: 'Zona 1.70-2.49 mejor rendimiento', icon: 'ðŸŽ¯' },
+  { text: 'Sistema de certificaciÃ³n con 4 niveles IA', icon: 'ðŸ§ ' },
 ];
 
 // ============================================================================
 // COMPONENTES AUXILIARES
 // ============================================================================
 
-/** Contador animado - se incrementa de 0 al valor final */
-const AnimatedCounter = ({ value, suffix = '', decimals = 0 }: {
-  value: number; suffix?: string; decimals?: number;
-}) => {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    const duration = 2000;
-    const steps = 60;
-    const increment = value / steps;
-    let current = 0;
-
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= value) {
-        setCount(value);
-        clearInterval(timer);
-      } else {
-        setCount(decimals > 0 ? parseFloat(current.toFixed(decimals)) : Math.floor(current));
-      }
-    }, duration / steps);
-
-    return () => clearInterval(timer);
-  }, [value, decimals]);
-
-  return <span>{decimals > 0 ? count.toFixed(decimals) : count.toLocaleString()}{suffix}</span>;
-};
-
-/** Ticker de actividad real — rota eventos verificados, sin montos falsos */
+/** Ticker de actividad real â€” rota eventos verificados, sin montos falsos */
 const ActivityTicker = () => {
   const [idx, setIdx] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -152,12 +125,12 @@ const WinRateBar = ({ value, color = '#00D1B2' }: { value: number; color?: strin
 // GOOGLE TRANSLATE WIDGET
 // ============================================================================
 const LANGUAGES = [
-  { code: 'es', label: 'ES', flag: '🇪🇸' },
-  { code: 'en', label: 'EN', flag: '🇬🇧' },
-  { code: 'pt', label: 'PT', flag: '🇧🇷' },
-  { code: 'fr', label: 'FR', flag: '🇫🇷' },
-  { code: 'de', label: 'DE', flag: '🇩🇪' },
-  { code: 'it', label: 'IT', flag: '🇮🇹' },
+  { code: 'es', label: 'ES', flag: 'ðŸ‡ªðŸ‡¸' },
+  { code: 'en', label: 'EN', flag: 'ðŸ‡¬ðŸ‡§' },
+  { code: 'pt', label: 'PT', flag: 'ðŸ‡§ðŸ‡·' },
+  { code: 'fr', label: 'FR', flag: 'ðŸ‡«ðŸ‡·' },
+  { code: 'de', label: 'DE', flag: 'ðŸ‡©ðŸ‡ª' },
+  { code: 'it', label: 'IT', flag: 'ðŸ‡®ðŸ‡¹' },
 ];
 
 const LanguageSelector = () => {
@@ -215,10 +188,10 @@ export default function LandingPage() {
   const [stats, setStats] = useState(REAL_STATS);
   const [apiLoaded, setApiLoaded] = useState(false);
 
-  // Intentar cargar datos live de la API (fallback a estáticos si falla)
+  // Intentar cargar datos live de la API (fallback a estÃ¡ticos si falla)
   useEffect(() => {
     const fetchLive = async () => {
-      // ★ Fetch stats reales del API de certificación v2.1
+      // â˜… Fetch stats reales del API de certificaciÃ³n v2.1
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
         const statsRes = await fetch(`${API_URL}/api/public/stats-reales`);
@@ -247,15 +220,15 @@ export default function LandingPage() {
 
           if (sorted.length >= 3) {
             const deporteEmoji: Record<string, string> = {
-              'Futbol': '⚽', 'Fútbol': '⚽', 'Tenis': '🎾',
-              'NBA': '🏀', 'Baloncesto': '🏀', 'Mixto': '🎯',
+              'Futbol': 'âš½', 'FÃºtbol': 'âš½', 'Tenis': 'ðŸŽ¾',
+              'NBA': 'ðŸ€', 'Baloncesto': 'ðŸ€', 'Mixto': 'ðŸŽ¯',
             };
 
             setTopTipsters(sorted.map((t: any, i: number) => ({
               id: t.id,
               alias: t.alias,
               deporte: t.deporte,
-              emoji: deporteEmoji[t.deporte] || '🎯',
+              emoji: deporteEmoji[t.deporte] || 'ðŸŽ¯',
               winRate: parseFloat(t.porcentaje_acierto?.toFixed(1) || '0'),
               roi: TOP_TIPSTERS_FALLBACK[i]?.roi || 0,
               apuestas: t.total_apuestas,
@@ -270,7 +243,7 @@ export default function LandingPage() {
           setApiLoaded(true);
         }
       } catch {
-        // Silently use fallback — all data is still real
+        // Silently use fallback â€” all data is still real
       }
     };
     fetchLive();
@@ -279,7 +252,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ background: '#0B1120' }}>
 
-      {/* Google Translate — hidden default widget, we use custom selector */}
+      {/* Google Translate â€” hidden default widget, we use custom selector */}
       <div id="google_translate_element" className="hidden" />
       <Script
         src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
@@ -307,6 +280,13 @@ export default function LandingPage() {
         .skiptranslate { display: none !important; }
         .VIpgJd-ZVi9od-ORHb-OEVmcd { display: none !important; }
       `}</style>
+      {/* ★ Week 1: Shimmer keyframe (backup — also in globals.css) */}
+      <style jsx global>{`
+        @keyframes shimmerSweep {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
 
       {/* ================================================================
           HEADER
@@ -332,7 +312,7 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-4">
               <LanguageSelector />
               <Link href="/login" className="text-[#94A3B8] hover:text-white transition text-sm px-3 py-2">
-                Iniciar Sesión
+                Iniciar SesiÃ³n
               </Link>
               <Link href="/registro" className="text-sm font-semibold py-2.5 px-5 rounded-lg transition" style={{
                 background: 'linear-gradient(135deg, #00D1B2 0%, #00B89C 100%)',
@@ -346,7 +326,7 @@ export default function LandingPage() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 text-white"
-              aria-label="Menú"
+              aria-label="MenÃº"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -359,7 +339,7 @@ export default function LandingPage() {
               </div>
               <Link href="/login" className="block w-full text-center py-3 text-white border border-white/20 rounded-lg font-medium"
                 onClick={() => setMobileMenuOpen(false)}>
-                Iniciar Sesión
+                Iniciar SesiÃ³n
               </Link>
               <Link href="/registro" className="block w-full text-center py-3 font-bold rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
@@ -407,7 +387,7 @@ export default function LandingPage() {
           {/* Subtitle */}
           <p className="text-base sm:text-xl text-[#94A3B8] mb-4 sm:mb-6 max-w-2xl mx-auto px-2">
             Nuestro algoritmo analiza {stats.totalTipsters}+ tipsters reales de Telegram,
-            detecta patrones de éxito y señales de riesgo antes de que coloques tu dinero.
+            detecta patrones de Ã©xito y seÃ±ales de riesgo antes de que coloques tu dinero.
           </p>
 
           {/* Quote */}
@@ -416,47 +396,46 @@ export default function LandingPage() {
           </p>
 
           {/* Stats reales verificados */}
+          <FadeInSection delay={0.15}>
           <div className="flex flex-wrap justify-center gap-6 sm:gap-10 mb-8 sm:mb-10">
             <div className="text-center">
               <p className="text-2xl sm:text-3xl font-bold text-[#00D1B2] font-mono">
-                <AnimatedCounter value={stats.totalApuestas} suffix="+" />
+                <NumberTicker value={stats.totalApuestas} suffix="+" />
               </p>
               <p className="text-[#94A3B8] text-xs sm:text-sm">Picks Analizados</p>
             </div>
             <div className="text-center">
               <p className="text-2xl sm:text-3xl font-bold text-white font-mono">
-                <AnimatedCounter value={stats.bestWinRate} suffix="%" decimals={1} />
+                <NumberTicker value={stats.bestWinRate} suffix="%" decimals={1} />
               </p>
               <p className="text-[#94A3B8] text-xs sm:text-sm">Win Rate Global</p>
             </div>
             <div className="text-center">
               <p className="text-2xl sm:text-3xl font-bold text-[#FFDD57] font-mono">
-                +<AnimatedCounter value={stats.roiPromedio} suffix="%" decimals={1} />
+                <NumberTicker value={stats.roiPromedio} prefix="+" suffix="%" decimals={1} />
               </p>
-              <p className="text-[#94A3B8] text-xs sm:text-sm">ROI Picks ✓✓✓</p>
+              <p className="text-[#94A3B8] text-xs sm:text-sm">ROI Picks âœ“âœ“âœ“</p>
             </div>
           </div>
+          </FadeInSection>
 
           {/* CTA */}
           <div className="flex flex-col items-center gap-3">
-            <Link href="/registro" className="w-full sm:w-auto font-bold py-4 px-8 rounded-xl transition inline-flex items-center justify-center gap-2" style={{
-              background: 'linear-gradient(135deg, #00D1B2 0%, #00B89C 100%)',
-              color: '#0B1120',
-              boxShadow: '0 4px 30px rgba(0, 209, 178, 0.4)',
-            }}>
+            <ShimmerButton href="/registro">
               Comenzar 5 Días Gratis
               <ArrowRight className="h-5 w-5" />
-            </Link>
-            <p className="text-[#64748B] text-sm">Sin tarjeta • Cancela cuando quieras</p>
+            </ShimmerButton>
+            <p className="text-[#64748B] text-sm">Sin tarjeta â€¢ Cancela cuando quieras</p>
           </div>
         </div>
       </section>
 
       {/* ================================================================
-          QUÉ HACEMOS DIFERENTE
+          QUÃ‰ HACEMOS DIFERENTE
           ================================================================ */}
       <section className="py-12 sm:py-16 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
+          <FadeInSection>
           <div className="rounded-2xl p-6 sm:p-10 relative overflow-hidden" style={{
             background: 'linear-gradient(135deg, rgba(0,209,178,0.06) 0%, rgba(11,17,32,0.95) 100%)',
             border: '1px solid rgba(0,209,178,0.15)',
@@ -467,7 +446,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                  ¿Qué hacemos diferente?
+                  Â¿QuÃ© hacemos diferente?
                 </h2>
                 <p className="text-[#94A3B8] text-sm sm:text-base">
                   Seguimos a {stats.totalTipsters}+ tipsters de Telegram y WhatsApp. Registramos TODAS sus apuestas
@@ -488,32 +467,35 @@ export default function LandingPage() {
                 <Brain className="h-5 w-5 text-[#FFDD57] mt-0.5 flex-shrink-0" />
                 <div>
                   <h4 className="font-semibold text-white text-sm">IA Predictiva</h4>
-                  <p className="text-[#64748B] text-xs mt-1">Detectamos en qué mercados rinde mejor cada tipster</p>
+                  <p className="text-[#64748B] text-xs mt-1">Detectamos en quÃ© mercados rinde mejor cada tipster</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <BarChart3 className="h-5 w-5 text-[#3B82F6] mt-0.5 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-white text-sm">Stake Óptimo</h4>
-                  <p className="text-[#64748B] text-xs mt-1">Te decimos cuánto apostar según el historial real</p>
+                  <h4 className="font-semibold text-white text-sm">Stake Ã“ptimo</h4>
+                  <p className="text-[#64748B] text-xs mt-1">Te decimos cuÃ¡nto apostar segÃºn el historial real</p>
                 </div>
               </div>
             </div>
           </div>
+          </FadeInSection>
         </div>
       </section>
 
       {/* ================================================================
-          FEATURES — Ventaja Competitiva
+          FEATURES â€” Ventaja Competitiva
           ================================================================ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
+          <FadeInSection>
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-3 sm:mb-4">
             Tu ventaja competitiva
           </h2>
           <p className="text-[#94A3B8] text-center mb-10 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base">
-            Mientras otros apuestan a ciegas, tú tendrás datos reales y estrategias probadas
+            Mientras otros apuestan a ciegas, tÃº tendrÃ¡s datos reales y estrategias probadas
           </p>
+          </FadeInSection>
 
           <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
             {[
@@ -526,17 +508,18 @@ export default function LandingPage() {
               {
                 icon: Zap,
                 color: '#FFDD57',
-                title: 'Análisis de Rachas',
-                desc: 'Sabemos cuándo un tipster está en racha ganadora y cuándo es mejor esperar.',
+                title: 'AnÃ¡lisis de Rachas',
+                desc: 'Sabemos cuÃ¡ndo un tipster estÃ¡ en racha ganadora y cuÃ¡ndo es mejor esperar.',
               },
               {
                 icon: Target,
                 color: '#3B82F6',
                 title: 'Filtro por EV+',
-                desc: 'Solo ves las apuestas con valor esperado positivo. Adiós al ruido.',
+                desc: 'Solo ves las apuestas con valor esperado positivo. AdiÃ³s al ruido.',
               },
             ].map((feature, i) => (
-              <div key={i} className="rounded-xl p-5 sm:p-6 text-center transition-all duration-300 hover:-translate-y-1" style={{
+              <FadeInSection key={i} delay={0.1 + i * 0.12}>
+              <div className="rounded-xl p-5 sm:p-6 text-center transition-all duration-300 hover:-translate-y-1" style={{
                 background: 'rgba(15, 23, 42, 0.6)',
                 border: '1px solid rgba(255,255,255,0.05)',
               }}>
@@ -547,21 +530,23 @@ export default function LandingPage() {
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">{feature.title}</h3>
                 <p className="text-[#94A3B8] text-xs sm:text-sm">{feature.desc}</p>
               </div>
+              </FadeInSection>
             ))}
           </div>
         </div>
       </section>
 
       {/* ================================================================
-          COMBINADA IA DEL DÍA
+          COMBINADA IA DEL DÃA
           ================================================================ */}
       <CombinadaIA />
 
       {/* ================================================================
-          TOP TIPSTERS — Datos reales de BD
+          TOP TIPSTERS â€” Datos reales de BD
           ================================================================ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6" style={{ background: 'rgba(15,23,42,0.4)' }}>
         <div className="max-w-5xl mx-auto">
+          <FadeInSection>
           <div className="text-center mb-8 sm:mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">
               Top Tipsters Verificados
@@ -571,11 +556,12 @@ export default function LandingPage() {
               Resultados actualizados diariamente.
             </p>
           </div>
+          </FadeInSection>
 
           <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
             {topTipsters.map((tipster, i) => (
+              <FadeInSection key={tipster.id} delay={0.1 + i * 0.15}>
               <div
-                key={tipster.id}
                 className="rounded-xl p-5 sm:p-6 relative transition-all duration-300 hover:-translate-y-1"
                 style={{
                   background: i === 0
@@ -587,11 +573,11 @@ export default function LandingPage() {
                   boxShadow: i === 0 ? '0 0 40px rgba(0,209,178,0.08)' : 'none',
                 }}
               >
-                {/* Badge posición */}
+                {/* Badge posiciÃ³n */}
                 {i === 0 && (
                   <div className="absolute -top-3 left-4 text-xs font-bold px-3 py-1 rounded-full"
                     style={{ background: 'linear-gradient(135deg, #00D1B2, #00B89C)', color: '#0B1120' }}>
-                    🏆 #1 VERIFICADO
+                    ðŸ† #1 VERIFICADO
                   </div>
                 )}
 
@@ -603,7 +589,7 @@ export default function LandingPage() {
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-bold text-white text-sm sm:text-base truncate">{tipster.alias}</h3>
-                    <p className="text-[#94A3B8] text-xs">{tipster.deporte} • {tipster.apuestas} apuestas</p>
+                    <p className="text-[#94A3B8] text-xs">{tipster.deporte} â€¢ {tipster.apuestas} apuestas</p>
                   </div>
                 </div>
 
@@ -632,6 +618,7 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
+              </FadeInSection>
             ))}
           </div>
 
@@ -650,16 +637,18 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
-          CÓMO FUNCIONA — Reemplaza testimonios falsos
+          CÃ“MO FUNCIONA â€” Reemplaza testimonios falsos
           ================================================================ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-4xl mx-auto">
+          <FadeInSection>
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-3 sm:mb-4">
-            Cómo funciona
+            CÃ³mo funciona
           </h2>
           <p className="text-[#94A3B8] text-center mb-10 sm:mb-12 text-sm sm:text-base">
-            En 3 pasos accedes a análisis que tomarían horas calcular
+            En 3 pasos accedes a anÃ¡lisis que tomarÃ­an horas calcular
           </p>
+          </FadeInSection>
 
           <div className="grid sm:grid-cols-3 gap-6">
             {[
@@ -675,18 +664,18 @@ export default function LandingPage() {
                 icon: Brain,
                 color: '#FFDD57',
                 title: 'La IA analiza',
-                desc: 'Detectamos en qué mercados y cuotas rinde mejor cada tipster. Calculamos ROI, rachas y EV.',
+                desc: 'Detectamos en quÃ© mercados y cuotas rinde mejor cada tipster. Calculamos ROI, rachas y EV.',
               },
               {
                 step: '03',
                 icon: Target,
                 color: '#3B82F6',
-                title: 'Tú decides con datos',
-                desc: 'Ves solo picks con valor esperado positivo. Stake sugerido según tu banca y perfil de riesgo.',
+                title: 'TÃº decides con datos',
+                desc: 'Ves solo picks con valor esperado positivo. Stake sugerido segÃºn tu banca y perfil de riesgo.',
               },
             ].map((item, i) => (
               <div key={i} className="relative">
-                {/* Línea conectora (solo en desktop) */}
+                {/* LÃ­nea conectora (solo en desktop) */}
                 {i < 2 && (
                   <div className="hidden sm:block absolute top-10 -right-3 w-6 border-t border-dashed border-[#334155]" />
                 )}
@@ -711,12 +700,12 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
-          DASHBOARD PREVIEW — Así se ve por dentro
+          DASHBOARD PREVIEW â€” AsÃ­ se ve por dentro
           ================================================================ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6" style={{ background: 'rgba(15,23,42,0.4)' }}>
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-3">
-            Así se ve por dentro
+            AsÃ­ se ve por dentro
           </h2>
           <p className="text-[#94A3B8] text-center mb-8 sm:mb-10 text-sm sm:text-base">
             Dashboard en tiempo real con datos que importan
@@ -759,7 +748,7 @@ export default function LandingPage() {
               <div className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.04)' }}>
                 <div className="px-3 sm:px-4 py-2 flex items-center gap-2" style={{ background: 'rgba(11,17,32,0.6)' }}>
                   <Zap className="h-3.5 w-3.5 text-[#FFDD57]" />
-                  <span className="text-white text-xs font-bold">Picks del Día</span>
+                  <span className="text-white text-xs font-bold">Picks del DÃ­a</span>
                   <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold"
                     style={{ background: 'rgba(0,209,178,0.15)', color: '#00D1B2', border: '1px solid rgba(0,209,178,0.3)' }}>
                     IA FILTRADO
@@ -806,12 +795,14 @@ export default function LandingPage() {
           ================================================================ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
+          <FadeInSection>
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-3 sm:mb-4">
             Elige tu plan
           </h2>
           <p className="text-[#94A3B8] text-center mb-8 sm:mb-10 text-sm sm:text-base">
             Sin trucos. Acceso total. Cancela cuando quieras.
           </p>
+          </FadeInSection>
 
           <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
             {/* Mensual */}
@@ -820,11 +811,11 @@ export default function LandingPage() {
               border: '1px solid rgba(255,255,255,0.08)',
             }}>
               <p className="text-white font-bold text-lg mb-1">Mensual</p>
-              <p className="text-[#64748B] text-xs mb-4">30 días</p>
+              <p className="text-[#64748B] text-xs mb-4">30 dÃ­as</p>
               <div className="mb-5">
                 <span className="text-3xl sm:text-4xl font-bold text-white font-mono">$15.000</span>
                 <span className="text-[#64748B] text-sm"> /mes</span>
-                <p className="text-[#64748B] text-xs mt-1">CLP · o $17 USDT</p>
+                <p className="text-[#64748B] text-xs mt-1">CLP Â· o $17 USDT</p>
               </div>
               <ul className="space-y-2.5 mb-5">
                 {['Todos los tipsters', 'Picks filtrados por IA', 'Alertas por Telegram'].map((f, i) => (
@@ -839,7 +830,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Trimestral — Popular */}
+            {/* Trimestral â€” Popular */}
             <div className="rounded-xl p-5 sm:p-6 relative" style={{
               background: 'rgba(15, 23, 42, 0.6)',
               border: '2px solid #00D1B2',
@@ -847,30 +838,29 @@ export default function LandingPage() {
             }}>
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap"
                 style={{ background: 'linear-gradient(135deg, #00D1B2, #00B89C)', color: '#0B1120' }}>
-                ⭐ MÁS POPULAR
+                â­ MÃS POPULAR
               </div>
               <p className="text-white font-bold text-lg mb-1 mt-2">Trimestral</p>
-              <p className="text-[#64748B] text-xs mb-4">90 días</p>
+              <p className="text-[#64748B] text-xs mb-4">90 dÃ­as</p>
               <div className="mb-2">
                 <span className="text-3xl sm:text-4xl font-bold text-white font-mono">$39.000</span>
-                <p className="text-[#64748B] text-xs mt-1">CLP · o $43 USDT</p>
+                <p className="text-[#64748B] text-xs mt-1">CLP Â· o $43 USDT</p>
               </div>
               <span className="inline-block mb-4 px-2 py-0.5 rounded text-[10px] font-bold"
                 style={{ background: 'rgba(0,209,178,0.12)', color: '#00D1B2', border: '1px solid rgba(0,209,178,0.3)' }}>
                 Ahorra 13%
               </span>
               <ul className="space-y-2.5 mb-5">
-                {['Todo lo del plan Mensual', 'Soporte prioritario', 'Estadísticas avanzadas'].map((f, i) => (
+                {['Todo lo del plan Mensual', 'Soporte prioritario', 'EstadÃ­sticas avanzadas'].map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-xs text-[#94A3B8]">
                     <CheckCircle className="h-3.5 w-3.5 text-[#00D1B2] flex-shrink-0" />{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/registro" className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition"
-                style={{ background: 'linear-gradient(135deg, #00D1B2, #00B89C)', color: '#0B1120' }}>
+              <ShimmerButton href="/registro" size="small" fullWidth>
                 Comenzar Gratis
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </ShimmerButton>
             </div>
 
             {/* Anual */}
@@ -879,10 +869,10 @@ export default function LandingPage() {
               border: '1px solid rgba(255,255,255,0.08)',
             }}>
               <p className="text-white font-bold text-lg mb-1">Anual</p>
-              <p className="text-[#64748B] text-xs mb-4">365 días</p>
+              <p className="text-[#64748B] text-xs mb-4">365 dÃ­as</p>
               <div className="mb-2">
                 <span className="text-3xl sm:text-4xl font-bold text-white font-mono">$120.000</span>
-                <p className="text-[#64748B] text-xs mt-1">CLP · o $130 USDT</p>
+                <p className="text-[#64748B] text-xs mt-1">CLP Â· o $130 USDT</p>
               </div>
               <span className="inline-block mb-4 px-2 py-0.5 rounded text-[10px] font-bold"
                 style={{ background: 'rgba(255,221,87,0.12)', color: '#FFDD57', border: '1px solid rgba(255,221,87,0.3)' }}>
@@ -903,7 +893,7 @@ export default function LandingPage() {
           </div>
 
           <p className="text-center text-[#64748B] text-xs mt-6">
-            5 días gratis · Sin tarjeta de crédito · Transferencia bancaria o crypto
+            5 dÃ­as gratis Â· Sin tarjeta de crÃ©dito Â· Transferencia bancaria o crypto
           </p>
         </div>
       </section>
@@ -913,12 +903,13 @@ export default function LandingPage() {
           ================================================================ */}
       <section className="py-12 sm:py-16 px-4 sm:px-6" style={{ background: 'rgba(15,23,42,0.4)' }}>
         <div className="max-w-3xl mx-auto">
+          <FadeInSection from="scale">
           <div className="rounded-2xl p-6 sm:p-10 relative overflow-hidden" style={{
             background: 'linear-gradient(135deg, rgba(255,221,87,0.06), rgba(249,115,22,0.03), rgba(11,17,32,0.95))',
             border: '1px solid rgba(255,221,87,0.2)',
           }}>
             <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="text-5xl sm:text-6xl">🔥</div>
+              <div className="text-5xl sm:text-6xl">ðŸ”¥</div>
               <div className="text-center sm:text-left flex-1">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3"
                   style={{ background: 'rgba(255,221,87,0.12)', border: '1px solid rgba(255,221,87,0.25)' }}>
@@ -929,35 +920,35 @@ export default function LandingPage() {
                   Picks exclusivos verificados por IA
                 </h3>
                 <p className="text-[#94A3B8] text-sm mb-2">
-                  Accede a pronósticos premium de tipsters internacionales, filtrados por nuestro algoritmo.
+                  Accede a pronÃ³sticos premium de tipsters internacionales, filtrados por nuestro algoritmo.
                 </p>
                 <p className="text-[#64748B] text-xs mb-4">
-                  Add-on al plan base · Máximo 5 picks VIP por mes para mantener la calidad.
+                  Add-on al plan base Â· MÃ¡ximo 5 picks VIP por mes para mantener la calidad.
                 </p>
-                <Link href="/registro" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition" style={{
-                  background: 'linear-gradient(135deg, #FFDD57, #F5C518)',
-                  color: '#0B1120',
-                }}>
+                <ShimmerButton href="/registro" variant="gold" size="small">
                   Desbloquear Sala VIP
                   <ArrowRight className="h-4 w-4" />
-                </Link>
+                </ShimmerButton>
               </div>
             </div>
           </div>
+          </FadeInSection>
         </div>
       </section>
 
       {/* ================================================================
-          COMUNIDAD — Telegram + WhatsApp
+          COMUNIDAD â€” Telegram + WhatsApp
           ================================================================ */}
       <section className="py-12 sm:py-16 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
+          <FadeInSection>
           <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-3">
-            Únete a la comunidad
+            Ãšnete a la comunidad
           </h2>
           <p className="text-[#94A3B8] text-center mb-8 text-sm sm:text-base">
-            Recibe picks gratis, alertas y análisis directo en tu celular
+            Recibe picks gratis, alertas y anÃ¡lisis directo en tu celular
           </p>
+          </FadeInSection>
 
           <div className="grid sm:grid-cols-2 gap-4">
             {/* Telegram */}
@@ -1013,8 +1004,8 @@ export default function LandingPage() {
               <ul className="space-y-2 mb-4">
                 {[
                   'Respuesta en menos de 5 minutos',
-                  'Asesoría sobre planes y features',
-                  'Soporte técnico directo',
+                  'AsesorÃ­a sobre planes y features',
+                  'Soporte tÃ©cnico directo',
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-xs text-[#94A3B8]">
                     <CheckCircle className="h-3.5 w-3.5 text-[#22C55E] flex-shrink-0" />{item}
@@ -1036,6 +1027,7 @@ export default function LandingPage() {
           ================================================================ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6" style={{ background: 'rgba(15,23,42,0.4)' }}>
         <div className="max-w-2xl mx-auto text-center">
+          <FadeInSection from="scale">
           <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 sm:mb-6 rounded-2xl overflow-hidden p-2" style={{
             background: 'rgba(11,17,32,0.8)',
             border: '1px solid rgba(0,209,178,0.3)',
@@ -1044,7 +1036,7 @@ export default function LandingPage() {
             <img src={LOGO_ICON} alt="NeuroTips" className="w-full h-full object-contain" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">
-            ¿Listo para tu ventaja basada en datos?
+            Â¿Listo para tu ventaja basada en datos?
           </h2>
           <p className="text-[#94A3B8] mb-6 sm:mb-8 text-sm sm:text-base">
             {stats.totalApuestas}+ apuestas verificadas.
@@ -1052,14 +1044,10 @@ export default function LandingPage() {
             {' '}Deja de apostar a ciegas.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/registro" className="w-full sm:w-auto font-bold py-4 px-8 rounded-xl transition inline-flex items-center justify-center gap-2" style={{
-              background: 'linear-gradient(135deg, #00D1B2 0%, #00B89C 100%)',
-              color: '#0B1120',
-              boxShadow: '0 4px 30px rgba(0, 209, 178, 0.35)',
-            }}>
+            <ShimmerButton href="/registro">
               Comenzar Gratis Ahora
               <ArrowRight className="h-5 w-5" />
-            </Link>
+            </ShimmerButton>
             <Link href="/login" className="w-full sm:w-auto font-bold py-4 px-8 rounded-xl transition inline-flex items-center justify-center gap-2" style={{
               background: 'rgba(255,221,87,0.08)',
               border: '1px solid rgba(255,221,87,0.3)',
@@ -1069,6 +1057,7 @@ export default function LandingPage() {
               Ya tengo cuenta
             </Link>
           </div>
+          </FadeInSection>
         </div>
       </section>
 
@@ -1106,11 +1095,11 @@ export default function LandingPage() {
             </div>
 
             <p className="text-[#64748B] text-xs sm:text-sm text-center">
-              © 2026 NeuroTips • Todos los derechos reservados
+              Â© 2026 NeuroTips â€¢ Todos los derechos reservados
             </p>
           </div>
           <p className="text-[#64748B] text-xs text-center">
-            Juego responsable. Solo +18. NeuroTips proporciona análisis estadísticos, no asesoría financiera.
+            Juego responsable. Solo +18. NeuroTips proporciona anÃ¡lisis estadÃ­sticos, no asesorÃ­a financiera.
           </p>
         </div>
       </footer>
