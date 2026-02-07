@@ -275,21 +275,59 @@ export default function PicksRecomendadosPage() {
   const [selectedPick, setSelectedPick] = useState<Pick | null>(null);
   const [filter, setFilter] = useState<'todos' | 'oro' | 'media'>('todos');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [requiereSetup, setRequiereSetup] = useState(false);
+  const [fetchError, setFetchError] = useState('');
 
   const fetchData = async () => {
     try {
+      setFetchError('');
+
+      // ★ Calls independientes — si uno falla, el otro sigue
+      let picksOk = false;
+      let bancaOk = false;
+
       const [picksData, bancaData] = await Promise.all([
-        picksAPI.getRecomendados(),
+        picksAPI.getRecomendados()
+          .then((data: any) => { picksOk = true; return data; })
+          .catch(() => ({ picks: [], total: 0, requiere_setup: false })),
         miBancaAPI.getEstado()
+          .then((data: any) => { bancaOk = true; return data; })
+          .catch(() => ({ onboarding_completo: false, banca_actual: 0 }))
       ]);
+
+      // ★ Si AMBAS fallaron → error de red
+      if (!picksOk && !bancaOk) {
+        setFetchError('Sin conexión. Toca para reintentar.');
+        setPicks([]);
+        setBancaInfo(null);
+        return;
+      }
+
+      // ★ Detectar si backend pide configurar banca
+      if (picksData.requiere_setup || (bancaOk && !bancaData.onboarding_completo)) {
+        setRequiereSetup(true);
+      } else {
+        setRequiereSetup(false);
+      }
+
+      // ★ Setear picks (siempre safe)
       setPicks(picksData.picks || []);
-      setBancaInfo({
-        banca_actual: bancaData.banca_actual,
-        perfil_riesgo: bancaData.perfil_riesgo
-      });
+
+      // ★ Solo setear bancaInfo si hay banca real (> 0)
+      const bancaActual = parseFloat(bancaData?.banca_actual) || 0;
+      if (bancaActual > 0) {
+        setBancaInfo({
+          banca_actual: bancaActual,
+          perfil_riesgo: bancaData?.perfil_riesgo || 'moderado'
+        });
+      } else {
+        setBancaInfo(null);
+      }
+
       setLastUpdate(new Date());
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error cargando picks:', error);
+      setFetchError('Error al cargar datos. Toca para reintentar.');
     } finally {
       setIsLoading(false);
     }
@@ -410,7 +448,7 @@ export default function PicksRecomendadosPage() {
           </div>
           <p className="text-2xl font-bold font-mono text-white">${totalStake.toLocaleString()}</p>
           <p className="text-xs text-[#64748B] mt-0.5">
-            {bancaInfo ? `${((totalStake / bancaInfo.banca_actual) * 100).toFixed(1)}% banca` : ''}
+            {bancaInfo && bancaInfo.banca_actual > 0 ? `${((totalStake / bancaInfo.banca_actual) * 100).toFixed(1)}% banca` : ''}
           </p>
         </div>
 
@@ -476,6 +514,56 @@ export default function PicksRecomendadosPage() {
           </div>
         )}
       </div>
+
+      {/* ================================================================ */}
+      {/* ERROR STATE                                                       */}
+      {/* ================================================================ */}
+      {fetchError && !isLoading && (
+        <button 
+          onClick={() => { setFetchError(''); setIsLoading(true); fetchData(); }}
+          className="w-full rounded-2xl p-6 text-center transition-all hover:scale-[1.01] active:scale-[0.99]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.06), rgba(30,41,59,0.9))',
+            border: '1px solid rgba(239,68,68,0.2)',
+          }}
+        >
+          <AlertCircle className="h-10 w-10 text-[#EF4444] mx-auto mb-3" />
+          <h3 className="text-white font-bold mb-1">Error de conexión</h3>
+          <p className="text-[#94A3B8] text-sm">{fetchError}</p>
+          <span className="inline-flex items-center gap-2 mt-3 text-[#00D1B2] text-sm font-medium">
+            🔄 Toca para reintentar
+          </span>
+        </button>
+      )}
+
+      {/* ================================================================ */}
+      {/* REQUIERE SETUP BANCA                                              */}
+      {/* ================================================================ */}
+      {requiereSetup && !isLoading && !fetchError && (
+        <div className="rounded-2xl p-6 text-center" style={{
+          background: 'linear-gradient(135deg, rgba(255,187,0,0.08), rgba(30,41,59,0.9))',
+          border: '1px solid rgba(255,187,0,0.25)',
+        }}>
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+            style={{ background: 'rgba(255,221,87,0.1)' }}>
+            <Zap className="h-8 w-8 text-[#FFDD57]" />
+          </div>
+          <h3 className="text-white font-bold text-lg mb-2">Configura tu banca primero</h3>
+          <p className="text-[#94A3B8] text-sm mb-4 max-w-sm mx-auto">
+            Para ver picks con stakes personalizados según tu perfil de riesgo, necesitas configurar tu banca.
+          </p>
+          <Link href="/dashboard/mi-banca/setup"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, #FFDD57, #D4A843)',
+              color: '#0F172A',
+              boxShadow: '0 4px 15px rgba(255, 221, 87, 0.25)',
+            }}>
+            <Target className="h-5 w-5" />
+            Configurar Mi Banca
+          </Link>
+        </div>
+      )}
 
       {/* ================================================================ */}
       {/* LISTA DE PICKS                                                    */}
@@ -579,8 +667,10 @@ export default function PicksRecomendadosPage() {
 
                       {/* CTA Button */}
                       <button
-                        onClick={() => setSelectedPick(pick)}
-                        className="px-5 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 whitespace-nowrap"
+                        onClick={() => bancaInfo && bancaInfo.banca_actual > 0 ? setSelectedPick(pick) : null}
+                        disabled={!bancaInfo || bancaInfo.banca_actual <= 0}
+                        title={!bancaInfo ? 'Configura tu banca primero' : ''}
+                        className="px-5 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                         style={{
                           background: isOro 
                             ? 'linear-gradient(135deg, #00D1B2, #00B89C)' 
@@ -591,7 +681,7 @@ export default function PicksRecomendadosPage() {
                         }}
                       >
                         <Target className="h-4 w-4" />
-                        Apostar
+                        {bancaInfo && bancaInfo.banca_actual > 0 ? 'Apostar' : 'Sin banca'}
                       </button>
                     </div>
                   </div>
@@ -762,7 +852,7 @@ export default function PicksRecomendadosPage() {
       </div>
 
       {/* Modal */}
-      {selectedPick && bancaInfo && (
+      {selectedPick && bancaInfo && bancaInfo.banca_actual > 0 && (
         <RegistrarModal
           pick={selectedPick}
           banca={bancaInfo.banca_actual}
