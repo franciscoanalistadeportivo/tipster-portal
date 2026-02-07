@@ -1060,16 +1060,8 @@ export default function LandingPage() {
       <footer className="py-8 sm:py-10 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
-                background: 'linear-gradient(135deg, rgba(0,209,178,0.15), rgba(255,221,87,0.15))',
-                border: '1px solid rgba(0,209,178,0.25)',
-              }}>
-                <span className="text-[#00D1B2] font-bold">N</span>
-              </div>
-              <span className="font-bold text-white text-sm sm:text-base">
-                Neuro<span className="text-[#00D1B2]">Tips</span>
-              </span>
+            <div className="flex items-center">
+              <img src="/logo-neurotips.png" alt="NeuroTips" className="h-8 sm:h-10 object-contain" />
             </div>
 
             <div className="flex items-center gap-3">
@@ -1112,6 +1104,12 @@ export default function LandingPage() {
     </div>
   );
 }
+
+
+
+
+
+
 
 
 
