@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { authAPI, loadTokens, isAuthenticated, picksAPI, alertasAPI } from '@/lib/api';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 interface BadgeCounts {
   apuestasPendientes: number;
@@ -424,7 +425,9 @@ export default function DashboardLayout({
       {/* Main Content */}
       <main className="lg:ml-64 pt-16 lg:pt-0 pb-20 lg:pb-0 min-h-screen">
         <div className="p-4 lg:p-6">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </div>
       </main>
 
