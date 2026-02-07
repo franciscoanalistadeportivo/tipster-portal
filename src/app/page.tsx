@@ -94,7 +94,6 @@ const ActivityTicker = ({ events }: { events: { text: string; icon: string }[] }
       }, 300);
     }, 4000);
     return () => clearInterval(timer);
-  }, []);
   }, [events.length]);
   const event = events[idx];
 
@@ -1119,3 +1118,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
