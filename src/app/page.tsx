@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { dashboardAPI } from '@/lib/api';
 import CombinadaIA from '@/components/CombinadaIA';
+import NeuroVision from '@/components/NeuroVision';
 import { FadeInSection, NumberTicker, ShimmerButton } from '@/components/ui/motion';
 
 // ============================================================================
@@ -534,6 +535,11 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ================================================================
+          NEUROVISION — Backtesting IA con datos reales
+          ================================================================ */}
+      <NeuroVision />
 
       {/* ================================================================
           COMBINADA IA DEL DÍA
@@ -1118,6 +1124,10 @@ export default function LandingPage() {
     </div>
   );
 }
+
+
+
+
 
 
 
