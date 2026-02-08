@@ -42,7 +42,7 @@ interface BancaInfo {
 // NeuroScore Circle
 // ============================================================================
 const NeuroScoreCircle = ({ score, size = 56 }: { score: number; size?: number }) => {
-  const color = score >= 75 ? '#00D1B2' : score >= 50 ? '#FFBB00' : '#EF4444';
+  const color = score >= 75 ? '#22C55E' : score >= 50 ? '#F59E0B' : '#EF4444';
   const radius = (size - 8) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
@@ -75,7 +75,7 @@ const FactoresDetail = ({ pick }: { pick: Pick }) => {
   const [open, setOpen] = useState(false);
 
   const impactoColors: Record<string, string> = {
-    muy_positivo: '#00D1B2', positivo: '#34D399', neutral: '#94A3B8',
+    muy_positivo: '#00D1FF', positivo: '#34D399', neutral: '#94A3B8',
     negativo: '#F59E0B', muy_negativo: '#EF4444',
   };
 
@@ -86,12 +86,12 @@ const FactoresDetail = ({ pick }: { pick: Pick }) => {
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 text-xs transition-all"
-        style={{ color: 'rgba(0, 209, 178, 0.8)' }}
+        style={{ color: 'rgba(255, 107, 157, 0.9)' }}
       >
         <Brain className="h-3 w-3" />
         <span>NeuroScore {pick.neuroscore}/100</span>
         {pick.ev_estimado > 0 && (
-          <span className="text-[#00D1B2] font-mono font-bold">+{pick.ev_estimado}% EV</span>
+          <span className="text-[#00D1FF] font-mono font-bold">+{pick.ev_estimado}% EV</span>
         )}
         {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
       </button>
@@ -99,7 +99,7 @@ const FactoresDetail = ({ pick }: { pick: Pick }) => {
       {open && (
         <div className="mt-2 p-3 rounded-lg animate-fadeIn" style={{
           background: 'rgba(15, 23, 42, 0.8)',
-          border: '1px solid rgba(0, 209, 178, 0.1)',
+          border: '1px solid rgba(0, 209, 255, 0.1)',
         }}>
           {pick.veredicto && (
             <p className="text-xs text-[#94A3B8] mb-3 italic">&quot;{pick.veredicto}&quot;</p>
@@ -178,23 +178,23 @@ const RegistrarModal = ({ pick, banca, onClose, onSuccess }: {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
       <div className="rounded-2xl max-w-md w-full p-6 animate-fadeInUp" style={{
         background: 'linear-gradient(145deg, #1E293B 0%, #0F172A 100%)',
-        border: '1px solid rgba(0, 209, 178, 0.2)',
-        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 209, 178, 0.05)',
+        border: '1px solid rgba(0, 209, 255, 0.2)',
+        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 209, 255, 0.05)',
       }}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <Target className="h-5 w-5 text-[#00D1B2]" />
+            <Target className="h-5 w-5 text-[#00D1FF]" />
             Registrar Apuesta
           </h3>
           {pick.neuroscore && <NeuroScoreCircle score={pick.neuroscore} size={44} />}
         </div>
         
         <div className="rounded-xl p-4 mb-5" style={{
-          background: 'rgba(0, 209, 178, 0.05)',
-          border: '1px solid rgba(0, 209, 178, 0.15)',
+          background: 'rgba(0, 209, 255, 0.05)',
+          border: '1px solid rgba(0, 209, 255, 0.15)',
         }}>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm text-[#00D1B2] font-medium">{pick.tipster}</span>
+            <span className="text-sm text-[#00D1FF] font-medium">{pick.tipster}</span>
             <div className="flex">
               {[...Array(pick.confianza)].map((_, i) => (
                 <Star key={i} className="h-3 w-3 text-[#FFDD57] fill-[#FFDD57]" />
@@ -222,7 +222,7 @@ const RegistrarModal = ({ pick, banca, onClose, onSuccess }: {
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">@</span>
               <input type="number" step="0.01" value={cuotaUsuario}
                 onChange={(e) => setCuotaUsuario(e.target.value)}
-                className="w-full bg-[#0F172A] border border-[#334155] rounded-lg py-2.5 pl-8 pr-4 text-white font-mono focus:border-[#00D1B2] outline-none transition-colors" />
+                className="w-full bg-[#0F172A] border border-[#334155] rounded-lg py-2.5 pl-8 pr-4 text-white font-mono focus:border-[#00D1FF] outline-none transition-colors" />
             </div>
           </div>
           <div>
@@ -233,18 +233,18 @@ const RegistrarModal = ({ pick, banca, onClose, onSuccess }: {
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">$</span>
               <input type="number" value={stake}
                 onChange={(e) => setStake(e.target.value)}
-                className="w-full bg-[#0F172A] border border-[#334155] rounded-lg py-2.5 pl-8 pr-4 text-white font-mono focus:border-[#00D1B2] outline-none transition-colors" />
+                className="w-full bg-[#0F172A] border border-[#334155] rounded-lg py-2.5 pl-8 pr-4 text-white font-mono focus:border-[#00D1FF] outline-none transition-colors" />
             </div>
             <p className="text-xs text-[#64748B] mt-1">{porcentajeBanca.toFixed(1)}% de tu banca</p>
           </div>
 
           <div className="rounded-lg p-3" style={{
-            background: 'linear-gradient(135deg, rgba(0, 209, 178, 0.08), rgba(0, 209, 178, 0.02))',
-            border: '1px solid rgba(0, 209, 178, 0.2)',
+            background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.08), rgba(0, 209, 255, 0.02))',
+            border: '1px solid rgba(0, 209, 255, 0.2)',
           }}>
             <div className="flex justify-between text-sm">
               <span className="text-[#94A3B8]">Ganancia potencial</span>
-              <span className="text-[#00D1B2] font-mono font-bold">
+              <span className="text-[#00D1FF] font-mono font-bold">
                 +${gananciaEstimada.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </span>
             </div>
@@ -265,8 +265,8 @@ const RegistrarModal = ({ pick, banca, onClose, onSuccess }: {
           <button onClick={handleSubmit} disabled={isLoading}
             className="flex-1 py-2.5 rounded-xl text-white font-bold disabled:opacity-50 transition-all flex items-center justify-center gap-2"
             style={{
-              background: 'linear-gradient(135deg, #00D1B2, #00B89C)',
-              boxShadow: '0 4px 15px rgba(0, 209, 178, 0.3)',
+              background: 'linear-gradient(135deg, #00D1FF, #00B8E6)',
+              boxShadow: '0 4px 15px rgba(0, 209, 255, 0.3)',
             }}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><CheckCircle className="h-4 w-4" />Confirmar</>}
           </button>
@@ -372,7 +372,7 @@ export default function PicksRecomendadosPage() {
 
   const getZonaBorder = (pick: Pick) => {
     const score = pick.neuroscore || 50;
-    if (score >= 75) return 'rgba(0, 209, 178, 0.35)';
+    if (score >= 75) return 'rgba(0, 209, 255, 0.35)';
     if (score >= 50) return 'rgba(255, 187, 0, 0.25)';
     return 'rgba(239, 68, 68, 0.25)';
   };
@@ -381,8 +381,8 @@ export default function PicksRecomendadosPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <div className="relative">
-          <div className="w-12 h-12 border-3 border-[#00D1B2]/20 border-t-[#00D1B2] rounded-full animate-spin" />
-          <Brain className="h-5 w-5 text-[#00D1B2] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          <div className="w-12 h-12 border-3 border-[#00D1FF]/20 border-t-[#00D1FF] rounded-full animate-spin" />
+          <Brain className="h-5 w-5 text-[#00D1FF] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         </div>
         <p className="text-[#94A3B8] text-sm">Analizando picks con IA...</p>
       </div>
@@ -398,10 +398,10 @@ export default function PicksRecomendadosPage() {
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
             <div className="p-2 rounded-xl" style={{
-              background: 'linear-gradient(135deg, rgba(0, 209, 178, 0.15), rgba(0, 209, 178, 0.05))',
-              border: '1px solid rgba(0, 209, 178, 0.2)',
+              background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.15), rgba(0, 209, 255, 0.05))',
+              border: '1px solid rgba(0, 209, 255, 0.2)',
             }}>
-              <Sparkles className="h-5 w-5 text-[#00D1B2]" />
+              <Brain className="h-5 w-5" style={{ color: '#FF6B9D' }} />
             </div>
             Recomendaciones IA
           </h1>
@@ -413,7 +413,7 @@ export default function PicksRecomendadosPage() {
           <span className="text-xs text-[#64748B]">
             Actualizado {lastUpdate.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
           </span>
-          <div className="w-2 h-2 rounded-full bg-[#00D1B2] animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-[#00D1FF] animate-pulse" />
         </div>
       </div>
 
@@ -424,14 +424,14 @@ export default function PicksRecomendadosPage() {
         {/* Picks Activos */}
         <div className="rounded-xl p-4" style={{
           background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(0, 209, 178, 0.15)',
+          border: '1px solid rgba(0, 209, 255, 0.15)',
         }}>
           <div className="flex items-center gap-2 mb-2">
-            <Zap className="h-4 w-4 text-[#00D1B2]" />
+            <Zap className="h-4 w-4 text-[#00D1FF]" />
             <span className="text-xs text-[#94A3B8]">Picks Activos</span>
           </div>
           <p className="text-2xl font-bold font-mono text-white">{picks.length}</p>
-          <p className="text-xs text-[#00D1B2] mt-0.5">{oroCount} zona oro</p>
+          <p className="text-xs text-[#00D1FF] mt-0.5">{oroCount} zona oro</p>
         </div>
 
         {/* Score Promedio */}
@@ -440,10 +440,10 @@ export default function PicksRecomendadosPage() {
           border: '1px solid rgba(255, 187, 0, 0.15)',
         }}>
           <div className="flex items-center gap-2 mb-2">
-            <Brain className="h-4 w-4 text-[#FFBB00]" />
+            <Brain className="h-4 w-4 text-[#F59E0B]" />
             <span className="text-xs text-[#94A3B8]">Score Promedio</span>
           </div>
-          <p className="text-2xl font-bold font-mono" style={{ color: avgScore >= 75 ? '#00D1B2' : avgScore >= 50 ? '#FFBB00' : '#EF4444' }}>
+          <p className="text-2xl font-bold font-mono" style={{ color: avgScore >= 75 ? '#00D1FF' : avgScore >= 50 ? '#F59E0B' : '#EF4444' }}>
             {avgScore}/100
           </p>
         </div>
@@ -466,13 +466,13 @@ export default function PicksRecomendadosPage() {
         {/* Ganancia Potencial */}
         <div className="rounded-xl p-4" style={{
           background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(0, 209, 178, 0.25)',
+          border: '1px solid rgba(0, 209, 255, 0.25)',
         }}>
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-[#00D1B2]" />
+            <TrendingUp className="h-4 w-4 text-[#00D1FF]" />
             <span className="text-xs text-[#94A3B8]">Gan. Potencial</span>
           </div>
-          <p className="text-2xl font-bold font-mono text-[#00D1B2]">+${totalGanPotencial.toLocaleString()}</p>
+          <p className="text-2xl font-bold font-mono text-[#00D1FF]">+${totalGanPotencial.toLocaleString()}</p>
         </div>
       </div>
 
@@ -493,11 +493,11 @@ export default function PicksRecomendadosPage() {
               className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all"
               style={{
                 background: filter === tab.key
-                  ? 'linear-gradient(135deg, #00D1B2, #00B89C)'
+                  ? 'linear-gradient(135deg, #00D1FF, #00B8E6)'
                   : 'rgba(30, 41, 59, 0.8)',
                 color: filter === tab.key ? 'white' : '#94A3B8',
                 border: filter === tab.key ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                boxShadow: filter === tab.key ? '0 4px 12px rgba(0, 209, 178, 0.25)' : 'none',
+                boxShadow: filter === tab.key ? '0 4px 12px rgba(0, 209, 255, 0.25)' : 'none',
               }}
             >
               {tab.icon && <span className="mr-1">{tab.icon}</span>}
@@ -541,7 +541,7 @@ export default function PicksRecomendadosPage() {
           <AlertCircle className="h-10 w-10 text-[#EF4444] mx-auto mb-3" />
           <h3 className="text-white font-bold mb-1">Error de conexión</h3>
           <p className="text-[#94A3B8] text-sm">{fetchError}</p>
-          <span className="inline-flex items-center gap-2 mt-3 text-[#00D1B2] text-sm font-medium">
+          <span className="inline-flex items-center gap-2 mt-3 text-[#00D1FF] text-sm font-medium">
             🔄 Toca para reintentar
           </span>
         </button>
@@ -552,8 +552,8 @@ export default function PicksRecomendadosPage() {
       {/* ================================================================ */}
       {requiereSetup && !isLoading && !fetchError && (
         <div className="rounded-2xl p-6 text-center" style={{
-          background: 'linear-gradient(135deg, rgba(255,187,0,0.08), rgba(30,41,59,0.9))',
-          border: '1px solid rgba(255,187,0,0.25)',
+          background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(30,41,59,0.9))',
+          border: '1px solid rgba(245,158,11,0.25)',
         }}>
           <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
             style={{ background: 'rgba(255,221,87,0.1)' }}>
@@ -591,7 +591,7 @@ export default function PicksRecomendadosPage() {
           </p>
           {filter !== 'todos' && (
             <button onClick={() => setFilter('todos')}
-              className="mt-4 px-4 py-2 rounded-lg text-sm text-[#00D1B2] border border-[#00D1B2]/30 hover:bg-[#00D1B2]/10 transition-all">
+              className="mt-4 px-4 py-2 rounded-lg text-sm text-[#00D1FF] border border-[#00D1FF]/30 hover:bg-[#00D1FF]/10 transition-all">
               Ver todos los picks
             </button>
           )}
@@ -610,7 +610,7 @@ export default function PicksRecomendadosPage() {
                   animationDelay: `${index * 0.04}s`,
                   background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))',
                   border: `1px solid ${getZonaBorder(pick)}`,
-                  boxShadow: isOro ? '0 0 20px rgba(0, 209, 178, 0.06)' : 'none',
+                  boxShadow: isOro ? '0 0 20px rgba(0, 209, 255, 0.06)' : 'none',
                 }}
               >
                 <div className="p-4 lg:p-5">
@@ -619,7 +619,7 @@ export default function PicksRecomendadosPage() {
                     <div className="flex-1 min-w-0">
                       {/* Tipster + Badges */}
                       <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className="text-sm font-semibold text-[#00D1B2]">{pick.tipster}</span>
+                        <span className="text-sm font-semibold text-[#00D1FF]">{pick.tipster}</span>
                         {pick.tipo_mercado && (
                           <span className="text-[10px] px-2 py-0.5 rounded font-medium"
                             style={{ background: 'rgba(255, 221, 87, 0.1)', color: '#FFDD57', border: '1px solid rgba(255, 221, 87, 0.2)' }}>
@@ -628,8 +628,8 @@ export default function PicksRecomendadosPage() {
                         )}
                         {isOro && (
                           <span className="text-[10px] px-2 py-0.5 rounded font-bold"
-                            style={{ background: 'rgba(0, 209, 178, 0.1)', color: '#00D1B2', border: '1px solid rgba(0, 209, 178, 0.2)' }}>
-                            ✨ IA APROBADA
+                            style={{ background: 'rgba(0, 209, 255, 0.1)', color: '#00D1FF', border: '1px solid rgba(0, 209, 255, 0.2)' }}>
+                            🧠 IA APROBADA
                           </span>
                         )}
                         {pick.racha_tipster >= 3 && (
@@ -680,7 +680,7 @@ export default function PicksRecomendadosPage() {
                         </div>
                         <div className="flex items-baseline gap-1">
                           <span className="text-xs text-[#64748B]">Gan.</span>
-                          <span className="text-sm font-bold text-[#00D1B2] font-mono ml-auto">+${pick.ganancia_potencial.toLocaleString()}</span>
+                          <span className="text-sm font-bold text-[#00D1FF] font-mono ml-auto">+${pick.ganancia_potencial.toLocaleString()}</span>
                         </div>
                       </div>
 
@@ -692,10 +692,10 @@ export default function PicksRecomendadosPage() {
                         className="px-5 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                         style={{
                           background: isOro 
-                            ? 'linear-gradient(135deg, #00D1B2, #00B89C)' 
+                            ? 'linear-gradient(135deg, #00D1FF, #00B8E6)' 
                             : 'linear-gradient(135deg, #334155, #1E293B)',
                           color: 'white',
-                          boxShadow: isOro ? '0 4px 15px rgba(0, 209, 178, 0.3)' : 'none',
+                          boxShadow: isOro ? '0 4px 15px rgba(0, 209, 255, 0.3)' : 'none',
                           border: isOro ? 'none' : '1px solid rgba(255,255,255,0.1)',
                         }}
                       >
@@ -709,9 +709,9 @@ export default function PicksRecomendadosPage() {
                 {/* Bottom gradient bar */}
                 <div className="h-0.5" style={{
                   background: score >= 75 
-                    ? 'linear-gradient(90deg, #00D1B2, transparent)' 
+                    ? 'linear-gradient(90deg, #00D1FF, transparent)' 
                     : score >= 50 
-                      ? 'linear-gradient(90deg, #FFBB00, transparent)' 
+                      ? 'linear-gradient(90deg, #F59E0B, transparent)' 
                       : 'linear-gradient(90deg, #EF4444, transparent)',
                   opacity: 0.6,
                 }} />
@@ -745,10 +745,10 @@ export default function PicksRecomendadosPage() {
         {/* Tipsters recomendados */}
         <div className="rounded-xl p-5" style={{
           background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(0, 209, 178, 0.12)',
+          border: '1px solid rgba(0, 209, 255, 0.12)',
         }}>
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-5 w-5 text-[#00D1B2]" />
+            <TrendingUp className="h-5 w-5 text-[#00D1FF]" />
             <h3 className="font-bold text-white">Tipsters para Seguir</h3>
           </div>
           <p className="text-xs text-[#94A3B8]">Alto rendimiento comprobado</p>
@@ -758,16 +758,16 @@ export default function PicksRecomendadosPage() {
                 .slice(0, 3)
                 .map((p, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded-lg" style={{
-                    background: 'rgba(0, 209, 178, 0.05)',
+                    background: 'rgba(0, 209, 255, 0.05)',
                   }}>
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ background: 'rgba(0, 209, 178, 0.15)', color: '#00D1B2' }}>
+                        style={{ background: 'rgba(0, 209, 255, 0.15)', color: '#00D1FF' }}>
                         {p.tipster.charAt(0)}
                       </div>
                       <span className="text-sm text-white font-medium">{p.tipster}</span>
                     </div>
-                    <span className="text-xs text-[#00D1B2] font-mono">Score {p.neuroscore}</span>
+                    <span className="text-xs text-[#00D1FF] font-mono">Score {p.neuroscore}</span>
                   </div>
                 ))}
               {picks.filter(p => (p.neuroscore || 0) >= 70).length === 0 && (
@@ -828,7 +828,7 @@ export default function PicksRecomendadosPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
             { icon: '📊', title: 'Diversifica', desc: 'No apuestes más del 30% de tu banca en un solo tipster', color: '#60A5FA' },
-            { icon: '🎯', title: 'Sigue las rachas', desc: 'Aumenta stake en tipsters con racha positiva W3+', color: '#00D1B2' },
+            { icon: '🎯', title: 'Sigue las rachas', desc: 'Aumenta stake en tipsters con racha positiva W3+', color: '#00D1FF' },
             { icon: '⚠️', title: 'Gestiona riesgo', desc: 'Reduce o pausa tipsters con racha negativa L3+', color: '#FFDD57' },
           ].map((c, i) => (
             <div key={i} className="p-3 rounded-lg" style={{ background: 'rgba(15, 23, 42, 0.5)' }}>
@@ -882,3 +882,4 @@ export default function PicksRecomendadosPage() {
     </div>
   );
 }
+
