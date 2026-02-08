@@ -58,7 +58,7 @@ const getMercadoLabel = (tipo: string | undefined) => {
   const map: Record<string, { label: string; color: string }> = {
     'GANADOR': { label: '1X2', color: '#3B82F6' },
     'DOBLE OPORTUNIDAD': { label: 'DO', color: '#6366F1' },
-    'OVER GOLES': { label: 'OV GOL', color: '#00D1B2' },
+    'OVER GOLES': { label: 'OV GOL', color: '#00D1FF' },
     'UNDER GOLES': { label: 'UN GOL', color: '#F59E0B' },
     'GOLES EXACTOS': { label: 'GOL EX', color: '#10B981' },
     'AMBOS MARCAN': { label: 'BTTS', color: '#A855F7' },
@@ -96,9 +96,9 @@ const getEstadoPartido = (hora_partido?: string): { estado: 'LIVE' | 'PROXIMO' |
       return { estado: 'LIVE', texto: `🔴 EN VIVO · ${hora_partido}`, color: '#EF4444' };
     }
     if (horaPartidoMinutos - ahoraMinutos <= 30) {
-      return { estado: 'PROXIMO', texto: `⚡ POR INICIAR · ${hora_partido}`, color: '#FFBB00' };
+      return { estado: 'PROXIMO', texto: `⚡ POR INICIAR · ${hora_partido}`, color: '#F59E0B' };
     }
-    return { estado: 'PROXIMO', texto: `🕐 ${hora_partido} CL`, color: '#FFBB00' };
+    return { estado: 'PROXIMO', texto: `🕐 ${hora_partido} CL`, color: '#F59E0B' };
   } catch {
     return { estado: 'SIN_HORA', texto: hora_partido, color: '#94A3B8' };
   }
@@ -113,8 +113,8 @@ const NeuroScoreBadge = ({
   score: number; zona: string; zona_color: string 
 }) => {
   const colorMap: Record<string, string> = {
-    'green': '#00D1B2',
-    'yellow': '#FFBB00', 
+    'green': '#00D1FF',
+    'yellow': '#F59E0B', 
     'red': '#EF4444',
   };
   const color = colorMap[zona_color] || '#94A3B8';
@@ -165,7 +165,7 @@ const NeuroScoreDetail = ({ analysis }: { analysis: IAAnalysis }) => {
   const [open, setOpen] = useState(false);
 
   const impactoColor: Record<string, string> = {
-    'muy_positivo': '#00D1B2',
+    'muy_positivo': '#00D1FF',
     'positivo': '#34D399',
     'neutral': '#94A3B8',
     'negativo': '#F59E0B',
@@ -176,12 +176,12 @@ const NeuroScoreDetail = ({ analysis }: { analysis: IAAnalysis }) => {
     <div className="mt-2">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#00D1B2] transition-colors"
+        className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#00D1FF] transition-colors"
       >
         <Brain className="h-3 w-3" />
         <span>NeuroScore {analysis.score}/100</span>
         {analysis.ev > 0 && (
-          <span className="text-[#00D1B2] font-mono">+{analysis.ev}% EV</span>
+          <span className="text-[#00D1FF] font-mono">+{analysis.ev}% EV</span>
         )}
         {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
       </button>
@@ -190,7 +190,7 @@ const NeuroScoreDetail = ({ analysis }: { analysis: IAAnalysis }) => {
         <div className="mt-2 p-3 rounded-lg bg-[#0F172A]/70 border border-white/5 space-y-2.5">
           {/* Veredicto */}
           <p className="text-sm font-medium" style={{ 
-            color: analysis.zona === 'ORO' ? '#00D1B2' : analysis.zona === 'NEUTRA' ? '#FFBB00' : '#EF4444'
+            color: analysis.zona === 'ORO' ? '#00D1FF' : analysis.zona === 'NEUTRA' ? '#F59E0B' : '#EF4444'
           }}>
             {analysis.veredicto}
           </p>
@@ -340,7 +340,7 @@ const CardPendiente = ({
               </span>
             ) : (
               <span style={{
-                background: 'linear-gradient(135deg, #F59E0B, #FFBB00)',
+                background: 'linear-gradient(135deg, #F59E0B, #F59E0B)',
                 color: '#000', fontSize: '10px', fontWeight: 800,
                 padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px',
                 display: 'flex', alignItems: 'center', gap: '4px',
@@ -348,7 +348,7 @@ const CardPendiente = ({
                 ⏳ PENDIENTE
               </span>
             )}
-            <span className="text-sm font-medium text-[#00D1B2]">
+            <span className="text-sm font-medium text-[#00D1FF]">
               {getDeporteIcon(apuesta.deporte)} {apuesta.tipster_alias}
             </span>
             {mercado && (
@@ -377,7 +377,7 @@ const CardPendiente = ({
               />
             )}
             {!esCombinada(apuesta) && (
-              <span className="font-mono font-bold text-lg" style={{ color: isLive ? '#EF4444' : '#FFBB00' }}>
+              <span className="font-mono font-bold text-lg" style={{ color: isLive ? '#EF4444' : '#F59E0B' }}>
                 @{Number(apuesta.cuota || 0).toFixed(2)}
               </span>
             )}
@@ -454,14 +454,14 @@ const CardResuelta = ({
   const [showAnalisis, setShowAnalisis] = useState(false);
   const isGanada = apuesta.resultado === 'GANADA';
   const mercado = getMercadoLabel(apuesta.tipo_mercado);
-  const color = isGanada ? '#00D1B2' : '#EF4444';
+  const color = isGanada ? '#22C55E' : '#EF4444';
   
   return (
     <div 
       className="rounded-xl p-4 animate-fadeInUp"
       style={{
-        background: isGanada ? 'rgba(0, 209, 178, 0.05)' : 'rgba(239, 68, 68, 0.05)',
-        border: `1px solid ${isGanada ? 'rgba(0, 209, 178, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+        background: isGanada ? 'rgba(0, 209, 255, 0.05)' : 'rgba(239, 68, 68, 0.05)',
+        border: `1px solid ${isGanada ? 'rgba(0, 209, 255, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
         animationDelay: `${index * 0.03}s`,
       }}
     >
@@ -470,7 +470,7 @@ const CardResuelta = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="text-lg">{getDeporteIcon(apuesta.deporte)}</span>
-            <span className="text-sm font-medium text-[#00D1B2]">{apuesta.tipster_alias}</span>
+            <span className="text-sm font-medium text-[#00D1FF]">{apuesta.tipster_alias}</span>
             {mercado && (
               <span style={{
                 background: `${mercado.color}15`, color: mercado.color,
@@ -515,7 +515,7 @@ const CardResuelta = ({
               background: `${color}10`, border: `1px solid ${color}20`
             }}>
               {isGanada 
-                ? <CheckCircle className="h-4 w-4 text-[#00D1B2]" />
+                ? <CheckCircle className="h-4 w-4 text-[#00D1FF]" />
                 : <XCircle className="h-4 w-4 text-[#EF4444]" />
               }
               <span className="text-sm font-bold" style={{ color }}>{apuesta.resultado}</span>
@@ -531,7 +531,7 @@ const CardResuelta = ({
         <div className="mt-3">
           <button
             onClick={() => setShowAnalisis(!showAnalisis)}
-            className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#00D1B2] transition-colors"
+            className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#00D1FF] transition-colors"
           >
             <Brain className="h-3 w-3" />
             Análisis IA
@@ -674,7 +674,7 @@ export default function ApuestasPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-10 h-10 border-3 border-[#00D1B2]/30 border-t-[#00D1B2] rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-3 border-[#00D1FF]/30 border-t-[#00D1FF] rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -685,8 +685,8 @@ export default function ApuestasPage() {
       {/* HEADER */}
       <div>
         <div className="flex items-center gap-3 mb-1">
-          <div className="p-2.5 rounded-xl" style={{ background: 'rgba(0, 209, 178, 0.1)' }}>
-            <Target className="h-6 w-6 text-[#00D1B2]" />
+          <div className="p-2.5 rounded-xl" style={{ background: 'rgba(0, 209, 255, 0.1)' }}>
+            <Target className="h-6 w-6 text-[#00D1FF]" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Centro de Operaciones</h1>
@@ -696,7 +696,7 @@ export default function ApuestasPage() {
               </span>
               {stats.pendientes > 0 && (
                 <span style={{
-                  background: 'linear-gradient(135deg, #F59E0B, #FFBB00)',
+                  background: 'linear-gradient(135deg, #F59E0B, #F59E0B)',
                   color: '#000', fontSize: '10px', fontWeight: 800,
                   padding: '2px 8px', borderRadius: '10px',
                 }}>
@@ -705,8 +705,8 @@ export default function ApuestasPage() {
               )}
               {stats.ganadas > 0 && (
                 <span style={{
-                  background: 'rgba(0, 209, 178, 0.15)',
-                  color: '#00D1B2', fontSize: '10px', fontWeight: 700,
+                  background: 'rgba(0, 209, 255, 0.15)',
+                  color: '#00D1FF', fontSize: '10px', fontWeight: 700,
                   padding: '2px 8px', borderRadius: '10px',
                 }}>
                   {stats.ganadas} ganadas
@@ -735,9 +735,9 @@ export default function ApuestasPage() {
           icono={<BarChart3 className="h-4 w-4 text-[#E2E8F0]" />}
         />
         <KPICard 
-          valor={stats.ganadas} label="Ganadas" color="#00D1B2"
+          valor={stats.ganadas} label="Ganadas" color="#00D1FF"
           porcentaje={stats.total > 0 ? Math.round((stats.ganadas / stats.total) * 100) : 0}
-          icono={<CheckCircle className="h-4 w-4 text-[#00D1B2]" />}
+          icono={<CheckCircle className="h-4 w-4 text-[#00D1FF]" />}
         />
         <KPICard 
           valor={stats.perdidas} label="Perdidas" color="#EF4444"
@@ -745,30 +745,30 @@ export default function ApuestasPage() {
           icono={<XCircle className="h-4 w-4 text-[#EF4444]" />}
         />
         <KPICard 
-          valor={stats.pendientes} label="En Juego" color="#FFBB00"
+          valor={stats.pendientes} label="En Juego" color="#F59E0B"
           porcentaje={stats.total > 0 ? Math.round((stats.pendientes / stats.total) * 100) : 0}
-          icono={<Activity className="h-4 w-4 text-[#FFBB00]" />}
+          icono={<Activity className="h-4 w-4 text-[#F59E0B]" />}
         />
         
         {/* Win Rate */}
         <div className="rounded-2xl p-4 col-span-2 lg:col-span-1" style={{
           background: winRate >= 50 
-            ? 'linear-gradient(135deg, rgba(0, 209, 178, 0.1), rgba(30, 41, 59, 0.7))'
+            ? 'linear-gradient(135deg, rgba(0, 209, 255, 0.1), rgba(30, 41, 59, 0.7))'
             : 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(30, 41, 59, 0.7))',
-          border: `1px solid ${winRate >= 50 ? 'rgba(0, 209, 178, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
+          border: `1px solid ${winRate >= 50 ? 'rgba(0, 209, 255, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
         }}>
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 rounded-lg" style={{ 
-              background: winRate >= 50 ? 'rgba(0, 209, 178, 0.15)' : 'rgba(239, 68, 68, 0.15)' 
+              background: winRate >= 50 ? 'rgba(0, 209, 255, 0.15)' : 'rgba(239, 68, 68, 0.15)' 
             }}>
-              <Target className="h-4 w-4" style={{ color: winRate >= 50 ? '#00D1B2' : '#EF4444' }} />
+              <Target className="h-4 w-4" style={{ color: winRate >= 50 ? '#00D1FF' : '#EF4444' }} />
             </div>
             <span className="text-xs font-mono text-[#94A3B8]">
               {stats.ganadas}W / {stats.perdidas}L
             </span>
           </div>
           <p className={`text-2xl font-bold font-mono ${
-            winRate >= 50 ? 'text-[#00D1B2]' : 'text-[#EF4444]'
+            winRate >= 50 ? 'text-[#00D1FF]' : 'text-[#EF4444]'
           }`}>
             {winRate}%
           </p>
@@ -779,11 +779,11 @@ export default function ApuestasPage() {
       {/* FILTROS (★ NUEVO: filtro Zona Oro) */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {[
-          { key: 'todas', label: `Todas (${stats.total})`, color: '#00D1B2' },
+          { key: 'todas', label: `Todas (${stats.total})`, color: '#00D1FF' },
           { key: 'oro', label: `🟢 Oro (${oroCount})`, color: '#A855F7' },
           { key: 'ia', label: `IA ✓ (${stats.iaApproved})`, color: '#FFDD57' },
-          { key: 'pendientes', label: `En Juego (${stats.pendientes})`, color: '#FFBB00' },
-          { key: 'ganadas', label: `Ganadas (${stats.ganadas})`, color: '#00D1B2' },
+          { key: 'pendientes', label: `En Juego (${stats.pendientes})`, color: '#F59E0B' },
+          { key: 'ganadas', label: `Ganadas (${stats.ganadas})`, color: '#00D1FF' },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -826,8 +826,8 @@ export default function ApuestasPage() {
                       width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444',
                     }} />
                   )}
-                  <Activity className="h-4 w-4 text-[#FFBB00]" />
-                  <span className="text-sm font-bold text-[#FFBB00]">
+                  <Activity className="h-4 w-4 text-[#F59E0B]" />
+                  <span className="text-sm font-bold text-[#F59E0B]">
                     Pendientes ({pendientes.length})
                     {(() => {
                       const liveCount = pendientes.filter(a => getEstadoPartido(a.hora_partido).estado === 'LIVE').length;
@@ -931,4 +931,5 @@ export default function ApuestasPage() {
     </div>
   );
 }
+
 
