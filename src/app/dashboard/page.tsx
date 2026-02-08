@@ -117,8 +117,8 @@ const IAConfidenceRing = ({ score, zona, size = 52 }: { score: number; zona: str
   const offset = circumference - (score / 100) * circumference;
   
   const colors: Record<string, { stroke: string; glow: string; bg: string }> = {
-    ORO: { stroke: '#00D1B2', glow: 'rgba(0,209,178,0.4)', bg: 'rgba(0,209,178,0.1)' },
-    NEUTRA: { stroke: '#FFBB00', glow: 'rgba(255,187,0,0.4)', bg: 'rgba(255,187,0,0.1)' },
+    ORO: { stroke: '#22C55E', glow: 'rgba(0,209,255,0.4)', bg: 'rgba(0,209,255,0.1)' },
+    NEUTRA: { stroke: '#F59E0B', glow: 'rgba(245,158,11,0.4)', bg: 'rgba(245,158,11,0.1)' },
     RIESGO: { stroke: '#EF4444', glow: 'rgba(239,68,68,0.4)', bg: 'rgba(239,68,68,0.1)' },
     BLOQUEADO: { stroke: '#6B7280', glow: 'rgba(107,114,128,0.3)', bg: 'rgba(107,114,128,0.1)' },
   };
@@ -142,7 +142,7 @@ const IAConfidenceRing = ({ score, zona, size = 52 }: { score: number; zona: str
         <span style={{ fontSize: size > 44 ? '14px' : '11px', fontWeight: 900, color: c.stroke, fontFamily: 'monospace', lineHeight: 1 }}>
           {score}
         </span>
-        {size > 44 && <span style={{ fontSize: '7px', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.5px' }}>IA</span>}
+        {size > 44 && <span style={{ fontSize: '7px', color: '#FF6B9D', fontWeight: 600, letterSpacing: '0.5px' }}>IA</span>}
       </div>
     </div>
   );
@@ -153,8 +153,8 @@ const IAConfidenceRing = ({ score, zona, size = 52 }: { score: number; zona: str
 // ============================================================================
 const ZonaBadge = ({ zona, small = false }: { zona: string; small?: boolean }) => {
   const config: Record<string, { bg: string; border: string; color: string; emoji: string; label: string }> = {
-    ORO:       { bg: 'rgba(0,209,178,0.12)', border: 'rgba(0,209,178,0.35)', color: '#00D1B2', emoji: '🟢', label: 'ZONA ORO' },
-    NEUTRA:    { bg: 'rgba(255,187,0,0.12)',  border: 'rgba(255,187,0,0.35)',  color: '#FFBB00', emoji: '🟡', label: 'ZONA NEUTRA' },
+    ORO:       { bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.35)', color: '#22C55E', emoji: '🟢', label: 'ZONA ORO' },
+    NEUTRA:    { bg: 'rgba(245,158,11,0.12)',  border: 'rgba(245,158,11,0.35)',  color: '#F59E0B', emoji: '🟡', label: 'ZONA NEUTRA' },
     RIESGO:    { bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.35)',  color: '#EF4444', emoji: '🔴', label: 'ZONA RIESGO' },
     BLOQUEADO: { bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.35)', color: '#6B7280', emoji: '🚫', label: 'BLOQUEADO' },
   };
@@ -177,9 +177,9 @@ const ZonaBadge = ({ zona, small = false }: { zona: string; small?: boolean }) =
 // ============================================================================
 const FactorBar = ({ factor }: { factor: { nombre: string; valor: number; impacto: string } }) => {
   const colorMap: Record<string, string> = {
-    positivo: '#00D1B2', elite: '#00D1B2', neutral: '#FFBB00', negativo: '#EF4444', bloqueado: '#6B7280'
+    positivo: '#00D1FF', elite: '#00D1FF', neutral: '#F59E0B', negativo: '#EF4444', bloqueado: '#6B7280'
   };
-  const color = colorMap[factor.impacto] || '#FFBB00';
+  const color = colorMap[factor.impacto] || '#F59E0B';
   
   return (
     <div style={{ marginBottom: '6px' }}>
@@ -216,7 +216,7 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
   return (
     <div style={{
       marginTop: '8px', borderRadius: '10px', overflow: 'hidden',
-      border: `1px solid ${ia.zona === 'ORO' ? 'rgba(0,209,178,0.2)' : ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO' ? 'rgba(239,68,68,0.2)' : 'rgba(255,187,0,0.2)'}`,
+      border: `1px solid ${ia.zona === 'ORO' ? 'rgba(0,209,255,0.2)' : ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
       background: 'rgba(15,23,42,0.6)',
     }}>
       {/* Toggle header */}
@@ -229,11 +229,11 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Brain style={{ width: '14px', height: '14px', color: '#00D1B2' }} />
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#00D1B2' }}>Análisis IA Profundo</span>
+          <Brain style={{ width: '14px', height: '14px', color: '#FF6B9D' }} />
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#00D1FF' }}>Análisis IA Profundo</span>
           <span style={{
             fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '4px',
-            background: 'rgba(0,209,178,0.1)', color: '#00D1B2', fontFamily: 'monospace',
+            background: 'rgba(0,209,255,0.1)', color: '#00D1FF', fontFamily: 'monospace',
           }}>v2.0</span>
         </div>
         {expanded ? <ChevronUp style={{ width: '14px', height: '14px' }} /> : <ChevronDown style={{ width: '14px', height: '14px' }} />}
@@ -248,8 +248,8 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
                 style={{
                   padding: '5px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer',
                   fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap',
-                  background: activeTab === i ? 'rgba(0,209,178,0.15)' : 'rgba(255,255,255,0.04)',
-                  color: activeTab === i ? '#00D1B2' : '#64748B',
+                  background: activeTab === i ? 'rgba(0,209,255,0.15)' : 'rgba(255,255,255,0.04)',
+                  color: activeTab === i ? '#00D1FF' : '#64748B',
                   transition: 'all 0.2s',
                 }}>
                 {tab.icon} {tab.label}
@@ -278,12 +278,12 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
             <div>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: '12px', padding: '12px',
-                borderRadius: '10px', background: ia.ev > 5 ? 'rgba(0,209,178,0.06)' : ia.ev > 0 ? 'rgba(255,187,0,0.06)' : 'rgba(239,68,68,0.06)',
-                border: `1px solid ${ia.ev > 5 ? 'rgba(0,209,178,0.15)' : ia.ev > 0 ? 'rgba(255,187,0,0.15)' : 'rgba(239,68,68,0.15)'}`,
+                borderRadius: '10px', background: ia.ev > 5 ? 'rgba(0,209,255,0.06)' : ia.ev > 0 ? 'rgba(245,158,11,0.06)' : 'rgba(239,68,68,0.06)',
+                border: `1px solid ${ia.ev > 5 ? 'rgba(0,209,255,0.15)' : ia.ev > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)'}`,
                 marginBottom: '8px',
               }}>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'monospace', color: ia.ev > 5 ? '#00D1B2' : ia.ev > 0 ? '#FFBB00' : '#EF4444' }}>
+                  <p style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'monospace', color: ia.ev > 5 ? '#00D1FF' : ia.ev > 0 ? '#F59E0B' : '#EF4444' }}>
                     {ia.ev > 0 ? '+' : ''}{ia.ev}%
                   </p>
                   <p style={{ fontSize: '9px', color: '#94A3B8', fontWeight: 600 }}>VALOR ESPERADO</p>
@@ -299,13 +299,13 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', textAlign: 'center' }}>
-                  <p style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace', color: '#FFBB00' }}>
+                  <p style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace', color: '#F59E0B' }}>
                     @{(apuesta.cuota || 0).toFixed(2)}
                   </p>
                   <p style={{ fontSize: '9px', color: '#64748B' }}>CUOTA</p>
                 </div>
                 <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', textAlign: 'center' }}>
-                  <p style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace', color: '#00D1B2' }}>
+                  <p style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace', color: '#00D1FF' }}>
                     x{(ia.stake_mult || 1).toFixed(2)}
                   </p>
                   <p style={{ fontSize: '9px', color: '#64748B' }}>STAKE MULT</p>
@@ -319,14 +319,14 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
               {/* Tipster mini-scorecard */}
               <div style={{
                 padding: '12px', borderRadius: '10px',
-                background: 'linear-gradient(135deg, rgba(0,209,178,0.05) 0%, rgba(30,41,59,0.5) 100%)',
-                border: '1px solid rgba(0,209,178,0.12)', marginBottom: '8px',
+                background: 'linear-gradient(135deg, rgba(0,209,255,0.05) 0%, rgba(30,41,59,0.5) 100%)',
+                border: '1px solid rgba(0,209,255,0.12)', marginBottom: '8px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                   <div style={{
                     width: '32px', height: '32px', borderRadius: '8px', display: 'flex',
                     alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-                    background: 'rgba(0,209,178,0.15)',
+                    background: 'rgba(0,209,255,0.15)',
                   }}>
                     {apuesta.deporte === 'Fútbol' ? '⚽' : apuesta.deporte === 'NBA' || apuesta.deporte === 'Basket' ? '🏀' : apuesta.deporte === 'Tenis' ? '🎾' : '🎯'}
                   </div>
@@ -337,13 +337,13 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
                   <div style={{ textAlign: 'center', padding: '6px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)' }}>
-                    <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: (ia.tipster_wr || 0) >= 65 ? '#00D1B2' : (ia.tipster_wr || 0) >= 58 ? '#FFBB00' : '#EF4444' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: (ia.tipster_wr || 0) >= 65 ? '#00D1FF' : (ia.tipster_wr || 0) >= 58 ? '#F59E0B' : '#EF4444' }}>
                       {(ia.tipster_wr || 0).toFixed(1)}%
                     </p>
                     <p style={{ fontSize: '8px', color: '#64748B', fontWeight: 600 }}>WIN RATE</p>
                   </div>
                   <div style={{ textAlign: 'center', padding: '6px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)' }}>
-                    <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: (ia.tipster_roi || 0) > 0 ? '#00D1B2' : '#EF4444' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 900, fontFamily: 'monospace', color: (ia.tipster_roi || 0) > 0 ? '#00D1FF' : '#EF4444' }}>
                       {(ia.tipster_roi || 0) > 0 ? '+' : ''}{(ia.tipster_roi || 0).toFixed(1)}%
                     </p>
                     <p style={{ fontSize: '8px', color: '#64748B', fontWeight: 600 }}>ROI</p>
@@ -374,8 +374,8 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
             <div>
               <div style={{
                 padding: '14px', borderRadius: '10px', textAlign: 'center',
-                background: ia.zona === 'ORO' ? 'rgba(0,209,178,0.08)' : ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO' ? 'rgba(239,68,68,0.08)' : 'rgba(255,187,0,0.08)',
-                border: `1px solid ${ia.zona === 'ORO' ? 'rgba(0,209,178,0.2)' : ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO' ? 'rgba(239,68,68,0.2)' : 'rgba(255,187,0,0.2)'}`,
+                background: ia.zona === 'ORO' ? 'rgba(0,209,255,0.08)' : ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO' ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
+                border: `1px solid ${ia.zona === 'ORO' ? 'rgba(0,209,255,0.2)' : ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
                 marginBottom: '10px',
               }}>
                 <IAConfidenceRing score={ia.score} zona={ia.zona} size={64} />
@@ -389,7 +389,7 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
                   background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
                 }}>
                   <p style={{ fontSize: '9px', color: '#64748B', fontWeight: 600, marginBottom: '2px' }}>STAKE RECOMENDADO</p>
-                  <p style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'monospace', color: ia.stake_mult > 1 ? '#00D1B2' : ia.stake_mult > 0 ? '#FFBB00' : '#EF4444' }}>
+                  <p style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'monospace', color: ia.stake_mult > 1 ? '#00D1FF' : ia.stake_mult > 0 ? '#F59E0B' : '#EF4444' }}>
                     {ia.stake_mult === 0 ? 'NO APOSTAR' : `${(ia.stake_mult * 100).toFixed(0)}%`}
                   </p>
                 </div>
@@ -398,7 +398,7 @@ const IADeepAnalysis = ({ ia, apuesta }: { ia: IAAnalysis; apuesta: Apuesta }) =
                   background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
                 }}>
                   <p style={{ fontSize: '9px', color: '#64748B', fontWeight: 600, marginBottom: '2px' }}>CONFIANZA IA</p>
-                  <p style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'monospace', color: ia.score >= 75 ? '#00D1B2' : ia.score >= 50 ? '#FFBB00' : '#EF4444' }}>
+                  <p style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'monospace', color: ia.score >= 75 ? '#22C55E' : ia.score >= 50 ? '#F59E0B' : '#EF4444' }}>
                     {ia.score}/100
                   </p>
                 </div>
@@ -442,14 +442,14 @@ const OddsCompareWidget = ({ odds }: { odds: any }) => {
             <span style={{ fontSize: '9px', fontWeight: 700, color: '#64748B' }}>CUOTAS</span>
           </div>
           {casas.map((casa: any, i: number) => (
-            <div key={casa.nombre} style={{ padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: i === 0 ? 'rgba(0,209,178,0.04)' : 'transparent', borderBottom: i < casas.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+            <div key={casa.nombre} style={{ padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: i === 0 ? 'rgba(0,209,255,0.04)' : 'transparent', borderBottom: i < casas.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {i === 0 && <span style={{ background: 'rgba(0,209,178,0.2)', color: '#00D1B2', fontSize: '8px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px' }}>⭐ MEJOR</span>}
+                {i === 0 && <span style={{ background: 'rgba(0,209,255,0.2)', color: '#00D1FF', fontSize: '8px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px' }}>⭐ MEJOR</span>}
                 <span style={{ fontSize: '11px', color: i === 0 ? '#FFF' : '#94A3B8', fontWeight: i === 0 ? 600 : 400 }}>{casa.nombre}</span>
               </div>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {Object.entries(casa.cuotas).map(([k, v]: [string, any]) => (
-                  <span key={k} style={{ fontFamily: 'monospace', fontSize: '11px', padding: '1px 5px', borderRadius: '3px', background: i === 0 ? 'rgba(0,209,178,0.12)' : 'rgba(255,255,255,0.04)', color: i === 0 ? '#00D1B2' : '#CBD5E1', fontWeight: i === 0 ? 700 : 500 }}>
+                  <span key={k} style={{ fontFamily: 'monospace', fontSize: '11px', padding: '1px 5px', borderRadius: '3px', background: i === 0 ? 'rgba(0,209,255,0.12)' : 'rgba(255,255,255,0.04)', color: i === 0 ? '#00D1FF' : '#CBD5E1', fontWeight: i === 0 ? 700 : 500 }}>
                     {Number(v).toFixed(2)}
                   </span>
                 ))}
@@ -489,7 +489,7 @@ const FraseRotativa = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-    <span style={{ opacity: fade ? 1 : 0, color: '#00D1B2', fontStyle: 'italic', fontSize: '13px', transition: 'opacity 0.4s' }}>
+    <span style={{ opacity: fade ? 1 : 0, color: '#00D1FF', fontStyle: 'italic', fontSize: '13px', transition: 'opacity 0.4s' }}>
       &quot;{FRASES_NEUROTIPS[index]}&quot;
     </span>
   );
@@ -515,7 +515,7 @@ const CountdownTimer = ({ days }: { days: number }) => {
   return (
     <div style={{ display: 'flex', gap: '6px' }}>
       {[{ v: timeLeft.days, l: 'd' }, { v: timeLeft.hours, l: 'h' }, { v: timeLeft.minutes, l: 'm' }, { v: timeLeft.seconds, l: 's' }].map(t => (
-        <div key={t.l} style={{ textAlign: 'center', padding: '4px 8px', borderRadius: '8px', background: 'rgba(255,187,0,0.1)', border: '1px solid rgba(255,187,0,0.2)', minWidth: '36px' }}>
+        <div key={t.l} style={{ textAlign: 'center', padding: '4px 8px', borderRadius: '8px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', minWidth: '36px' }}>
           <span style={{ fontSize: '16px', fontWeight: 900, fontFamily: 'monospace', color: '#FFDD57' }}>{String(t.v).padStart(2, '0')}</span>
           <span style={{ fontSize: '8px', color: '#94A3B8', display: 'block' }}>{t.l}</span>
         </div>
@@ -533,12 +533,12 @@ const MiniSparkline = ({ positive = true }: { positive?: boolean }) => {
     <svg width="60" height="25" viewBox="0 0 60 25">
       <defs>
         <linearGradient id={`spark-${positive ? 'up' : 'dn'}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={positive ? '#00D1B2' : '#EF4444'} stopOpacity="0.4" />
-          <stop offset="100%" stopColor={positive ? '#00D1B2' : '#EF4444'} stopOpacity="0" />
+          <stop offset="0%" stopColor={positive ? '#00D1FF' : '#EF4444'} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={positive ? '#00D1FF' : '#EF4444'} stopOpacity="0" />
         </linearGradient>
       </defs>
       <polyline points={pts + ' 60,25 0,25'} fill={`url(#spark-${positive ? 'up' : 'dn'})`} />
-      <polyline points={pts} fill="none" stroke={positive ? '#00D1B2' : '#EF4444'} strokeWidth="2" strokeLinecap="round" />
+      <polyline points={pts} fill="none" stroke={positive ? '#00D1FF' : '#EF4444'} strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 };
@@ -547,7 +547,7 @@ const MiniSparkline = ({ positive = true }: { positive?: boolean }) => {
 // PROGRESS BAR PENDIENTE
 // ============================================================================
 const ProgressBarPendiente = () => (
-  <div style={{ width: '100%', height: '3px', borderRadius: '2px', background: 'rgba(255,187,0,0.12)', overflow: 'hidden', marginTop: '8px' }}>
+  <div style={{ width: '100%', height: '3px', borderRadius: '2px', background: 'rgba(245,158,11,0.12)', overflow: 'hidden', marginTop: '8px' }}>
     <div style={{ width: '60%', height: '100%', borderRadius: '2px', background: 'linear-gradient(90deg, #F59E0B, #FFDD57)', animation: 'pendienteProgress 2s ease-in-out infinite alternate' }} />
   </div>
 );
@@ -565,24 +565,24 @@ const PickDelDia = ({ apuestas }: { apuestas: Apuesta[] }) => {
   return (
     <div style={{
       borderRadius: '16px', padding: '16px', position: 'relative', overflow: 'hidden',
-      background: 'linear-gradient(135deg, rgba(0,209,178,0.12) 0%, rgba(255,221,87,0.06) 50%, rgba(30,41,59,0.9) 100%)',
-      border: '1.5px solid rgba(0,209,178,0.35)',
-      boxShadow: '0 0 30px rgba(0,209,178,0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
+      background: 'linear-gradient(135deg, rgba(0,209,255,0.12) 0%, rgba(255,221,87,0.06) 50%, rgba(30,41,59,0.9) 100%)',
+      border: '1.5px solid rgba(0,209,255,0.35)',
+      boxShadow: '0 0 30px rgba(0,209,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
     }}>
       {/* Glowing background accent */}
       <div style={{
         position: 'absolute', top: '-30px', right: '-30px', width: '120px', height: '120px',
-        borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,209,178,0.15) 0%, transparent 70%)',
+        borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,209,255,0.15) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
         <span style={{
-          background: 'linear-gradient(135deg, #00D1B2, #00E5C3)',
+          background: 'linear-gradient(135deg, #22C55E, #33DBFF)',
           color: '#000', fontSize: '10px', fontWeight: 900, padding: '3px 10px',
           borderRadius: '6px', letterSpacing: '1px',
           display: 'flex', alignItems: 'center', gap: '4px',
-          boxShadow: '0 0 12px rgba(0,209,178,0.4)',
+          boxShadow: '0 0 12px rgba(0,209,255,0.4)',
         }}>
           <Star style={{ width: '12px', height: '12px' }} />
           PICK DEL DÍA IA
@@ -609,10 +609,10 @@ const PickDelDia = ({ apuestas }: { apuestas: Apuesta[] }) => {
             </p>
           )}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 800, color: '#FFBB00' }}>
+            <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 800, color: '#F59E0B' }}>
               @{(best.cuota || 0).toFixed(2)}
             </span>
-            <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: (best.ia_analysis?.ev || 0) > 0 ? '#00D1B2' : '#EF4444' }}>
+            <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: (best.ia_analysis?.ev || 0) > 0 ? '#00D1FF' : '#EF4444' }}>
               EV: {(best.ia_analysis?.ev || 0) > 0 ? '+' : ''}{best.ia_analysis?.ev || 0}%
             </span>
             <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: '#818CF8' }}>
@@ -770,8 +770,8 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div style={{ textAlign: 'center' }}>
-          <div className="w-12 h-12 border-3 border-[#00D1B2]/30 border-t-[#00D1B2] rounded-full animate-spin mx-auto mb-3"></div>
-          <p style={{ fontSize: '13px', color: '#00D1B2', fontWeight: 600 }}>🧠 Cargando análisis IA...</p>
+          <div className="w-12 h-12 border-3 border-[#00D1FF]/30 border-t-[#00D1FF] rounded-full animate-spin mx-auto mb-3"></div>
+          <p style={{ fontSize: '13px', color: '#00D1FF', fontWeight: 600 }}>🧠 Cargando análisis IA...</p>
         </div>
       </div>
     );
@@ -800,11 +800,17 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <img src="/logo-icon.png" alt="NeuroTips" style={{ width: '40px', height: '40px', borderRadius: '10px' }} />
             <div>
-              <h1 className="text-2xl font-bold text-white">
-                ¡Hola, {user?.nombre || 'Apostador'}!
+              <h1 className="text-2xl font-bold text-white flex items-center gap-1">
+                <span style={{ color: '#00D1FF', fontWeight: 900 }}>Neuro</span>
+                <span style={{ fontSize: '28px' }}>🧠</span>
+                <span style={{ color: '#F1F5F9', fontWeight: 900 }}>Tips</span>
               </h1>
+              <p className="text-sm mt-0.5">
+                <span style={{ color: '#94A3B8' }}>¡Hola, </span>
+                <span style={{ color: '#00D1FF', fontWeight: 600 }}>{user?.nombre || 'Apostador'}</span>
+                <span style={{ color: '#94A3B8' }}>!</span>
+              </p>
               <FraseRotativa />
             </div>
           </div>
@@ -812,24 +818,24 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2 flex-wrap">
           {/* IA Version Badge */}
           <span style={{
-            background: 'linear-gradient(135deg, rgba(0,209,178,0.15), rgba(0,209,178,0.05))',
-            border: '1px solid rgba(0,209,178,0.3)', borderRadius: '8px',
-            padding: '4px 10px', fontSize: '10px', fontWeight: 800, color: '#00D1B2',
+            background: 'linear-gradient(135deg, rgba(255,107,157,0.15), rgba(0,209,255,0.05))',
+            border: '1px solid rgba(0,209,255,0.3)', borderRadius: '8px',
+            padding: '4px 10px', fontSize: '10px', fontWeight: 800, color: '#00D1FF',
             display: 'flex', alignItems: 'center', gap: '4px',
             animation: 'iaPulse 3s ease-in-out infinite',
           }}>
             <Brain style={{ width: '12px', height: '12px' }} />
             IA v{data.iaVersion}
-            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#00D1B2', animation: 'livePulse 1.5s infinite' }} />
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#00D1FF', animation: 'livePulse 1.5s infinite' }} />
           </span>
           {/* Sound toggle */}
           <button onClick={() => setSoundEnabled(!soundEnabled)}
             style={{
               display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px',
               borderRadius: '8px', fontSize: '10px', fontWeight: 700, cursor: 'pointer',
-              background: soundEnabled ? 'rgba(0,209,178,0.12)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${soundEnabled ? 'rgba(0,209,178,0.3)' : 'rgba(255,255,255,0.1)'}`,
-              color: soundEnabled ? '#00D1B2' : '#64748B',
+              background: soundEnabled ? 'rgba(0,209,255,0.12)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${soundEnabled ? 'rgba(0,209,255,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              color: soundEnabled ? '#00D1FF' : '#64748B',
             }}>
             {soundEnabled ? <Volume2 style={{ width: '12px', height: '12px' }} /> : <VolumeX style={{ width: '12px', height: '12px' }} />}
             {soundEnabled ? 'ON' : 'OFF'}
@@ -875,23 +881,23 @@ export default function DashboardPage() {
         {/* TIPSTERS ACTIVOS */}
         <div className="stat-card animate-fadeInUp stagger-1">
           <div className="flex items-start justify-between mb-3">
-            <div className="p-2.5 rounded-xl bg-[#00D1B2]/10">
-              <Users className="h-5 w-5 text-[#00D1B2]" />
+            <div className="p-2.5 rounded-xl bg-[#00D1FF]/10">
+              <Users className="h-5 w-5 text-[#00D1FF]" />
             </div>
-            <span style={{ fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: 'rgba(0,209,178,0.1)', color: '#00D1B2' }}>
+            <span style={{ fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: 'rgba(0,209,255,0.1)', color: '#00D1FF' }}>
               IA Tracked
             </span>
           </div>
           <p className="text-3xl font-bold text-white font-mono">{data.totalTipsters}</p>
           <p className="text-[#94A3B8] text-sm mt-1">Tipsters Activos</p>
-          <p style={{ fontSize: '9px', color: '#00D1B2', marginTop: '2px' }}>{data.profilesAvailable.length} perfilados IA</p>
+          <p style={{ fontSize: '9px', color: '#00D1FF', marginTop: '2px' }}>{data.profilesAvailable.length} perfilados IA</p>
         </div>
 
         {/* APUESTAS HOY */}
         <div className="stat-card animate-fadeInUp stagger-2" style={{ borderColor: 'rgba(255, 187, 0, 0.5)', borderWidth: '2px', boxShadow: '0 0 20px rgba(255, 187, 0, 0.15)' }}>
           <div className="flex items-start justify-between mb-3">
-            <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,187,0,0.15)' }}>
-              <Calendar className="h-5 w-5 text-[#FFBB00]" />
+            <div className="p-2.5 rounded-xl" style={{ background: 'rgba(245,158,11,0.15)' }}>
+              <Calendar className="h-5 w-5 text-[#F59E0B]" />
             </div>
             {pendientes.length > 0 && (
               <span style={{
@@ -903,7 +909,7 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
-          <p className="text-3xl font-bold font-mono" style={{ color: '#FFBB00' }}>{data.apuestasHoy || apuestas.length}</p>
+          <p className="text-3xl font-bold font-mono" style={{ color: '#F59E0B' }}>{data.apuestasHoy || apuestas.length}</p>
           <p className="text-sm mt-0.5" style={{ color: '#D4A843' }}>Apuestas Hoy</p>
           <p style={{ fontSize: '9px', color: '#94A3B8', marginTop: '2px' }}>
             {pendientes.length > 0 ? `${pendientes.length} pendiente${pendientes.length > 1 ? 's' : ''}` : ''}
@@ -912,7 +918,7 @@ export default function DashboardPage() {
             {apuestas.length === 0 ? 'Sin picks aún' : ''}
           </p>
           {zonaOroCount > 0 && (
-            <p style={{ fontSize: '9px', color: '#00D1B2', marginTop: '1px' }}>🟢 {zonaOroCount} en Zona ORO</p>
+            <p style={{ fontSize: '9px', color: '#00D1FF', marginTop: '1px' }}>🟢 {zonaOroCount} en Zona ORO</p>
           )}
         </div>
 
@@ -926,7 +932,7 @@ export default function DashboardPage() {
           </div>
           <p className="text-lg font-bold text-white truncate">{data.topTipster?.alias || '—'}</p>
           {data.topTipster && (
-            <p className="text-[#00D1B2] font-bold flex items-center gap-1 mt-0.5 text-sm">
+            <p className="text-[#00D1FF] font-bold flex items-center gap-1 mt-0.5 text-sm">
               <TrendingUp className="h-3.5 w-3.5" /> Mejor rendimiento
             </p>
           )}
@@ -935,15 +941,15 @@ export default function DashboardPage() {
 
         {/* IA SCORE PROMEDIO */}
         <div className="stat-card animate-fadeInUp stagger-4" style={{
-          borderColor: avgIAScore >= 65 ? 'rgba(0,209,178,0.25)' : avgIAScore >= 50 ? 'rgba(255,187,0,0.25)' : 'rgba(239,68,68,0.25)',
+          borderColor: avgIAScore >= 65 ? 'rgba(0,209,255,0.25)' : avgIAScore >= 50 ? 'rgba(245,158,11,0.25)' : 'rgba(239,68,68,0.25)',
         }}>
           <div className="flex items-start justify-between mb-2">
-            <div className="p-2.5 rounded-xl bg-[#00D1B2]/10">
-              <Brain className="h-5 w-5 text-[#00D1B2]" />
+            <div className="p-2.5 rounded-xl bg-[#00D1FF]/10">
+              <Brain className="h-5 w-5 text-[#00D1FF]" />
             </div>
             <IAConfidenceRing score={avgIAScore} zona={avgIAScore >= 75 ? 'ORO' : avgIAScore >= 50 ? 'NEUTRA' : 'RIESGO'} size={40} />
           </div>
-          <p className="text-3xl font-bold font-mono" style={{ color: avgIAScore >= 65 ? '#00D1B2' : avgIAScore >= 50 ? '#FFBB00' : '#EF4444' }}>
+          <p className="text-3xl font-bold font-mono" style={{ color: avgIAScore >= 65 ? '#22C55E' : avgIAScore >= 50 ? '#F59E0B' : '#EF4444' }}>
             {avgIAScore}
           </p>
           <p className="text-[#94A3B8] text-sm mt-0.5">Score IA Promedio</p>
@@ -987,7 +993,7 @@ export default function DashboardPage() {
               <span style={{
                 fontSize: '10px', fontWeight: 700, padding: '3px 8px',
                 borderRadius: '6px', background: 'rgba(255, 187, 0, 0.15)',
-                color: '#FFBB00', border: '1px solid rgba(255, 187, 0, 0.3)',
+                color: '#F59E0B', border: '1px solid rgba(255, 187, 0, 0.3)',
               }}>
                 ⚡ {liveData.total_urgentes} urgente{liveData.total_urgentes > 1 ? 's' : ''}
               </span>
@@ -1005,9 +1011,9 @@ export default function DashboardPage() {
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#00D1B2' }}>{pick.tipster}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#00D1FF' }}>{pick.tipster}</span>
                     {pick.is_urgente && (
-                      <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(255, 187, 0, 0.15)', color: '#FFBB00' }}>
+                      <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(255, 187, 0, 0.15)', color: '#F59E0B' }}>
                         ⚡ URGENTE
                       </span>
                     )}
@@ -1032,10 +1038,10 @@ export default function DashboardPage() {
                   {/* Mini NeuroScore */}
                   <div style={{
                     width: '32px', height: '32px', borderRadius: '50%',
-                    border: `2px solid ${pick.neuroscore >= 75 ? '#00D1B2' : pick.neuroscore >= 50 ? '#FFBB00' : '#EF4444'}`,
+                    border: `2px solid ${pick.neuroscore >= 75 ? '#22C55E' : pick.neuroscore >= 50 ? '#F59E0B' : '#EF4444'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '10px', fontWeight: 700, fontFamily: 'monospace',
-                    color: pick.neuroscore >= 75 ? '#00D1B2' : pick.neuroscore >= 50 ? '#FFBB00' : '#EF4444',
+                    color: pick.neuroscore >= 75 ? '#22C55E' : pick.neuroscore >= 50 ? '#F59E0B' : '#EF4444',
                   }}>
                     {pick.neuroscore}
                   </div>
@@ -1048,7 +1054,7 @@ export default function DashboardPage() {
             {liveData.total_live > 4 && (
               <Link href="/dashboard/apuestas" style={{
                 display: 'block', textAlign: 'center', paddingTop: '8px',
-                fontSize: '12px', color: '#00D1B2', textDecoration: 'none',
+                fontSize: '12px', color: '#00D1FF', textDecoration: 'none',
               }}>
                 Ver {liveData.total_live - 4} más →
               </Link>
@@ -1075,8 +1081,8 @@ export default function DashboardPage() {
         
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,187,0,0.1)' }}>
-              <Activity className="h-5 w-5 text-[#FFBB00]" />
+            <div className="p-2.5 rounded-xl" style={{ background: 'rgba(245,158,11,0.1)' }}>
+              <Activity className="h-5 w-5 text-[#F59E0B]" />
             </div>
             <div>
               <h3 className="font-bold text-white text-lg">Apuestas en Juego</h3>
@@ -1087,7 +1093,7 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-          <Link href="/dashboard/apuestas" className="flex items-center gap-1 text-sm text-[#00D1B2] hover:text-[#00E5C3] transition-colors">
+          <Link href="/dashboard/apuestas" className="flex items-center gap-1 text-sm text-[#00D1FF] hover:text-[#33DBFF] transition-colors">
             Ver todas <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
@@ -1107,8 +1113,8 @@ export default function DashboardPage() {
                   const horaMin = h * 60 + m;
                   const nowMin = now.getHours() * 60 + now.getMinutes();
                   if (nowMin >= horaMin) { horaLabel = `🔴 EN VIVO · ${hora}`; horaColor = '#EF4444'; }
-                  else if (horaMin - nowMin <= 30) { horaLabel = `⚡ POR INICIAR · ${hora}`; horaColor = '#FFBB00'; }
-                  else { horaLabel = `🕐 ${hora} CL`; horaColor = '#FFBB00'; }
+                  else if (horaMin - nowMin <= 30) { horaLabel = `⚡ POR INICIAR · ${hora}`; horaColor = '#F59E0B'; }
+                  else { horaLabel = `🕐 ${hora} CL`; horaColor = '#F59E0B'; }
                 } catch(_e) { horaLabel = hora; }
               }
               const unidades = apuesta.stake_ia ? (apuesta.stake_ia / 1000).toFixed(1) + 'u' : '';
@@ -1119,10 +1125,10 @@ export default function DashboardPage() {
                   style={{
                     background: horaColor === '#EF4444'
                       ? 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(255,50,50,0.02) 100%)'
-                      : 'linear-gradient(135deg, rgba(255,187,0,0.06) 0%, rgba(255,221,87,0.02) 100%)',
+                      : 'linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(255,221,87,0.02) 100%)',
                     border: horaColor === '#EF4444'
                       ? '1.5px solid rgba(239,68,68,0.35)'
-                      : '1.5px solid rgba(255,187,0,0.3)',
+                      : '1.5px solid rgba(245,158,11,0.3)',
                     animation: 'pendienteBorder 3s ease-in-out infinite',
                   }}>
                   
@@ -1154,7 +1160,7 @@ export default function DashboardPage() {
                       </span>
                     ) : (
                       <span style={{
-                        background: 'linear-gradient(135deg, #F59E0B, #FFBB00)', color: '#000',
+                        background: 'linear-gradient(135deg, #F59E0B, #F59E0B)', color: '#000',
                         fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '5px',
                       }}>
                         ⏳ PENDIENTE
@@ -1178,9 +1184,9 @@ export default function DashboardPage() {
                       {ia.ev > 0 && (
                         <span style={{
                           fontSize: '9px', fontWeight: 800, fontFamily: 'monospace',
-                          color: ia.ev > 10 ? '#00D1B2' : '#FFBB00',
+                          color: ia.ev > 10 ? '#00D1FF' : '#F59E0B',
                           padding: '1px 6px', borderRadius: '4px',
-                          background: ia.ev > 10 ? 'rgba(0,209,178,0.1)' : 'rgba(255,187,0,0.1)',
+                          background: ia.ev > 10 ? 'rgba(0,209,255,0.1)' : 'rgba(245,158,11,0.1)',
                         }}>
                           EV+{ia.ev}%
                         </span>
@@ -1220,7 +1226,7 @@ export default function DashboardPage() {
                       <p style={{ color: '#FFF', fontWeight: 600, fontSize: '13px', lineHeight: 1.4, flex: 1, paddingRight: '8px' }}>
                         {apuesta.apuesta}
                       </p>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '16px', color: '#FFBB00', flexShrink: 0 }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '16px', color: '#F59E0B', flexShrink: 0 }}>
                         @{(apuesta.cuota || 0).toFixed(2)}
                       </span>
                     </div>
@@ -1277,16 +1283,16 @@ export default function DashboardPage() {
               return (
                 <div key={`r-${idx}`} className="rounded-xl p-3"
                   style={{
-                    background: isWin ? 'rgba(0,209,178,0.05)' : 'rgba(239,68,68,0.05)',
-                    border: `1px solid ${isWin ? 'rgba(0,209,178,0.18)' : 'rgba(239,68,68,0.18)'}`,
+                    background: isWin ? 'rgba(0,209,255,0.05)' : 'rgba(239,68,68,0.05)',
+                    border: `1px solid ${isWin ? 'rgba(0,209,255,0.18)' : 'rgba(239,68,68,0.18)'}`,
                   }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                       <span style={{
                         width: '24px', height: '24px', borderRadius: '6px', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0,
-                        background: isWin ? 'rgba(0,209,178,0.2)' : 'rgba(239,68,68,0.2)',
-                        color: isWin ? '#00D1B2' : '#EF4444',
+                        background: isWin ? 'rgba(0,209,255,0.2)' : 'rgba(239,68,68,0.2)',
+                        color: isWin ? '#00D1FF' : '#EF4444',
                       }}>
                         {isWin ? '✓' : '✗'}
                       </span>
@@ -1307,7 +1313,7 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
                       {ia && <IAConfidenceRing score={ia.score} zona={ia.zona} size={32} />}
-                      <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '13px', color: isWin ? '#00D1B2' : '#EF4444' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '13px', color: isWin ? '#00D1FF' : '#EF4444' }}>
                         @{(apuesta.cuota || 0).toFixed(2)}
                       </span>
                     </div>
@@ -1318,9 +1324,9 @@ export default function DashboardPage() {
                       <span style={{
                         fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px',
                         background: (isWin && ia.zona === 'ORO') || (!isWin && (ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO'))
-                          ? 'rgba(0,209,178,0.1)' : 'rgba(239,68,68,0.1)',
+                          ? 'rgba(0,209,255,0.1)' : 'rgba(239,68,68,0.1)',
                         color: (isWin && ia.zona === 'ORO') || (!isWin && (ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO'))
-                          ? '#00D1B2' : '#EF4444',
+                          ? '#00D1FF' : '#EF4444',
                       }}>
                         {(isWin && ia.zona === 'ORO') || (!isWin && (ia.zona === 'RIESGO' || ia.zona === 'BLOQUEADO'))
                           ? '✅ IA acertó' : isWin ? '📊 IA Score: ' + ia.score : '📊 IA Score: ' + ia.score}
@@ -1356,12 +1362,12 @@ export default function DashboardPage() {
         {/* INSIGHTS IA */}
         <div className="rounded-2xl p-5 animate-fadeInUp"
           style={{
-            background: 'linear-gradient(135deg, rgba(0,209,178,0.08) 0%, rgba(30,41,59,0.7) 100%)',
-            backdropFilter: 'blur(12px)', border: '1px solid rgba(0,209,178,0.25)',
+            background: 'linear-gradient(135deg, rgba(0,209,255,0.08) 0%, rgba(30,41,59,0.7) 100%)',
+            backdropFilter: 'blur(12px)', border: '1px solid rgba(0,209,255,0.25)',
           }}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2.5 rounded-xl bg-[#00D1B2]/15">
-              <Brain className="h-5 w-5 text-[#00D1B2]" />
+            <div className="p-2.5 rounded-xl bg-[#00D1FF]/15">
+              <Brain className="h-5 w-5 text-[#00D1FF]" />
             </div>
             <div>
               <h3 className="font-bold text-white">NeuroTips IA</h3>
@@ -1369,7 +1375,7 @@ export default function DashboardPage() {
             </div>
             <span style={{
               marginLeft: 'auto', fontSize: '9px', fontWeight: 800, fontFamily: 'monospace',
-              padding: '2px 6px', borderRadius: '4px', background: 'rgba(0,209,178,0.1)', color: '#00D1B2',
+              padding: '2px 6px', borderRadius: '4px', background: 'rgba(0,209,255,0.1)', color: '#00D1FF',
             }}>
               LIVE
             </span>
@@ -1378,8 +1384,8 @@ export default function DashboardPage() {
             {insights.map((insight, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'start', gap: '10px', padding: '10px', borderRadius: '10px',
-                background: insight.tipo === 'positivo' ? 'rgba(0,209,178,0.06)' : insight.tipo === 'precaucion' ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
-                border: `1px solid ${insight.tipo === 'positivo' ? 'rgba(0,209,178,0.12)' : insight.tipo === 'precaucion' ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)'}`,
+                background: insight.tipo === 'positivo' ? 'rgba(0,209,255,0.06)' : insight.tipo === 'precaucion' ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
+                border: `1px solid ${insight.tipo === 'positivo' ? 'rgba(0,209,255,0.12)' : insight.tipo === 'precaucion' ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)'}`,
               }}>
                 <span style={{ fontSize: '16px', flexShrink: 0, lineHeight: 1 }}>{insight.emoji}</span>
                 <p style={{ fontSize: '12px', color: '#E2E8F0', lineHeight: 1.5 }}>{insight.texto}</p>
@@ -1417,7 +1423,7 @@ export default function DashboardPage() {
             </p>
             <div className="grid grid-cols-3 gap-2 mt-2">
               {[
-                { icon: Target, label: 'EV+', color: '#00D1B2' },
+                { icon: Target, label: 'EV+', color: '#00D1FF' },
                 { icon: BarChart3, label: 'Zonas', color: '#FFDD57' },
                 { icon: Shield, label: 'Filtro IA', color: '#818CF8' },
               ].map((item, i) => (
@@ -1487,7 +1493,7 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(255, 187, 0, 0.1)' }}>
-                <Flame className="h-5 w-5 text-[#FFBB00]" />
+                <Flame className="h-5 w-5 text-[#F59E0B]" />
               </div>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'white' }}>Alertas de Rachas</h3>
@@ -1499,7 +1505,7 @@ export default function DashboardPage() {
             <span style={{
               fontSize: '10px', fontWeight: 700, padding: '3px 10px',
               borderRadius: '8px', background: 'rgba(255, 187, 0, 0.1)',
-              color: '#FFBB00', border: '1px solid rgba(255, 187, 0, 0.2)',
+              color: '#F59E0B', border: '1px solid rgba(255, 187, 0, 0.2)',
             }}>
               {rachasData.total} alerta{rachasData.total > 1 ? 's' : ''}
             </span>
@@ -1509,27 +1515,27 @@ export default function DashboardPage() {
             {rachasData.alertas.slice(0, 6).map((alerta: any, idx: number) => (
               <div key={idx} style={{
                 padding: '12px 14px', borderRadius: '10px',
-                background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 178, 0.05)' : 'rgba(239, 68, 68, 0.05)',
-                borderLeft: `3px solid ${alerta.color || (alerta.tipo === 'positiva' ? '#00D1B2' : '#EF4444')}`,
+                background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 255, 0.05)' : 'rgba(239, 68, 68, 0.05)',
+                borderLeft: `3px solid ${alerta.color || (alerta.tipo === 'positiva' ? '#00D1FF' : '#EF4444')}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
                     <span style={{
                       fontSize: '12px', fontWeight: 700,
-                      color: alerta.tipo === 'positiva' ? '#00D1B2' : '#EF4444',
+                      color: alerta.tipo === 'positiva' ? '#00D1FF' : '#EF4444',
                     }}>
                       {alerta.tipster}
                     </span>
                     <span style={{
                       fontSize: '9px', padding: '1px 6px', borderRadius: '4px', fontWeight: 700,
-                      background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 178, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                      color: alerta.tipo === 'positiva' ? '#00D1B2' : '#EF4444',
+                      background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 255, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      color: alerta.tipo === 'positiva' ? '#00D1FF' : '#EF4444',
                     }}>
                       {alerta.racha > 0 ? `🔥 W${alerta.racha}` : `⚠️ L${Math.abs(alerta.racha)}`}
                     </span>
                     {alerta.severidad === 'alta' && (
-                      <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', fontWeight: 700, background: 'rgba(255, 187, 0, 0.15)', color: '#FFBB00' }}>
+                      <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', fontWeight: 700, background: 'rgba(255, 187, 0, 0.15)', color: '#F59E0B' }}>
                         ¡IMPORTANTE!
                       </span>
                     )}
@@ -1538,8 +1544,8 @@ export default function DashboardPage() {
                 </div>
                 <div style={{
                   padding: '6px 10px', borderRadius: '8px', flexShrink: 0,
-                  background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 178, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-                  fontSize: '10px', color: alerta.tipo === 'positiva' ? '#00D1B2' : '#EF4444',
+                  background: alerta.tipo === 'positiva' ? 'rgba(0, 209, 255, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                  fontSize: '10px', color: alerta.tipo === 'positiva' ? '#00D1FF' : '#EF4444',
                   fontWeight: 600, textAlign: 'center', maxWidth: '120px',
                 }}>
                   {alerta.accion}
@@ -1555,10 +1561,10 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       <div className="flex items-center justify-between text-xs text-[#64748B] pt-4 border-t border-slate-800/50">
         <span className="font-mono">
-          🧠 NeuroTips IA v{data.iaVersion} · {data.profilesAvailable.length} tipsters perfilados · {iaScores.length} picks analizados hoy
+          🧠 Neuro🧠Tips IA v{data.iaVersion} · {data.profilesAvailable.length} tipsters perfilados · {iaScores.length} picks analizados hoy
         </span>
         <span className="flex items-center gap-1.5">
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00D1B2', animation: 'livePulse 1.5s infinite' }} />
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00D1FF', animation: 'livePulse 1.5s infinite' }} />
           IA Activa
         </span>
       </div>
@@ -1605,16 +1611,16 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       <style jsx>{`
         @keyframes goldPulse {
-          0%, 100% { box-shadow: 0 0 15px rgba(255,187,0,0.1); border-color: rgba(255,187,0,0.4); }
-          50% { box-shadow: 0 0 25px rgba(255,187,0,0.25); border-color: rgba(255,187,0,0.7); }
+          0%, 100% { box-shadow: 0 0 15px rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.4); }
+          50% { box-shadow: 0 0 25px rgba(245,158,11,0.25); border-color: rgba(245,158,11,0.7); }
         }
         @keyframes livePulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
         @keyframes pendienteBorder {
-          0%, 100% { border-color: rgba(255,187,0,0.2); box-shadow: 0 0 0 rgba(255,187,0,0); }
-          50% { border-color: rgba(255,187,0,0.45); box-shadow: 0 0 12px rgba(255,187,0,0.06); }
+          0%, 100% { border-color: rgba(245,158,11,0.2); box-shadow: 0 0 0 rgba(245,158,11,0); }
+          50% { border-color: rgba(245,158,11,0.45); box-shadow: 0 0 12px rgba(245,158,11,0.06); }
         }
         @keyframes pendienteProgress {
           0% { width: 30%; opacity: 0.5; }
@@ -1622,8 +1628,8 @@ export default function DashboardPage() {
           100% { width: 30%; opacity: 0.5; }
         }
         @keyframes iaPulse {
-          0%, 100% { box-shadow: 0 0 0 rgba(0,209,178,0); }
-          50% { box-shadow: 0 0 12px rgba(0,209,178,0.15); }
+          0%, 100% { box-shadow: 0 0 0 rgba(0,209,255,0); }
+          50% { box-shadow: 0 0 12px rgba(0,209,255,0.15); }
         }
         @keyframes liveBorderPulse {
           0%, 100% { border-color: rgba(239,68,68,0.25); box-shadow: 0 0 0 rgba(239,68,68,0); }
